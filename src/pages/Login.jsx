@@ -11,7 +11,7 @@ const Login = () => {
       // mock login
       localStorage.setItem("name", form.username);
       localStorage.setItem("department", "Computer Science");
-      navigate("/form/1");
+      navigate("/GeneralDetail");
     } else {
       alert("Please fill username and password");
     }
