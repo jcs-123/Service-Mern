@@ -8,3 +8,206 @@
 body {
   overflow: hidden;
 }
+/* login page */
+/* === Background === */
+.mimo-login-container {
+  height: 100vh;
+  background: linear-gradient(135deg, #b2ebf2 0%, #80deea 40%, #4dd0e1 100%);
+  overflow: hidden;
+}
+
+/* === Glass Login Box === */
+.glass {
+  width: 330px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 20px;
+  border: 2px solid #000; /* 🖤 Black Border */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+.glass:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* === Mimo Robot === */
+.mimo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mimo-head {
+  width: 100px;
+  height: 60px;
+  background: linear-gradient(180deg, #00bcd4, #0097a7);
+  border-radius: 30px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  position: relative;
+  border: 2px solid #000;
+  box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.6),
+    0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease-in-out;
+}
+
+/* 💡 Eye Glow when password focused */
+.mimo-active {
+  box-shadow: 0 0 25px 10px rgba(0, 255, 255, 0.6),
+    inset 0 0 10px rgba(0, 255, 255, 0.3);
+  background: linear-gradient(180deg, #26c6da, #00acc1);
+}
+
+/* 👀 Eyes */
+.mimo-eye {
+  width: 18px;
+  height: 18px;
+  background: white;
+  border: 2px solid black;
+  border-radius: 50%;
+  position: relative;
+  transition: transform 0.1s ease-out;
+}
+.mimo-eye::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: black;
+  border-radius: 50%;
+  position: absolute;
+  top: 4px;
+  left: 4px;
+}
+
+/* 😴 Blinking Animation */
+@keyframes blink {
+  0%, 100% {
+    height: 18px;
+  }
+  50% {
+    height: 3px;
+    transform: translateY(7px);
+  }
+}
+.mimo-blink .mimo-eye {
+  animation: blink 0.25s ease-in-out;
+}
+
+/* 🤖 Body */
+.mimo-body {
+  width: 50px;
+  height: 60px;
+  background: linear-gradient(180deg, #0097a7, #006064);
+  border-radius: 12px;
+  border: 2px solid #000;
+  margin-top: -5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* === Input Styling === */
+.form-control {
+  border-radius: 10px;
+  border: 1.5px solid rgba(0, 0, 0, 0.5);
+  font-size: 0.95rem;
+}
+.form-control:focus {
+  border-color: #0288d1;
+  box-shadow: 0 0 6px rgba(2, 136, 209, 0.4);
+}
+
+/* === Password Eye Button === */
+.eye-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.eye-toggle:hover {
+  color: #0288d1;
+}
+
+/* === Login Button === */
+.btn-primary {
+  background: linear-gradient(135deg, #0288d1, #01579b);
+  border: 2px solid #000;
+  border-radius: 10px;
+  padding: 0.6rem;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #039be5, #0277bd);
+  transform: scale(1.03);
+  box-shadow: 0 0 10px rgba(2, 136, 209, 0.4);
+}
+/* === Animated Login Button === */
+.animated-login-btn {
+  background: linear-gradient(135deg, #0288d1, #01579b);
+  border: 2px solid #000;
+  border-radius: 10px;
+  padding: 0.7rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: #fff;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* Hover Glow */
+.animated-login-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.4),
+    rgba(255, 255, 255, 0)
+  );
+  transition: all 0.5s ease;
+}
+
+.animated-login-btn:hover::before {
+  left: 100%;
+}
+
+.animated-login-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 18px rgba(2, 136, 209, 0.6);
+}
+
+/* Press-down Effect */
+.animated-login-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 0 8px rgba(1, 87, 155, 0.7);
+}
+
+/* Optional: Pulse animation on load */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(2, 136, 209, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(2, 136, 209, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(2, 136, 209, 0);
+  }
+}
+
+.animated-login-btn {
+  animation: pulse 2s infinite;
+}

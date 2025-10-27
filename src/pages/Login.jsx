@@ -1,14 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Login = () => {
   const [form, setForm] = useState({ username: "", password: "" });
+  const [eyePos, setEyePos] = useState({ x: 0, y: 0 });
+  const [isPasswordFocus, setIsPasswordFocus] = useState(false);
+  const [isBlinking, setIsBlinking] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  // 🧠 Eye tracking
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 25;
+      const y = (e.clientY / window.innerHeight - 0.5) * 25;
+      setEyePos({ x, y });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  // 😴 Blink every few seconds
+  useEffect(() => {
+    const blinkTimer = setInterval(() => {
+      setIsBlinking(true);
+      setTimeout(() => setIsBlinking(false), 250);
+    }, 5000);
+    return () => clearInterval(blinkTimer);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (form.username && form.password) {
-      // mock login
       localStorage.setItem("name", form.username);
       localStorage.setItem("department", "Computer Science");
       navigate("/GeneralDetail");
@@ -18,9 +43,40 @@ const Login = () => {
   };
 
   return (
-    <div className="vh-100 d-flex justify-content-center align-items-center bg-light">
-      <div className="card p-4 shadow" style={{ width: "320px" }}>
-        <h4 className="text-center mb-3">Service Book Login</h4>
+    <div className="mimo-login-container d-flex align-items-center justify-content-center">
+      <motion.div
+        className="login-card glass p-4 shadow-lg"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        {/* 🤖 Mimo Robot */}
+        <div className="mimo text-center mb-4">
+          <div
+            className={`mimo-head ${
+              isPasswordFocus ? "mimo-active" : ""
+            } ${isBlinking ? "mimo-blink" : ""}`}
+          >
+            <div
+              className="mimo-eye"
+              style={{
+                transform: `translate(${eyePos.x}px, ${eyePos.y}px)`,
+              }}
+            ></div>
+            <div
+              className="mimo-eye"
+              style={{
+                transform: `translate(${eyePos.x}px, ${eyePos.y}px)`,
+              }}
+            ></div>
+          </div>
+          <div className="mimo-body"></div>
+        </div>
+
+        {/* 🔐 Form */}
+        <h4 className="text-center mb-3 fw-bold text-dark">
+          Service Book Login
+        </h4>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
@@ -28,15 +84,30 @@ const Login = () => {
             placeholder="Username"
             onChange={(e) => setForm({ ...form, username: e.target.value })}
           />
-          <input
-            type="password"
-            className="form-control mb-3"
-            placeholder="Password"
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-          <button className="btn btn-primary w-100">Login</button>
+
+          <div className="position-relative mb-3">
+            <input
+              type={showPassword ? "text" : "password"}
+              className="form-control pe-5"
+              placeholder="Password"
+              onFocus={() => setIsPasswordFocus(true)}
+              onBlur={() => setIsPasswordFocus(false)}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
+            <button
+              type="button"
+              className="eye-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+
+<button className="btn btn-primary rounded-5 w-100 fw-semibold animated-login-btn">
+  Login
+</button>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 };

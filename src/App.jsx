@@ -3,6 +3,7 @@ import "./App.css";
 import Login from "./pages/Login";
 import Layout from "./components/Layout";
 import Generalsetting from "./pages/Generalsetting";
+import Qualification from "./pages/Qualification";
 
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
                 <Route element={<Layout />}>
 
         <Route path='/GeneralDetail' element={<Generalsetting />} />
+        <Route path='/Qualification' element={<Qualification />} />
 
 
         </Route>
