@@ -9,6 +9,9 @@ import Publications from "./pages/Publications";
 import ProgramsCoordinated from "./pages/ProgramsCoordinated";
 import ProgramsAttended from "./pages/ProgramsAttended";
 import Experience from "./pages/Experience.jsx";
+import FacultyResearch from "./pages/FacultyResearch.jsx";
+import Consultancy from "./pages/Consultancy.jsx";
+import Projectguided from "./pages/Projectguided.jsx";
 
 
 function App() {
@@ -27,6 +30,9 @@ function App() {
         <Route path="/ProgramsAttended" element={<ProgramsAttended />} />
 
         <Route path='/Experience' element={<Experience/>} />
+        <Route path='/FacultyReserach' element={<FacultyResearch/>} />
+        <Route path='/Consultancy' element={<Consultancy/>} />
+        <Route path='/ProjectGuided' element={<Projectguided/>} />
 
         </Route>
 

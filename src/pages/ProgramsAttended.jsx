@@ -76,7 +76,7 @@ function ProgramsAttended() {
   };
 
   const handlePrevious = () => navigate("/ProgramsCoordinated");
-  const handleNext = () => navigate("/ProgramsCoordinated");
+  const handleNext = () => navigate("/FacultyReserach");
 
   return (
     <Box
