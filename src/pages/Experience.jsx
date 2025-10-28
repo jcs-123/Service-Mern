@@ -1,4 +1,3 @@
-// Qualification.jsx
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -15,72 +14,66 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Chip,
   Tooltip,
+  Chip,
   InputAdornment,
 } from "@mui/material";
 import {
   Add,
   Delete,
   Edit,
-  UploadFile,
-  School,
-  Book,
-  LocationOn,
-  Percent,
+  Business,
   CalendarToday,
   CalendarMonth,
-  Comment,
-  Attachment,
-  ArrowForward,
+  WorkOutline,
+  AssignmentTurnedIn,
+  Badge,
+  UploadFile,
   ArrowBack,
+  ArrowForward,
+  Description,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
-const Qualification = () => {
+const Experience = () => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
-  const navigate = useNavigate();
 
-  // Load and persist qualifications
-  const [qualifications, setQualifications] = useState(() => {
-    const saved = localStorage.getItem("qualifications");
+  // Load from localStorage
+  const [experiences, setExperiences] = useState(() => {
+    const saved = localStorage.getItem("experiences");
     return saved ? JSON.parse(saved) : [];
   });
 
-  useEffect(() => {
-    localStorage.setItem("qualifications", JSON.stringify(qualifications));
-  }, [qualifications]);
-
   const [formData, setFormData] = useState({
-    degree: "",
-    discipline: "",
-    university: "",
-    percentage: "",
-    registrationYear: "",
-    passingYear: "",
-    remarks: "",
+    title: "",
+    organization: "",
+    fromDate: "",
+    toDate: "",
+    designation: "",
+    employmentNature: "",
+    dutyNature: "",
     certificate: "",
   });
 
+  useEffect(() => {
+    localStorage.setItem("experiences", JSON.stringify(experiences));
+  }, [experiences]);
+
+  // Handlers
   const handleOpen = () => {
     setEditIndex(null);
     setFormData({
-      degree: "",
-      discipline: "",
-      university: "",
-      percentage: "",
-      registrationYear: "",
-      passingYear: "",
-      remarks: "",
+      title: "",
+      organization: "",
+      fromDate: "",
+      toDate: "",
+      designation: "",
+      employmentNature: "",
+      dutyNature: "",
       certificate: "",
     });
-    setOpen(true);
-  };
-
-  const handleEdit = (index) => {
-    setEditIndex(index);
-    setFormData(qualifications[index]);
     setOpen(true);
   };
 
@@ -95,31 +88,37 @@ const Qualification = () => {
     }
   };
 
-  const handleAdd = () => {
-    const updated = [...qualifications];
+  const handleSave = () => {
+    const updated = [...experiences];
     if (editIndex !== null) updated[editIndex] = formData;
     else updated.push(formData);
-    setQualifications(updated);
-    handleClose();
+    setExperiences(updated);
+    setOpen(false);
+  };
+
+  const handleEdit = (index) => {
+    setEditIndex(index);
+    setFormData(experiences[index]);
+    setOpen(true);
   };
 
   const handleDelete = (index) => {
-    const updated = [...qualifications];
-    updated.splice(index, 1);
-    setQualifications(updated);
+    const updated = experiences.filter((_, i) => i !== index);
+    setExperiences(updated);
   };
 
-  const handleBack = () => navigate("/GeneralDetail");
-  const handleNext = () => navigate("/experience");
+  const handleBack = () => navigate("/qualification");
+  const handleNext = () => navigate("/subject-engaged");
 
   return (
     <Box
       sx={{
-        p: { xs: 1.5, sm: 3 },
+        p: { xs: 2, sm: 3 },
         background: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
         borderRadius: 3,
         border: "2px solid #1565C0",
-        boxShadow: "0 6px 24px rgba(33,150,243,0.2)",
+        boxShadow: "0 6px 20px rgba(25,118,210,0.2)",
+        minHeight: "calc(100vh - 64px)",
       }}
     >
       {/* ===== Header Section ===== */}
@@ -133,21 +132,18 @@ const Qualification = () => {
           gap: 2,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <School sx={{ fontSize: 32, color: "#1565C0" }} />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <WorkOutline sx={{ fontSize: 34, color: "#1565C0" }} />
           <Typography
             variant="h4"
             sx={{
               fontWeight: 700,
-              fontSize: { xs: "1.6rem", sm: "1.9rem" },
-              background: "linear-gradient(135deg, #1565C0, #1976D2)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+              color: "#0D47A1",
               textTransform: "uppercase",
               letterSpacing: 1,
             }}
           >
-            Qualifications
+            Experience
           </Typography>
         </Box>
 
@@ -162,15 +158,14 @@ const Qualification = () => {
             fontWeight: 600,
             px: 3,
             py: 1,
-            fontSize: { xs: "0.9rem", sm: "1rem" },
             "&:hover": {
               background: "linear-gradient(135deg, #1E88E5, #1565C0)",
               transform: "translateY(-2px)",
+              boxShadow: "0 6px 18px rgba(25,118,210,0.4)",
             },
-            transition: "all 0.3s ease",
           }}
         >
-          Add Qualification
+          Add Experience
         </Button>
       </Box>
 
@@ -178,29 +173,30 @@ const Qualification = () => {
       <TableContainer
         component={Paper}
         sx={{
-          borderRadius: 2,
-          border: "2px solid #1976D2",
-          boxShadow: "0 4px 14px rgba(33,150,243,0.15)",
+          borderRadius: 3,
+          border: "2px solid #1565C0",
+          boxShadow: "0 6px 18px rgba(25,118,210,0.15)",
           overflowX: "auto",
+          mb: 3,
         }}
       >
         <Table>
           <TableHead sx={{ background: "linear-gradient(135deg, #42A5F5, #1976D2)" }}>
             <TableRow>
               {[
-                "No",
-                "Degree",
-                "Discipline",
-                "University",
-                "Percentage",
-                "Reg. Year",
-                "Passing Year",
-                "Remarks",
+                "Sl. No",
+                "Title",
+                "Organization / Institution",
+                "From Date",
+                "To Date",
+                "Designation",
+                "Nature of Employment",
+                "Nature of Duty",
                 "Certificate",
                 "Actions",
-              ].map((head, idx) => (
+              ].map((head, i) => (
                 <TableCell
-                  key={idx}
+                  key={i}
                   sx={{
                     fontWeight: "bold",
                     color: "white",
@@ -215,17 +211,17 @@ const Qualification = () => {
           </TableHead>
 
           <TableBody>
-            {qualifications.length === 0 ? (
+            {experiences.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
-                  <School sx={{ fontSize: 48, color: "grey.400" }} />
-                  <Typography variant="h6" color="grey.500">
-                    No qualifications added yet
+                  <WorkOutline sx={{ fontSize: 48, color: "grey.500" }} />
+                  <Typography variant="h6" color="grey.600">
+                    No experiences added yet
                   </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              qualifications.map((row, index) => (
+              experiences.map((exp, index) => (
                 <TableRow
                   key={index}
                   hover
@@ -236,21 +232,21 @@ const Qualification = () => {
                   }}
                 >
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{row.degree || "-"}</TableCell>
-                  <TableCell>{row.discipline || "-"}</TableCell>
-                  <TableCell>{row.university || "-"}</TableCell>
-                  <TableCell>{row.percentage || "-"}</TableCell>
-                  <TableCell>{row.registrationYear || "-"}</TableCell>
-                  <TableCell>{row.passingYear || "-"}</TableCell>
-                  <TableCell>{row.remarks || "-"}</TableCell>
+                  <TableCell>{exp.title || "-"}</TableCell>
+                  <TableCell>{exp.organization || "-"}</TableCell>
+                  <TableCell>{exp.fromDate || "-"}</TableCell>
+                  <TableCell>{exp.toDate || "-"}</TableCell>
+                  <TableCell>{exp.designation || "-"}</TableCell>
+                  <TableCell>{exp.employmentNature || "-"}</TableCell>
+                  <TableCell>{exp.dutyNature || "-"}</TableCell>
                   <TableCell>
-                    {row.certificate ? (
+                    {exp.certificate ? (
                       <Chip
-                        icon={<Attachment />}
+                        icon={<Description />}
                         label="File"
-                        color="info"
-                        size="small"
+                        color="primary"
                         variant="outlined"
+                        size="small"
                       />
                     ) : (
                       "-"
@@ -281,10 +277,10 @@ const Qualification = () => {
                           onClick={() => handleDelete(index)}
                           size="small"
                           sx={{
-                            background: "linear-gradient(135deg, #EF5350, #D32F2F)",
+                            background: "linear-gradient(135deg, #E57373, #C62828)",
                             color: "white",
                             "&:hover": {
-                              background: "linear-gradient(135deg, #E53935, #C62828)",
+                              background: "linear-gradient(135deg, #EF5350, #B71C1C)",
                               transform: "scale(1.1)",
                             },
                           }}
@@ -302,8 +298,7 @@ const Qualification = () => {
       </TableContainer>
 
       {/* ===== Navigation Buttons ===== */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
-        {/* Back Button */}
+      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <Button
           variant="outlined"
           startIcon={<ArrowBack />}
@@ -316,21 +311,19 @@ const Qualification = () => {
         >
           Back
         </Button>
-
-        {/* Next Button */}
         <Button
           variant="contained"
           endIcon={<ArrowForward />}
           onClick={handleNext}
           sx={{
-            background: "linear-gradient(135deg, #4CAF50, #2E7D32)",
-            border: "2px solid #1B5E20",
+            background: "linear-gradient(135deg, #1976D2, #1565C0)",
+            border: "2px solid #0D47A1",
             borderRadius: "10px",
             fontWeight: 600,
             px: 4,
-            py: 1.2,
+            py: 1,
             "&:hover": {
-              background: "linear-gradient(135deg, #66BB6A, #388E3C)",
+              background: "linear-gradient(135deg, #1E88E5, #1565C0)",
               transform: "translateY(-2px)",
             },
           }}
@@ -339,16 +332,16 @@ const Qualification = () => {
         </Button>
       </Box>
 
-      {/* ===== Modal (Add/Edit) ===== */}
+      {/* ===== Add/Edit Modal ===== */}
       <Modal open={open} onClose={handleClose}>
         <Box
           sx={{
-            width: { xs: "95%", sm: "85%", md: "70%" },
+            width: { xs: "95%", sm: "80%", md: "70%" },
             maxWidth: 800,
             bgcolor: "white",
             borderRadius: 3,
-            border: "2px solid #1976D2",
-            boxShadow: "0 20px 60px rgba(33,150,243,0.3)",
+            border: "2px solid #1565C0",
+            boxShadow: "0 20px 60px rgba(25,118,210,0.3)",
             p: { xs: 2.5, sm: 4 },
             mx: "auto",
             mt: "5%",
@@ -357,53 +350,38 @@ const Qualification = () => {
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 700, color: "#1565C0", mb: 3 }}>
-            {editIndex !== null ? "Edit Qualification" : "Add New Qualification"}
+            {editIndex !== null ? "Edit Experience" : "Add New Experience"}
           </Typography>
 
           <Grid container spacing={2}>
-            {[ 
-              { name: "degree", label: "Degree", icon: <School />, placeholder: "B.Tech" },
-              { name: "discipline", label: "Discipline / Stream", icon: <Book />, placeholder: "Computer Science" },
-              { name: "university", label: "University / Institution", icon: <LocationOn />, placeholder: "Calicut University" },
-              { name: "percentage", label: "Percentage / CGPA", icon: <Percent />, placeholder: "8.7" },
-              { name: "registrationYear", label: "Year of Registration", icon: <CalendarToday />, placeholder: "2023" },
-              { name: "passingYear", label: "Year of Passing", icon: <CalendarMonth />, placeholder: "2027" },
+            {[
+              { name: "title", label: "Title", icon: <WorkOutline />, placeholder: "Teaching / Research / Industrial" },
+              { name: "organization", label: "Organization / Institution", icon: <Business />, placeholder: "ABC Pvt. Ltd. / JEC" },
+              { name: "fromDate", label: "From Date", icon: <CalendarToday />, type: "date" },
+              { name: "toDate", label: "To Date", icon: <CalendarMonth />, type: "date" },
+              { name: "designation", label: "Designation", icon: <Badge />, placeholder: "Assistant Professor" },
+              { name: "employmentNature", label: "Nature of Employment", icon: <AssignmentTurnedIn />, placeholder: "Permanent / Contract" },
+              { name: "dutyNature", label: "Nature of Duty", icon: <WorkOutline />, placeholder: "Teaching / Admin / Research" },
             ].map((f, i) => (
-              <Grid item xs={12} sm={i < 3 ? 6 : 4} key={f.name}>
+              <Grid item xs={12} sm={i < 2 ? 6 : 4} key={f.name}>
                 <TextField
+                  fullWidth
                   label={f.label}
                   name={f.name}
-                  fullWidth
                   value={formData[f.name]}
                   onChange={handleChange}
                   placeholder={f.placeholder}
+                  type={f.type || "text"}
                   InputProps={{
-                    startAdornment: <InputAdornment position="start">{f.icon}</InputAdornment>,
+                    startAdornment: (
+                      <InputAdornment position="start">{f.icon}</InputAdornment>
+                    ),
                   }}
                 />
               </Grid>
             ))}
 
-            <Grid item xs={12}>
-              <TextField
-                label="Special Remarks"
-                fullWidth
-                multiline
-                rows={3}
-                name="remarks"
-                value={formData.remarks}
-                onChange={handleChange}
-                placeholder="Any additional details"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Comment sx={{ color: "grey.600" }} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-
+            {/* Certificate Upload */}
             <Grid item xs={12}>
               <Button
                 component="label"
@@ -427,20 +405,21 @@ const Qualification = () => {
                 />
               </Button>
               {formData.certificate && (
-                <Typography variant="caption" sx={{ mt: 1, display: "block", color: "text.secondary" }}>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
                   Selected: {formData.certificate}
                 </Typography>
               )}
             </Grid>
           </Grid>
 
+          {/* Save / Cancel Buttons */}
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3, gap: 2 }}>
-            <Button variant="outlined" onClick={handleClose} sx={{ borderColor: "#1976D2", color: "#1976D2" }}>
+            <Button variant="outlined" onClick={handleClose} sx={{ borderColor: "#1565C0", color: "#1565C0" }}>
               Cancel
             </Button>
             <Button
               variant="contained"
-              onClick={handleAdd}
+              onClick={handleSave}
               sx={{
                 background: "linear-gradient(135deg, #1976D2, #1565C0)",
                 border: "2px solid #0D47A1",
@@ -457,4 +436,4 @@ const Qualification = () => {
   );
 };
 
-export default Qualification;
+export default Experience;

@@ -45,7 +45,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
   const forms = [
     { text: "1. General Details", icon: <Person />, path: "/GeneralDetail" },
     { text: "2. Qualifications", icon: <School />, path: "/Qualification" },
-    { text: "3. Experience", icon: <Work />, path: "/form/3" },
+    { text: "3. Experience", icon: <Work />, path: "/Experience" },
     { text: "4. Subject Engaged", icon: <MenuBook />, path: "/form/4" },
     { text: "5. Publications", icon: <Article />, path: "/form/5" },
     { text: "6. Programs Co-ordinated", icon: <EventAvailable />, path: "/form/6" },

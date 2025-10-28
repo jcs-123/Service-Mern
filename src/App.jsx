@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Layout from "./components/Layout";
 import Generalsetting from "./pages/Generalsetting";
 import Qualification from "./pages/Qualification";
+import Experience from "./pages/Experience.jsx";
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path='/GeneralDetail' element={<Generalsetting />} />
         <Route path='/Qualification' element={<Qualification />} />
 
+        <Route path='/Experience' element={<Experience/>} />
 
         </Route>
 
