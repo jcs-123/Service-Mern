@@ -63,7 +63,7 @@ function ResearchInterests() {
   };
 
   const handlePrevious = () => navigate("/PositionsHeld");
-  const handleNext = () => navigate("/Publications");
+  const handleNext = () => navigate("/Achievements");
 
   return (
     <Box

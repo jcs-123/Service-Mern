@@ -59,7 +59,7 @@ function InteractionsOutsideWorld() {
   };
 
   const handlePrevious = () => navigate("/SeminarsGuided");
-  const handleNext = () => navigate("/PublicationsCollaborations");
+  const handleNext = () => navigate("/PositionsHeld");
 
   return (
     <Box

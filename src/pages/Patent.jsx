@@ -209,7 +209,7 @@ function Patent() {
                 }}>
                 Save
               </Button>
-              <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate("/BooksPublished")}
+              <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate("/MoocCourseCompleted")}
                 sx={{
                   background: "linear-gradient(135deg, #2e7d32, #4caf50)", textTransform: "none", fontWeight: "bold",
                   px: 4, py: 1.5, borderRadius: "12px", boxShadow: "0 4px 12px rgba(46,125,50,0.3)",

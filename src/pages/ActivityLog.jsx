@@ -42,7 +42,7 @@ function ActivityLog() {
   };
 
   const handlePrevious = () => navigate("/InterestedSubjects");
-  const handleNext = () => navigate("/Workshops");
+  const handleNext = () => navigate("/Patent");
 
   const textFieldStyles = {
     "& .MuiOutlinedInput-root": {

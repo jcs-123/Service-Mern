@@ -48,7 +48,7 @@ function PositionsHeld() {
   };
 
   const handlePrevious = () => navigate("/InteractionsOutsideWorld");
-  const handleNext = () => navigate("/AchievementsAwards");
+  const handleNext = () => navigate("/ResearchInterests");
 
   return (
     <Box

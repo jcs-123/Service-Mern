@@ -38,7 +38,7 @@ function InterestedSubjects() {
   };
 
   const handlePrevious = () => navigate("/Achievements");
-  const handleNext = () => navigate("/GuidedProjects");
+  const handleNext = () => navigate("/ActivityLog");
 
   return (
     <Box

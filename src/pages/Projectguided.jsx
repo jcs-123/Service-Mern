@@ -36,7 +36,7 @@ const Projectguided = () => {
   };
 
   const handleBack = () => navigate("/consultancy");
-  const handleNext = () => navigate("/faculty-achievements");
+  const handleNext = () => navigate("/SeminarsGuided");
 
   return (
     <div
