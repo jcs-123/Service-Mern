@@ -89,7 +89,7 @@ function ProgramsAttended() {
   };
 
   const handlePrevious = () => navigate("/ProgramsCoordinated");
-  const handleNext = () => navigate("/FacultyResearchProjects");
+  const handleNext = () => navigate("/FacultyReserach");
 
   return (
     <Box

@@ -20,6 +20,9 @@ import Patent from "./pages/Patent.jsx";
 import MoocCourseCompleted from "./pages/MoocCourseCompleted.jsx";
 import AdministrativeWork from "./pages/AdministrativeWork.jsx";
 import ProfessionalBodyMembership from "./pages/ProfessionalBodyMembership.jsx";
+import FacultyResearch from "./pages/FacultyResearch.jsx";
+import Consultancy from "./pages/Consultancy.jsx";
+import Projectguided from "./pages/Projectguided.jsx";
 
 
 function App() {
@@ -56,6 +59,9 @@ function App() {
 
 
 
+        <Route path='/FacultyReserach' element={<FacultyResearch/>} />
+        <Route path='/Consultancy' element={<Consultancy/>} />
+        <Route path='/ProjectGuided' element={<Projectguided/>} />
 
         </Route>
 

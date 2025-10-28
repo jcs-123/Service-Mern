@@ -50,9 +50,9 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
     { text: "5. Publications", icon: <Article />, path: "/Publications" },
     { text: "6. Programs Co-ordinated", icon: <EventAvailable />, path: "/ProgramsCoordinated" },
     { text: "7. Programs Attended", icon: <EventNote />, path: "/ProgramsAttended" },
-    { text: "8. Faculty Research", icon: <Science />, path: "/form/8" },
-    { text: "9. Consultancies", icon: <Build />, path: "/form/9" },
-    { text: "10. Project Guided", icon: <Folder />, path: "/form/10" },
+    { text: "8. Faculty Research", icon: <Science />, path: "/FacultyReserach" },
+    { text: "9. Consultancies", icon: <Build />, path: "/Consultancy" },
+    { text: "10. Project Guided", icon: <Folder />, path: "/ProjectGuided" },
     { text: "11. Seminars Guided", icon: <Forum />, path: "/SeminarsGuided" },
     { text: "12. Outside Interactions", icon: <Public />, path: "/InteractionsOutsideWorld" },
     { text: "13. Positions Held/ Other Responsibilities", icon: <AccountTree />, path: "/PositionsHeld" },
@@ -64,6 +64,8 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
     { text: "19. MOOC Course", icon: <LibraryBooks />, path: "/MoocCourseCompleted" },
     { text: "20. Administrative Work", icon: <WorkspacePremium />, path: "/AdministrativeWork" },
     { text: "21. Professional Body", icon: <MilitaryTech />, path: "/Professional" },
+
+
   ];
 
   const drawerContent = (
