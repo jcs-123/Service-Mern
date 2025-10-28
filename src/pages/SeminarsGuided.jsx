@@ -8,54 +8,33 @@ import {
   Paper,
   IconButton,
   Tooltip,
-  MenuItem,
 } from "@mui/material";
-import { UploadFile, CloudUpload, Save } from "@mui/icons-material";
-import * as XLSX from "xlsx";
+import { Save, CloudUpload } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
-function ProgramsAttended() {
+function SeminarsGuided() {
   const navigate = useNavigate();
 
-  const [programs, setPrograms] = useState([
+  const [seminars, setSeminars] = useState([
     {
-      category: "Other Programs",
-      subCategory: "",
-      title: "CAS selection committee",
-      period: "Outside this college",
-      fundingAgency: "Uty of Kerala",
-      organisedBy: "Uty of Kerala",
-      fromDate: "2020-02-17",
-      toDate: "2020-02-17",
+      category: "Seminar",
+      title:
+        "On comparative analysis of the Deep Learning Algorithms for Big Data Analytics.",
+      programme: "",
+      batch: "",
+      studentName: "",
+      rollNo: "",
+      academicYear: "2022-2023",
       certificate: "",
     },
   ]);
 
-  const [bulkData, setBulkData] = useState([]);
-
-  // ✅ Excel Upload
-  const handleExcelUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const data = new Uint8Array(evt.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(sheet);
-      setBulkData(json);
-      setPrograms(json);
-      alert(`✅ ${json.length} record(s) uploaded successfully!`);
-    };
-    reader.readAsArrayBuffer(file);
-  };
-
-  // ✅ Auto-save on every change
+  // ✅ Auto-save on change
   const handleChange = (index, field, value) => {
-    const updated = [...programs];
+    const updated = [...seminars];
     updated[index][field] = value;
-    setPrograms(updated);
+    setSeminars(updated);
     console.log("Auto-saved record:", updated[index]);
   };
 
@@ -63,33 +42,32 @@ function ProgramsAttended() {
   const handleFileUpload = (index, e) => {
     const file = e.target.files[0];
     if (file) {
-      const updated = [...programs];
+      const updated = [...seminars];
       updated[index].certificate = file.name;
-      setPrograms(updated);
+      setSeminars(updated);
       console.log("Auto-saved file:", file.name);
     }
   };
 
-  // ✅ Add New Record
+  // ✅ Add new record
   const handleAddRow = () => {
-    setPrograms([
-      ...programs,
+    setSeminars([
+      ...seminars,
       {
         category: "",
-        subCategory: "",
         title: "",
-        period: "",
-        fundingAgency: "",
-        organisedBy: "",
-        fromDate: "",
-        toDate: "",
+        programme: "",
+        batch: "",
+        studentName: "",
+        rollNo: "",
+        academicYear: "",
         certificate: "",
       },
     ]);
   };
 
-  const handlePrevious = () => navigate("/ProgramsCoordinated");
-  const handleNext = () => navigate("/FacultyResearchProjects");
+  const handlePrevious = () => navigate("/ProgramsAttended");
+  const handleNext = () => navigate("/InteractionsOutsideWorld");
 
   return (
     <Box
@@ -131,12 +109,12 @@ function ProgramsAttended() {
               mb: 1,
             }}
           >
-            Programs Attended (STTP / FDP / Workshop)
+            Seminars Guided
           </Typography>
           <Box
             sx={{
               height: "3px",
-              width: "140px",
+              width: "120px",
               backgroundColor: "#1565c0",
               mx: "auto",
               mb: 4,
@@ -144,48 +122,8 @@ function ProgramsAttended() {
             }}
           />
 
-          {/* ===== Bulk Upload ===== */}
-          <Box
-            sx={{
-              mb: 4,
-              p: 3,
-              border: "2px dashed #1976d2",
-              borderRadius: 3,
-              textAlign: "center",
-              background: "linear-gradient(135deg,#f8fbff 0%,#f1f7ff 100%)",
-              transition: "0.3s",
-              "&:hover": { boxShadow: "0 0 10px rgba(25,118,210,0.2)" },
-            }}
-          >
-            <Typography sx={{ mb: 1, color: "#0b3d91", fontWeight: 500 }}>
-              Upload Excel File (Bulk Upload)
-            </Typography>
-            <IconButton
-              component="label"
-              color="primary"
-              sx={{
-                border: "1px solid #1976d2",
-                borderRadius: 2,
-                "&:hover": { backgroundColor: "#1976d220" },
-              }}
-            >
-              <UploadFile />
-              <input
-                type="file"
-                accept=".xls,.xlsx"
-                hidden
-                onChange={handleExcelUpload}
-              />
-            </IconButton>
-            {bulkData.length > 0 && (
-              <Typography sx={{ mt: 1, color: "green" }}>
-                {bulkData.length} records uploaded successfully!
-              </Typography>
-            )}
-          </Box>
-
-          {/* ===== Form ===== */}
-          {programs.map((prog, index) => (
+          {/* ===== Seminar Records ===== */}
+          {seminars.map((item, index) => (
             <Box
               key={index}
               component={motion.div}
@@ -204,13 +142,9 @@ function ProgramsAttended() {
               <Typography
                 variant="subtitle1"
                 fontWeight="bold"
-                sx={{
-                  color: "#1565c0",
-                  mb: 2,
-                  textTransform: "capitalize",
-                }}
+                sx={{ color: "#1565c0", mb: 2 }}
               >
-                #{index + 1} Program Details
+                #{index + 1} Seminar Details
               </Typography>
 
               <Grid container spacing={2}>
@@ -221,7 +155,7 @@ function ProgramsAttended() {
                   <TextField
                     fullWidth
                     size="small"
-                    value={prog.category}
+                    value={item.category}
                     onChange={(e) =>
                       handleChange(index, "category", e.target.value)
                     }
@@ -230,14 +164,14 @@ function ProgramsAttended() {
 
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    Sub Category
+                    Programme
                   </Typography>
                   <TextField
                     fullWidth
                     size="small"
-                    value={prog.subCategory}
+                    value={item.programme}
                     onChange={(e) =>
-                      handleChange(index, "subCategory", e.target.value)
+                      handleChange(index, "programme", e.target.value)
                     }
                   />
                 </Grid>
@@ -249,7 +183,7 @@ function ProgramsAttended() {
                   <TextField
                     fullWidth
                     size="small"
-                    value={prog.title}
+                    value={item.title}
                     onChange={(e) =>
                       handleChange(index, "title", e.target.value)
                     }
@@ -258,75 +192,57 @@ function ProgramsAttended() {
 
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    Period
+                    Batch
                   </Typography>
                   <TextField
                     fullWidth
                     size="small"
-                    value={prog.period}
+                    value={item.batch}
                     onChange={(e) =>
-                      handleChange(index, "period", e.target.value)
+                      handleChange(index, "batch", e.target.value)
                     }
                   />
                 </Grid>
 
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    Funding Agency
+                    Name of Student
                   </Typography>
                   <TextField
                     fullWidth
                     size="small"
-                    value={prog.fundingAgency}
+                    value={item.studentName}
                     onChange={(e) =>
-                      handleChange(index, "fundingAgency", e.target.value)
+                      handleChange(index, "studentName", e.target.value)
                     }
                   />
                 </Grid>
 
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    Organised By
+                    Roll No
                   </Typography>
                   <TextField
                     fullWidth
                     size="small"
-                    value={prog.organisedBy}
+                    value={item.rollNo}
                     onChange={(e) =>
-                      handleChange(index, "organisedBy", e.target.value)
+                      handleChange(index, "rollNo", e.target.value)
                     }
                   />
                 </Grid>
 
-                <Grid item xs={12} sm={3}>
+                <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    From Date
+                    Academic Year
                   </Typography>
                   <TextField
-                    type="date"
                     fullWidth
                     size="small"
-                    value={prog.fromDate}
+                    value={item.academicYear}
                     onChange={(e) =>
-                      handleChange(index, "fromDate", e.target.value)
+                      handleChange(index, "academicYear", e.target.value)
                     }
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={3}>
-                  <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    To Date
-                  </Typography>
-                  <TextField
-                    type="date"
-                    fullWidth
-                    size="small"
-                    value={prog.toDate}
-                    onChange={(e) =>
-                      handleChange(index, "toDate", e.target.value)
-                    }
-                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
 
@@ -349,14 +265,14 @@ function ProgramsAttended() {
                     <Typography
                       variant="body2"
                       sx={{
-                        color: prog.certificate ? "#1565c0" : "#777",
+                        color: item.certificate ? "#1565c0" : "#777",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                         flex: 1,
                       }}
                     >
-                      {prog.certificate || "No file selected"}
+                      {item.certificate || "No file selected"}
                     </Typography>
                     <Tooltip title="Upload Certificate">
                       <IconButton component="label" color="primary">
@@ -375,7 +291,7 @@ function ProgramsAttended() {
             </Box>
           ))}
 
-          {/* Add Row Button */}
+          {/* ➕ Add New Seminar */}
           <Box sx={{ textAlign: "left", mt: 3 }}>
             <Button
               variant="outlined"
@@ -389,11 +305,11 @@ function ProgramsAttended() {
                 "&:hover": { background: "rgba(21,101,192,0.1)" },
               }}
             >
-              + Add Program
+              + Add Seminar
             </Button>
           </Box>
 
-          {/* Navigation Buttons */}
+          {/* ===== Navigation ===== */}
           <Box
             sx={{
               display: "flex",
@@ -427,7 +343,7 @@ function ProgramsAttended() {
                   px: 3,
                   "&:hover": { backgroundColor: "#0b3d91" },
                 }}
-                onClick={() => alert("✅ Auto-saved all programs!")}
+                onClick={() => alert("✅ Auto-saved all seminars!")}
               >
                 Save
               </Button>
@@ -453,4 +369,4 @@ function ProgramsAttended() {
   );
 }
 
-export default ProgramsAttended;
+export default SeminarsGuided;

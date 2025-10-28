@@ -53,17 +53,17 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
     { text: "8. Faculty Research", icon: <Science />, path: "/form/8" },
     { text: "9. Consultancies", icon: <Build />, path: "/form/9" },
     { text: "10. Project Guided", icon: <Folder />, path: "/form/10" },
-    { text: "11. Seminars Guided", icon: <Forum />, path: "/form/11" },
-    { text: "12. Outside Interactions", icon: <Public />, path: "/form/12" },
-    { text: "13. Research Interests", icon: <Interests />, path: "/form/13" },
-    { text: "14. Achievements", icon: <EmojiEvents />, path: "/form/14" },
-    { text: "15. Interested Subjects", icon: <Favorite />, path: "/form/15" },
-    { text: "16. Activity Log", icon: <History />, path: "/form/16" },
-    { text: "17. Patent", icon: <Lightbulb />, path: "/form/17" },
-    { text: "18. MOOC Course", icon: <LibraryBooks />, path: "/form/18" },
-    { text: "19. Administrative Work", icon: <WorkspacePremium />, path: "/form/19" },
-    { text: "20. Professional Body", icon: <MilitaryTech />, path: "/form/20" },
-    { text: "21. Additional Info", icon: <AccountTree />, path: "/form/21" },
+    { text: "11. Seminars Guided", icon: <Forum />, path: "/SeminarsGuided" },
+    { text: "12. Outside Interactions", icon: <Public />, path: "/InteractionsOutsideWorld" },
+    { text: "13. Positions Held/ Other Responsibilities", icon: <AccountTree />, path: "/PositionsHeld" },
+    { text: "14. Research Interests", icon: <Interests />, path: "/ResearchInterests" },
+    { text: "15. Achievements", icon: <EmojiEvents />, path: "/Achievements" },
+    { text: "16. Interested Subjects", icon: <Favorite />, path: "/InterestedSubjects" },
+    { text: "17. Activity Log", icon: <History />, path: "/ActivityLog" },
+    { text: "18. Patent", icon: <Lightbulb />, path: "/Patent" },
+    { text: "19. MOOC Course", icon: <LibraryBooks />, path: "/MoocCourseCompleted" },
+    { text: "20. Administrative Work", icon: <WorkspacePremium />, path: "/AdministrativeWork" },
+    { text: "21. Professional Body", icon: <MilitaryTech />, path: "/Professional" },
   ];
 
   const drawerContent = (
@@ -182,25 +182,25 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
       </Drawer>
 
       {/* === Desktop Drawer === */}
-   <Drawer
-  variant="permanent"
-  sx={{
-    display: { xs: "none", sm: "block" },
-    "& .MuiDrawer-paper": {
-      width: drawerWidth,
-      boxSizing: "border-box",
-      top: "64px",
-      height: "calc(100% - 64px)",
-      background: "linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%)",
-      borderRight: "2px solid #000", // ⚫ dark black border
-      boxShadow: "6px 0 12px rgba(0, 0, 0, 0.25)", // 🌫️ stronger sidebar shadow
-      transition: "all 0.3s ease-in-out",
-    },
-  }}
-  open
->
-  {drawerContent}
-</Drawer>
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: "none", sm: "block" },
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            boxSizing: "border-box",
+            top: "64px",
+            height: "calc(100% - 64px)",
+            background: "linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%)",
+            borderRight: "2px solid #000", // ⚫ dark black border
+            boxShadow: "6px 0 12px rgba(0, 0, 0, 0.25)", // 🌫️ stronger sidebar shadow
+            transition: "all 0.3s ease-in-out",
+          },
+        }}
+        open
+      >
+        {drawerContent}
+      </Drawer>
 
     </>
   );

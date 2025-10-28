@@ -9,6 +9,17 @@ import Publications from "./pages/Publications";
 import ProgramsCoordinated from "./pages/ProgramsCoordinated";
 import ProgramsAttended from "./pages/ProgramsAttended";
 import Experience from "./pages/Experience.jsx";
+import SeminarsGuided from "./pages/SeminarsGuided.jsx";
+import InteractionsOutsideWorld from "./pages/InteractionsOutsideWorld.jsx";
+import PositionsHeld from "./pages/PositionsHeld.jsx";
+import ResearchInterests from "./pages/ResearchInterests.jsx";
+import Achievements from "./pages/Achievements.jsx";
+import InterestedSubjects from "./pages/InterestedSubjects.jsx";
+import ActivityLog from "./pages/ActivityLog.jsx";
+import Patent from "./pages/Patent.jsx";
+import MoocCourseCompleted from "./pages/MoocCourseCompleted.jsx";
+import AdministrativeWork from "./pages/AdministrativeWork.jsx";
+import ProfessionalBodyMembership from "./pages/ProfessionalBodyMembership.jsx";
 
 
 function App() {
@@ -25,8 +36,26 @@ function App() {
         <Route path="/Publications" element={<Publications />} />
         <Route path="/ProgramsCoordinated" element={<ProgramsCoordinated />} />
         <Route path="/ProgramsAttended" element={<ProgramsAttended />} />
-
         <Route path='/Experience' element={<Experience/>} />
+        <Route path="/SeminarsGuided" element={<SeminarsGuided />} /> 
+        <Route path="/InteractionsOutsideWorld" element={<InteractionsOutsideWorld />} />
+        <Route path="/PositionsHeld" element={<PositionsHeld />} />
+        <Route path="/ResearchInterests" element={<ResearchInterests />} />
+        <Route path="/Achievements" element={<Achievements />} />
+        <Route path="/InterestedSubjects" element={<InterestedSubjects />} />
+        <Route path="/ActivityLog" element={<ActivityLog />} />
+        <Route path="/Patent" element={<Patent />} />
+        <Route path="/MoocCourseCompleted" element={<MoocCourseCompleted />} />
+        <Route path="/AdministrativeWork" element={<AdministrativeWork />} />
+        <Route path="/Professional" element={<ProfessionalBodyMembership />}
+/>
+
+
+
+
+
+
+
 
         </Route>
 
