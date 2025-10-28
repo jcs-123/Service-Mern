@@ -4,6 +4,10 @@ import Login from "./pages/Login";
 import Layout from "./components/Layout";
 import Generalsetting from "./pages/Generalsetting";
 import Qualification from "./pages/Qualification";
+import SubjectEngaged from "./pages/SubjectEngaged";
+import Publications from "./pages/Publications";
+import ProgramsCoordinated from "./pages/ProgramsCoordinated";
+import ProgramsAttended from "./pages/ProgramsAttended";
 
 
 function App() {
@@ -16,6 +20,10 @@ function App() {
 
         <Route path='/GeneralDetail' element={<Generalsetting />} />
         <Route path='/Qualification' element={<Qualification />} />
+        <Route path="/SubjectEngaged" element={<SubjectEngaged />} />
+        <Route path="/Publications" element={<Publications />} />
+        <Route path="/ProgramsCoordinated" element={<ProgramsCoordinated />} />
+        <Route path="/ProgramsAttended" element={<ProgramsAttended />} />
 
 
         </Route>
