@@ -8,6 +8,7 @@ import SubjectEngaged from "./pages/SubjectEngaged";
 import Publications from "./pages/Publications";
 import ProgramsCoordinated from "./pages/ProgramsCoordinated";
 import ProgramsAttended from "./pages/ProgramsAttended";
+import Experience from "./pages/Experience.jsx";
 
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
         <Route path="/ProgramsCoordinated" element={<ProgramsCoordinated />} />
         <Route path="/ProgramsAttended" element={<ProgramsAttended />} />
 
+        <Route path='/Experience' element={<Experience/>} />
 
         </Route>
 
