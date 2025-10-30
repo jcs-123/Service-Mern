@@ -49,9 +49,19 @@ const Login = () => {
       const user = res.data.user;
 
       // ✅ Store in localStorage
-      localStorage.setItem("name", user.username);
-      localStorage.setItem("role", user.role);
-      localStorage.setItem("gmail", user.gmail || "");
+      if (res.data.success) {
+        const user = res.data.user;
+
+        // 🔐 Save user info in localStorage
+        localStorage.setItem("staffId", user.staffId);
+        localStorage.setItem("username", user.username);
+        localStorage.setItem("gmail", user.gmail);
+        localStorage.setItem("role", user.role);
+
+        toast.success("Login successful ✅");
+        navigate("/GeneralDetail"); // go to general details page
+      }
+
 
       toast.success(`Welcome ${user.username}! 👋`);
 
@@ -80,9 +90,8 @@ const Login = () => {
         {/* 🤖 Mimo Robot */}
         <div className="mimo text-center mb-4">
           <div
-            className={`mimo-head ${
-              isPasswordFocus ? "mimo-active" : ""
-            } ${isBlinking ? "mimo-blink" : ""}`}
+            className={`mimo-head ${isPasswordFocus ? "mimo-active" : ""
+              } ${isBlinking ? "mimo-blink" : ""}`}
           >
             <div
               className="mimo-eye"
