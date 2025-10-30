@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Login = () => {
   const [form, setForm] = useState({ username: "", password: "" });
@@ -31,14 +34,38 @@ const Login = () => {
     return () => clearInterval(blinkTimer);
   }, []);
 
-  const handleSubmit = (e) => {
+  // 🔐 Handle Login Submit
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.username && form.password) {
-      localStorage.setItem("name", form.username);
-      localStorage.setItem("department", "Computer Science");
-      navigate("/GeneralDetail");
-    } else {
-      alert("Please fill username and password");
+
+    if (!form.username || !form.password) {
+      toast.warning("⚠️ Please fill username and password");
+      return;
+    }
+
+    try {
+      // 🌐 Backend login API
+      const res = await axios.post("http://localhost:4000/login", form);
+      const user = res.data.user;
+
+      // ✅ Store in localStorage
+      localStorage.setItem("name", user.username);
+      localStorage.setItem("role", user.role);
+      localStorage.setItem("gmail", user.gmail || "");
+
+      toast.success(`Welcome ${user.username}! 👋`);
+
+      // ⏳ Redirect with delay
+      setTimeout(() => {
+        if (user.role === "admin") navigate("/adminpanel");
+        else if (user.role === "department") navigate("/departmentpanel");
+        else navigate("/GeneralDetail");
+      }, 1000);
+    } catch (error) {
+      console.error("Login Error:", error);
+      toast.error(
+        error.response?.data?.message || "❌ Invalid username or password"
+      );
     }
   };
 
@@ -59,24 +86,21 @@ const Login = () => {
           >
             <div
               className="mimo-eye"
-              style={{
-                transform: `translate(${eyePos.x}px, ${eyePos.y}px)`,
-              }}
+              style={{ transform: `translate(${eyePos.x}px, ${eyePos.y}px)` }}
             ></div>
             <div
               className="mimo-eye"
-              style={{
-                transform: `translate(${eyePos.x}px, ${eyePos.y}px)`,
-              }}
+              style={{ transform: `translate(${eyePos.x}px, ${eyePos.y}px)` }}
             ></div>
           </div>
           <div className="mimo-body"></div>
         </div>
 
-        {/* 🔐 Form */}
+        {/* 🔐 Login Form */}
         <h4 className="text-center mb-3 fw-bold text-dark">
           Service Book Login
         </h4>
+
         <form onSubmit={handleSubmit}>
           <input
             type="text"
@@ -103,11 +127,21 @@ const Login = () => {
             </button>
           </div>
 
-<button className="btn btn-primary rounded-5 w-100 fw-semibold animated-login-btn">
-  Login
-</button>
+          <button className="btn btn-primary rounded-5 w-100 fw-semibold animated-login-btn">
+            Login
+          </button>
         </form>
+
+        {/* 🔁 Forgot Password */}
+        <div className="text-center mt-3">
+          <Link to="/forgotpassword" className="text-decoration-none fw-semibold" style={{ color: "#0d6efd" }}>
+            Forgot Password?
+          </Link>
+        </div>
       </motion.div>
+
+      {/* Toast Notification Container */}
+      <ToastContainer position="top-center" autoClose={2000} />
     </div>
   );
 };

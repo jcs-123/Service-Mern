@@ -23,6 +23,7 @@ import ProfessionalBodyMembership from "./pages/ProfessionalBodyMembership.jsx";
 import FacultyResearch from "./pages/FacultyResearch.jsx";
 import Consultancy from "./pages/Consultancy.jsx";
 import Projectguided from "./pages/Projectguided.jsx";
+import ForgotPassword from "./components/ForgotPassword.jsx";
 
 
 function App() {
@@ -31,6 +32,8 @@ function App() {
       <Routes>
        <Route path='/login' element={<Login />} />
         <Route path='/' element={<Login />} />
+                <Route path="/forgotpassword" element={<ForgotPassword/>}/>
+
                 <Route element={<Layout />}>
 
         <Route path='/GeneralDetail' element={<Generalsetting />} />
@@ -52,6 +55,7 @@ function App() {
         <Route path="/AdministrativeWork" element={<AdministrativeWork />} />
         <Route path="/Professional" element={<ProfessionalBodyMembership />}
 />
+        <Route path="/forgotpassword" element={<ForgotPassword/>}/>
 
 
 
