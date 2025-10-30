@@ -12,6 +12,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const tabLabels = [
   "General Details",
@@ -83,14 +85,14 @@ const Generalsetting = () => {
     "password",
   ];
 
-  // ✅ Track errors
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  // ✅ Input change
+  // ✅ Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" })); // clear error
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   // ✅ Validate required fields
@@ -105,28 +107,36 @@ const Generalsetting = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // ✅ Submit form (only if valid)
+  // ✅ Submit data
   const handleSubmit = async () => {
     if (!validateForm()) {
-      alert("⚠️ Please fill all required fields before submitting.");
+      toast.warning("⚠️ Please fill all required fields before submitting.");
       return;
     }
 
     try {
+      setLoading(true);
       const res = await axios.post(
         "http://localhost:4000/api/general-details",
         formData
       );
 
       if (res.data.success) {
-        alert("✅ General Details saved successfully!");
-        navigate("/Qualification");
+        if (res.data.message.includes("updated")) {
+          toast.info(`🔁 ${res.data.message}`);
+        } else {
+          toast.success(`✅ ${res.data.message}`);
+        }
+
+        setTimeout(() => navigate("/Qualification"), 1500);
       } else {
-        alert("⚠️ Failed to save details!");
+        toast.error("❌ Failed to save details!");
       }
     } catch (err) {
       console.error(err);
-      alert("❌ Server error, please try again later.");
+      toast.error("❌ Server error, please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -142,6 +152,7 @@ const Generalsetting = () => {
         overflowY: "auto",
       }}
     >
+      <ToastContainer position="top-right" autoClose={2000} />
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -189,7 +200,7 @@ const Generalsetting = () => {
             ))}
           </Tabs>
 
-          {/* ===== Form Sections ===== */}
+          {/* ===== Tabs Content ===== */}
           {activeTab === 0 && (
             <FormSection title="General Details">
               <Grid container spacing={2}>
@@ -337,7 +348,7 @@ const Generalsetting = () => {
             </FormSection>
           )}
 
-          {/* ===== Navigation ===== */}
+          {/* ===== Navigation Buttons ===== */}
           <Box
             sx={{
               mt: 5,
@@ -381,6 +392,7 @@ const Generalsetting = () => {
               <Button
                 onClick={handleSubmit}
                 variant="contained"
+                disabled={loading}
                 sx={{
                   px: 4,
                   py: 1,
@@ -390,7 +402,7 @@ const Generalsetting = () => {
                     "linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%)",
                 }}
               >
-                Save & Go to Qualifications →
+                {loading ? "Saving..." : "Save & Go to Qualifications →"}
               </Button>
             )}
           </Box>
