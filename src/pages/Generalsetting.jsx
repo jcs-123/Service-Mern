@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 const tabLabels = [
   "General Details",
@@ -65,12 +66,69 @@ const Generalsetting = () => {
     password: "",
   });
 
+  // ✅ Required fields
+  const requiredFields = [
+    "title",
+    "name",
+    "dateOfJoin",
+    "dateOfBirth",
+    "staffId",
+    "department",
+    "designation",
+    "bankName",
+    "accountNo",
+    "bankBranch",
+    "ifsc",
+    "username",
+    "password",
+  ];
+
+  // ✅ Track errors
+  const [errors, setErrors] = useState({});
+
+  // ✅ Input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" })); // clear error
   };
 
-  const handleNext = () => navigate("/Qualification");
+  // ✅ Validate required fields
+  const validateForm = () => {
+    const newErrors = {};
+    requiredFields.forEach((field) => {
+      if (!formData[field] || formData[field].trim() === "") {
+        newErrors[field] = "Required";
+      }
+    });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // ✅ Submit form (only if valid)
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      alert("⚠️ Please fill all required fields before submitting.");
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        "http://localhost:4000/api/general-details",
+        formData
+      );
+
+      if (res.data.success) {
+        alert("✅ General Details saved successfully!");
+        navigate("/Qualification");
+      } else {
+        alert("⚠️ Failed to save details!");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ Server error, please try again later.");
+    }
+  };
 
   return (
     <Box
@@ -131,56 +189,15 @@ const Generalsetting = () => {
             ))}
           </Tabs>
 
-          {/* ===== Tab Sections ===== */}
+          {/* ===== Form Sections ===== */}
           {activeTab === 0 && (
             <FormSection title="General Details">
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Title"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    size="small"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    size="small"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="date"
-                    fullWidth
-                    label="Date of Join"
-                    name="dateOfJoin"
-                    value={formData.dateOfJoin}
-                    onChange={handleChange}
-                    size="small"
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="date"
-                    fullWidth
-                    label="Date of Birth"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleChange}
-                    size="small"
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-
                 {[
+                  ["Title", "title"],
+                  ["Name", "name"],
+                  ["Date of Join", "dateOfJoin", "date"],
+                  ["Date of Birth", "dateOfBirth", "date"],
                   ["Religion", "religion"],
                   ["Staff ID", "staffId"],
                   ["Gender", "gender"],
@@ -194,15 +211,19 @@ const Generalsetting = () => {
                   ["Institution Last Worked", "institutionLastWorked"],
                   ["KTU ID", "ktuId"],
                   ["PEN No.", "penNo"],
-                ].map(([label, name]) => (
+                ].map(([label, name, type]) => (
                   <Grid item xs={12} sm={6} key={name}>
                     <TextField
                       fullWidth
+                      type={type || "text"}
                       label={label}
                       name={name}
                       value={formData[name]}
                       onChange={handleChange}
                       size="small"
+                      error={!!errors[name]}
+                      helperText={errors[name]}
+                      InputLabelProps={type === "date" ? { shrink: true } : {}}
                     />
                   </Grid>
                 ))}
@@ -282,6 +303,8 @@ const Generalsetting = () => {
                       value={formData[name]}
                       onChange={handleChange}
                       size="small"
+                      error={!!errors[name]}
+                      helperText={errors[name]}
                     />
                   </Grid>
                 ))}
@@ -292,27 +315,24 @@ const Generalsetting = () => {
           {activeTab === 4 && (
             <FormSection title="Login Details">
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Username"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    size="small"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Default Password"
-                    name="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    size="small"
-                  />
-                </Grid>
+                {[
+                  ["Username", "username"],
+                  ["Default Password", "password", "password"],
+                ].map(([label, name, type]) => (
+                  <Grid item xs={12} sm={6} key={name}>
+                    <TextField
+                      fullWidth
+                      label={label}
+                      name={name}
+                      type={type || "text"}
+                      value={formData[name]}
+                      onChange={handleChange}
+                      size="small"
+                      error={!!errors[name]}
+                      helperText={errors[name]}
+                    />
+                  </Grid>
+                ))}
               </Grid>
             </FormSection>
           )}
@@ -337,7 +357,6 @@ const Generalsetting = () => {
                 color: "#1976d2",
                 borderColor: "#1976d2",
                 borderRadius: 2,
-                "&:hover": { background: "rgba(25,118,210,0.08)" },
               }}
             >
               ← Back
@@ -352,26 +371,26 @@ const Generalsetting = () => {
                   py: 1,
                   fontWeight: 600,
                   borderRadius: 2,
-                  background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
-                  boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
+                  background:
+                    "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
                 }}
               >
                 Next →
               </Button>
             ) : (
               <Button
-                onClick={handleNext}
+                onClick={handleSubmit}
                 variant="contained"
                 sx={{
                   px: 4,
                   py: 1,
                   fontWeight: 600,
                   borderRadius: 2,
-                  background: "linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%)",
-                  boxShadow: "0 4px 12px rgba(46,125,50,0.3)",
+                  background:
+                    "linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%)",
                 }}
               >
-                Go to Qualifications →
+                Save & Go to Qualifications →
               </Button>
             )}
           </Box>
@@ -381,7 +400,7 @@ const Generalsetting = () => {
   );
 };
 
-// ===== Reusable Section Wrapper =====
+// ===== Section Wrapper =====
 const FormSection = ({ title, children }) => (
   <Box sx={{ mt: 2 }}>
     <Typography
