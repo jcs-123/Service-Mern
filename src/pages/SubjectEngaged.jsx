@@ -99,9 +99,6 @@ function SubjectEngaged() {
         ]);
     };
 
-<<<<<<< HEAD
-    const handlePrevious = () => navigate("/Experience");
-=======
     const handleRemoveRow = (index) => {
         if (subjects.length > 1) {
             const updated = subjects.filter((_, i) => i !== index);
@@ -247,7 +244,6 @@ function SubjectEngaged() {
     };
 
     const handlePrevious = () => navigate("/qualification");
->>>>>>> 70d491c (sandra upadte)
     const handleNext = () => navigate("/Publications");
 
     return (
