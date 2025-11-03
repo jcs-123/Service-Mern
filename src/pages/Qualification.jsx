@@ -1,4 +1,3 @@
-// Qualification.jsx
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -30,28 +29,62 @@ import {
   Percent,
   CalendarToday,
   CalendarMonth,
-  Comment,
   Attachment,
   ArrowForward,
   ArrowBack,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Qualification = () => {
   const [open, setOpen] = useState(false);
-  const [editIndex, setEditIndex] = useState(null);
+  const [editItem, setEditItem] = useState(null);
+  const [qualifications, setQualifications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null); // 👈 custom confirm toast control
   const navigate = useNavigate();
 
-  // Load and persist qualifications
-  const [qualifications, setQualifications] = useState(() => {
-    const saved = localStorage.getItem("qualifications");
-    return saved ? JSON.parse(saved) : [];
-  });
+  /* ======================================================
+     🧠 LOAD USER EMAIL FROM LOCALSTORAGE
+  ====================================================== */
+  useEffect(() => {
+    const gmail = localStorage.getItem("gmail");
+    if (gmail) {
+      setUserEmail(gmail);
+      console.log("📧 Logged-in Gmail:", gmail);
+    } else {
+      toast.error("⚠️ No Gmail found. Please log in again.");
+    }
+  }, []);
+
+  /* ======================================================
+     📥 FETCH QUALIFICATIONS BY EMAIL
+  ====================================================== */
+  const fetchQualifications = async () => {
+    if (!userEmail) return;
+    try {
+      setLoading(true);
+      const res = await axios.get(
+        `http://localhost:4000/qualification/${encodeURIComponent(userEmail)}`
+      );
+      setQualifications(res.data.data || []);
+    } catch (error) {
+      console.error("❌ Fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem("qualifications", JSON.stringify(qualifications));
-  }, [qualifications]);
+    if (userEmail) fetchQualifications();
+  }, [userEmail]);
 
+  /* ======================================================
+     🧾 FORM DATA
+  ====================================================== */
   const [formData, setFormData] = useState({
     degree: "",
     discipline: "",
@@ -60,11 +93,11 @@ const Qualification = () => {
     registrationYear: "",
     passingYear: "",
     remarks: "",
-    certificate: "",
+    certificate: null,
   });
 
   const handleOpen = () => {
-    setEditIndex(null);
+    setEditItem(null);
     setFormData({
       degree: "",
       discipline: "",
@@ -73,14 +106,8 @@ const Qualification = () => {
       registrationYear: "",
       passingYear: "",
       remarks: "",
-      certificate: "",
+      certificate: null,
     });
-    setOpen(true);
-  };
-
-  const handleEdit = (index) => {
-    setEditIndex(index);
-    setFormData(qualifications[index]);
     setOpen(true);
   };
 
@@ -89,29 +116,130 @@ const Qualification = () => {
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "certificate") {
-      setFormData({ ...formData, certificate: files[0]?.name || "" });
+      setFormData({ ...formData, certificate: files[0] });
     } else {
       setFormData({ ...formData, [name]: value });
     }
   };
 
-  const handleAdd = () => {
-    const updated = [...qualifications];
-    if (editIndex !== null) updated[editIndex] = formData;
-    else updated.push(formData);
-    setQualifications(updated);
-    handleClose();
+  /* ======================================================
+     🟢 ADD / UPDATE QUALIFICATION
+  ====================================================== */
+  const handleSave = async () => {
+    if (!userEmail) {
+      toast.error("User Gmail not found ❌");
+      return;
+    }
+
+    try {
+      const form = new FormData();
+      Object.entries(formData).forEach(([key, val]) => {
+        if (val) form.append(key, val);
+      });
+      form.append("email", userEmail);
+
+      if (editItem) {
+        await axios.put(
+          `http://localhost:4000/qualification/${editItem._id}`,
+          form,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+        toast.success("Qualification updated ✅");
+      } else {
+        await axios.post("http://localhost:4000/qualification", form, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Qualification added ✅");
+      }
+
+      setOpen(false);
+      await fetchQualifications();
+    } catch (err) {
+      console.error("Save error:", err);
+      toast.error("Failed to save qualification ❌");
+    }
   };
 
-  const handleDelete = (index) => {
-    const updated = [...qualifications];
-    updated.splice(index, 1);
-    setQualifications(updated);
+  /* ======================================================
+     🗑️ DELETE QUALIFICATION WITH TOAST CONFIRMATION
+  ====================================================== */
+  const handleDeleteClick = (id) => {
+    setConfirmDeleteId(id);
+    toast.info(
+      <div style={{ textAlign: "center" }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+          Delete this qualification?
+        </Typography>
+        <div style={{ marginTop: 10 }}>
+          <Button
+            size="small"
+            variant="contained"
+            color="error"
+            onClick={() => confirmDelete(id)}
+            sx={{ mr: 1 }}
+          >
+            Yes
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            color="inherit"
+            onClick={() => toast.dismiss()}
+          >
+            No
+          </Button>
+        </div>
+      </div>,
+      { autoClose: false, closeOnClick: false }
+    );
   };
 
+  const confirmDelete = async (id) => {
+    toast.dismiss();
+    try {
+      await toast.promise(
+        axios.delete(`http://localhost:4000/qualification/${id}`),
+        {
+          pending: "Deleting qualification...",
+          success: "Deleted successfully ✅",
+          error: "Failed to delete ❌",
+        }
+      );
+      fetchQualifications();
+    } catch (err) {
+      console.error("Delete error:", err);
+    } finally {
+      setConfirmDeleteId(null);
+    }
+  };
+
+  /* ======================================================
+     ✏️ EDIT QUALIFICATION
+  ====================================================== */
+  const handleEdit = (item) => {
+    setEditItem(item);
+    setFormData({
+      degree: item.degree,
+      discipline: item.discipline,
+      university: item.university,
+      percentage: item.percentage,
+      registrationYear: item.registrationYear,
+      passingYear: item.passingYear,
+      remarks: item.remarks,
+      certificate: null,
+    });
+    setOpen(true);
+  };
+
+  /* ======================================================
+     🔙 NAVIGATION
+  ====================================================== */
   const handleBack = () => navigate("/GeneralDetail");
   const handleNext = () => navigate("/experience");
 
+  /* ======================================================
+     🖼️ UI SECTION
+  ====================================================== */
   return (
     <Box
       sx={{
@@ -122,7 +250,9 @@ const Qualification = () => {
         boxShadow: "0 6px 24px rgba(33,150,243,0.2)",
       }}
     >
-      {/* ===== Header Section ===== */}
+      <ToastContainer position="top-right" autoClose={2500} />
+
+      {/* ===== Header ===== */}
       <Box
         sx={{
           display: "flex",
@@ -162,28 +292,14 @@ const Qualification = () => {
             fontWeight: 600,
             px: 3,
             py: 1,
-            fontSize: { xs: "0.9rem", sm: "1rem" },
-            "&:hover": {
-              background: "linear-gradient(135deg, #1E88E5, #1565C0)",
-              transform: "translateY(-2px)",
-            },
-            transition: "all 0.3s ease",
           }}
         >
           Add Qualification
         </Button>
       </Box>
 
-      {/* ===== Table Section ===== */}
-      <TableContainer
-        component={Paper}
-        sx={{
-          borderRadius: 2,
-          border: "2px solid #1976D2",
-          boxShadow: "0 4px 14px rgba(33,150,243,0.15)",
-          overflowX: "auto",
-        }}
-      >
+      {/* ===== Table ===== */}
+      <TableContainer component={Paper}>
         <Table>
           <TableHead sx={{ background: "linear-gradient(135deg, #42A5F5, #1976D2)" }}>
             <TableRow>
@@ -198,101 +314,66 @@ const Qualification = () => {
                 "Remarks",
                 "Certificate",
                 "Actions",
-              ].map((head, idx) => (
-                <TableCell
-                  key={idx}
-                  sx={{
-                    fontWeight: "bold",
-                    color: "white",
-                    borderRight: "1px solid rgba(255,255,255,0.3)",
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  {head}
+              ].map((h) => (
+                <TableCell key={h} sx={{ color: "white", fontWeight: "bold" }}>
+                  {h}
                 </TableCell>
               ))}
             </TableRow>
           </TableHead>
-
           <TableBody>
-            {qualifications.length === 0 ? (
+            {loading ? (
               <TableRow>
-                <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
-                  <School sx={{ fontSize: 48, color: "grey.400" }} />
-                  <Typography variant="h6" color="grey.500">
-                    No qualifications added yet
-                  </Typography>
+                <TableCell colSpan={10} align="center">
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : qualifications.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={10} align="center">
+                  No qualifications found
                 </TableCell>
               </TableRow>
             ) : (
-              qualifications.map((row, index) => (
-                <TableRow
-                  key={index}
-                  hover
-                  sx={{
-                    "&:hover": {
-                      background: "linear-gradient(135deg, #E3F2FD, #BBDEFB)",
-                    },
-                  }}
-                >
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{row.degree || "-"}</TableCell>
-                  <TableCell>{row.discipline || "-"}</TableCell>
-                  <TableCell>{row.university || "-"}</TableCell>
-                  <TableCell>{row.percentage || "-"}</TableCell>
-                  <TableCell>{row.registrationYear || "-"}</TableCell>
-                  <TableCell>{row.passingYear || "-"}</TableCell>
-                  <TableCell>{row.remarks || "-"}</TableCell>
+              qualifications.map((q, i) => (
+                <TableRow key={q._id}>
+                  <TableCell>{i + 1}</TableCell>
+                  <TableCell>{q.degree}</TableCell>
+                  <TableCell>{q.discipline}</TableCell>
+                  <TableCell>{q.university}</TableCell>
+                  <TableCell>{q.percentage}</TableCell>
+                  <TableCell>{q.registrationYear}</TableCell>
+                  <TableCell>{q.passingYear}</TableCell>
+                  <TableCell>{q.remarks}</TableCell>
                   <TableCell>
-                    {row.certificate ? (
-                      <Chip
-                        icon={<Attachment />}
-                        label="File"
-                        color="info"
-                        size="small"
-                        variant="outlined"
-                      />
+                    {q.certificate ? (
+                      <a
+                        href={`http://localhost:4000/uploads/${q.certificate}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Chip
+                          icon={<Attachment />}
+                          label="View File"
+                          color="info"
+                          size="small"
+                        />
+                      </a>
                     ) : (
                       "-"
                     )}
                   </TableCell>
                   <TableCell>
-                    <Box sx={{ display: "flex", gap: 1 }}>
-                      <Tooltip title="Edit">
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleEdit(index)}
-                          size="small"
-                          sx={{
-                            background: "linear-gradient(135deg, #42A5F5, #1976D2)",
-                            color: "white",
-                            "&:hover": {
-                              background: "linear-gradient(135deg, #1E88E5, #1565C0)",
-                              transform: "scale(1.1)",
-                            },
-                          }}
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDelete(index)}
-                          size="small"
-                          sx={{
-                            background: "linear-gradient(135deg, #EF5350, #D32F2F)",
-                            color: "white",
-                            "&:hover": {
-                              background: "linear-gradient(135deg, #E53935, #C62828)",
-                              transform: "scale(1.1)",
-                            },
-                          }}
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                    <Tooltip title="Edit">
+                      <IconButton color="primary" onClick={() => handleEdit(q)}>
+                        <Edit />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton color="error" onClick={() => handleDeleteClick(q._id)}>
+                        <Delete />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))
@@ -301,45 +382,17 @@ const Qualification = () => {
         </Table>
       </TableContainer>
 
-      {/* ===== Navigation Buttons ===== */}
+      {/* ===== Navigation ===== */}
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
-        {/* Back Button */}
-        <Button
-          variant="outlined"
-          startIcon={<ArrowBack />}
-          onClick={handleBack}
-          sx={{
-            borderColor: "#1565C0",
-            color: "#1565C0",
-            "&:hover": { background: "#E3F2FD" },
-          }}
-        >
+        <Button variant="outlined" startIcon={<ArrowBack />} onClick={handleBack}>
           Back
         </Button>
-
-        {/* Next Button */}
-        <Button
-          variant="contained"
-          endIcon={<ArrowForward />}
-          onClick={handleNext}
-          sx={{
-            background: "linear-gradient(135deg, #4CAF50, #2E7D32)",
-            border: "2px solid #1B5E20",
-            borderRadius: "10px",
-            fontWeight: 600,
-            px: 4,
-            py: 1.2,
-            "&:hover": {
-              background: "linear-gradient(135deg, #66BB6A, #388E3C)",
-              transform: "translateY(-2px)",
-            },
-          }}
-        >
+        <Button variant="contained" endIcon={<ArrowForward />} onClick={handleNext}>
           Next
         </Button>
       </Box>
 
-      {/* ===== Modal (Add/Edit) ===== */}
+      {/* ===== Modal ===== */}
       <Modal open={open} onClose={handleClose}>
         <Box
           sx={{
@@ -348,37 +401,37 @@ const Qualification = () => {
             bgcolor: "white",
             borderRadius: 3,
             border: "2px solid #1976D2",
-            boxShadow: "0 20px 60px rgba(33,150,243,0.3)",
             p: { xs: 2.5, sm: 4 },
             mx: "auto",
             mt: "5%",
-            maxHeight: "90vh",
             overflowY: "auto",
+            maxHeight: "90vh",
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 700, color: "#1565C0", mb: 3 }}>
-            {editIndex !== null ? "Edit Qualification" : "Add New Qualification"}
+            {editItem ? "Edit Qualification" : "Add Qualification"}
           </Typography>
 
           <Grid container spacing={2}>
-            {[ 
-              { name: "degree", label: "Degree", icon: <School />, placeholder: "B.Tech" },
-              { name: "discipline", label: "Discipline / Stream", icon: <Book />, placeholder: "Computer Science" },
-              { name: "university", label: "University / Institution", icon: <LocationOn />, placeholder: "Calicut University" },
-              { name: "percentage", label: "Percentage / CGPA", icon: <Percent />, placeholder: "8.7" },
-              { name: "registrationYear", label: "Year of Registration", icon: <CalendarToday />, placeholder: "2023" },
-              { name: "passingYear", label: "Year of Passing", icon: <CalendarMonth />, placeholder: "2027" },
-            ].map((f, i) => (
-              <Grid item xs={12} sm={i < 3 ? 6 : 4} key={f.name}>
+            {[
+              { name: "degree", label: "Degree", icon: <School /> },
+              { name: "discipline", label: "Discipline / Stream", icon: <Book /> },
+              { name: "university", label: "University / Institution", icon: <LocationOn /> },
+              { name: "percentage", label: "Percentage / CGPA", icon: <Percent /> },
+              { name: "registrationYear", label: "Year of Registration", icon: <CalendarToday /> },
+              { name: "passingYear", label: "Year of Passing", icon: <CalendarMonth /> },
+            ].map((f) => (
+              <Grid item xs={12} sm={6} key={f.name}>
                 <TextField
                   label={f.label}
                   name={f.name}
-                  fullWidth
                   value={formData[f.name]}
                   onChange={handleChange}
-                  placeholder={f.placeholder}
+                  fullWidth
                   InputProps={{
-                    startAdornment: <InputAdornment position="start">{f.icon}</InputAdornment>,
+                    startAdornment: (
+                      <InputAdornment position="start">{f.icon}</InputAdornment>
+                    ),
                   }}
                 />
               </Grid>
@@ -386,37 +439,18 @@ const Qualification = () => {
 
             <Grid item xs={12}>
               <TextField
-                label="Special Remarks"
-                fullWidth
-                multiline
-                rows={3}
+                label="Remarks"
                 name="remarks"
                 value={formData.remarks}
                 onChange={handleChange}
-                placeholder="Any additional details"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Comment sx={{ color: "grey.600" }} />
-                    </InputAdornment>
-                  ),
-                }}
+                fullWidth
+                multiline
+                rows={3}
               />
             </Grid>
 
             <Grid item xs={12}>
-              <Button
-                component="label"
-                variant="outlined"
-                startIcon={<UploadFile />}
-                fullWidth
-                sx={{
-                  border: "2px dashed #1976D2",
-                  color: "#1976D2",
-                  py: 1.5,
-                  "&:hover": { background: "#E3F2FD" },
-                }}
-              >
+              <Button component="label" variant="outlined" startIcon={<UploadFile />} fullWidth>
                 Upload Certificate
                 <input
                   type="file"
@@ -427,28 +461,19 @@ const Qualification = () => {
                 />
               </Button>
               {formData.certificate && (
-                <Typography variant="caption" sx={{ mt: 1, display: "block", color: "text.secondary" }}>
-                  Selected: {formData.certificate}
+                <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
+                  Selected: {formData.certificate.name || formData.certificate}
                 </Typography>
               )}
             </Grid>
           </Grid>
 
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3, gap: 2 }}>
-            <Button variant="outlined" onClick={handleClose} sx={{ borderColor: "#1976D2", color: "#1976D2" }}>
+            <Button variant="outlined" onClick={handleClose}>
               Cancel
             </Button>
-            <Button
-              variant="contained"
-              onClick={handleAdd}
-              sx={{
-                background: "linear-gradient(135deg, #1976D2, #1565C0)",
-                border: "2px solid #0D47A1",
-                px: 4,
-                "&:hover": { background: "linear-gradient(135deg, #1E88E5, #1565C0)" },
-              }}
-            >
-              {editIndex !== null ? "Update" : "Save"}
+            <Button variant="contained" onClick={handleSave}>
+              {editItem ? "Update" : "Save"}
             </Button>
           </Box>
         </Box>

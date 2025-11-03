@@ -68,7 +68,7 @@ function SubjectEngaged() {
         ]);
     };
 
-    const handlePrevious = () => navigate("/qualification");
+    const handlePrevious = () => navigate("/Experience");
     const handleNext = () => navigate("/Publications");
 
     return (

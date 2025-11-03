@@ -8,7 +8,6 @@ import SubjectEngaged from "./pages/SubjectEngaged";
 import Publications from "./pages/Publications";
 import ProgramsCoordinated from "./pages/ProgramsCoordinated";
 import ProgramsAttended from "./pages/ProgramsAttended";
-import Experience from "./pages/Experience.jsx";
 import SeminarsGuided from "./pages/SeminarsGuided.jsx";
 import InteractionsOutsideWorld from "./pages/InteractionsOutsideWorld.jsx";
 import PositionsHeld from "./pages/PositionsHeld.jsx";
@@ -24,6 +23,9 @@ import FacultyResearch from "./pages/FacultyResearch.jsx";
 import Consultancy from "./pages/Consultancy.jsx";
 import Projectguided from "./pages/Projectguided.jsx";
 import ForgotPassword from "./components/ForgotPassword.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
+import Experience from "./pages/Experience.jsx";
+import AdminExcelExport from "./pages/AdminExcelExport.jsx";
 
 
 function App() {
@@ -33,6 +35,8 @@ function App() {
        <Route path='/login' element={<Login />} />
         <Route path='/' element={<Login />} />
                 <Route path="/forgotpassword" element={<ForgotPassword/>}/>
+                <Route path="/adminpanel" element={<AdminDashboard/>}/>
+                <Route path="/adminexcelexport" element={<AdminExcelExport/>}/>
 
                 <Route element={<Layout />}>
 

@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Form,
+  Button,
+  Card,
+  Spinner,
+  Table,
+} from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Projectguided = () => {
   const navigate = useNavigate();
 
+  // -------------------- State --------------------
   const [formData, setFormData] = useState({
     name: "",
     academicYear: "",
@@ -13,40 +26,172 @@ const Projectguided = () => {
     coInvestigator: "",
     level: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [editId, setEditId] = useState(null);
+  const [userEmail, setUserEmail] = useState("");
 
-  // ✅ Load previously saved form from localStorage
+  // -------------------- Load email from localStorage --------------------
   useEffect(() => {
-    const saved = localStorage.getItem("guidedProjectForm");
-    if (saved) setFormData(JSON.parse(saved));
+    const gmail = localStorage.getItem("gmail") || localStorage.getItem("email");
+    if (gmail) {
+      setUserEmail(gmail.trim().toLowerCase());
+    } else {
+      toast.error("⚠️ No Gmail found — please log in again.");
+    }
   }, []);
 
+  // -------------------- Fetch All --------------------
+  const fetchData = async () => {
+    if (!userEmail) return;
+    try {
+      const res = await axios.get(`http://localhost:4000/view?email=${userEmail}`);
+      if (res.data.success) {
+        setProjects(res.data.data);
+      } else {
+      }
+    } catch (err) {
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [userEmail]);
+
+  // -------------------- Input Handler --------------------
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Save form data only (no table)
-  const handleSave = () => {
+  // -------------------- Add or Update --------------------
+  const handleSave = async () => {
     if (!formData.name || !formData.academicYear) {
-      alert("Please fill in all required fields before saving!");
+      toast.warning("⚠️ Please fill in all required fields!");
       return;
     }
-    localStorage.setItem("guidedProjectForm", JSON.stringify(formData));
-    alert("Project / Research details saved successfully!");
+
+    if (!userEmail) {
+      toast.error("⚠️ Email not found — please log in again.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const payload = { email: userEmail, ...formData };
+
+      if (editId) {
+        const res = await axios.put(
+          `http://localhost:4000/update/${editId}`,
+          payload
+        );
+        if (res.data.success) {
+          toast.success("✅ Project updated successfully!");
+          setEditId(null);
+          fetchData();
+        } else {
+          toast.error(res.data.message || "Update failed!");
+        }
+      } else {
+        const res = await axios.post("http://localhost:4000/add", payload);
+        if (res.data.success) {
+          toast.success("✅ Project added successfully!");
+          fetchData();
+        } else {
+          toast.error(res.data.message || "Add failed!");
+        }
+      }
+
+      setFormData({
+        name: "",
+        academicYear: "",
+        isFunded: "",
+        fundedAgency: "",
+        coInvestigator: "",
+        level: "",
+      });
+    } catch (err) {
+      toast.error("❌ Server error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // -------------------- Edit --------------------
+  const handleEdit = (item) => {
+    setFormData({
+      name: item.name,
+      academicYear: item.academicYear,
+      isFunded: item.isFunded,
+      fundedAgency: item.fundedAgency,
+      coInvestigator: item.coInvestigator,
+      level: item.level,
+    });
+    setEditId(item._id);
+    toast.info("✏️ Edit mode enabled — make changes and click Update.");
+  };
+
+  // -------------------- Delete with Toast Confirmation --------------------
+  const confirmDelete = (id) => {
+    toast.info(
+      <div className="text-center">
+        <p className="fw-semibold mb-2">
+          ⚠️ Are you sure you want to delete this record?
+        </p>
+        <div className="d-flex justify-content-center gap-2">
+          <Button
+            size="sm"
+            variant="danger"
+            onClick={() => handleDelete(id)}
+          >
+            Yes, Delete
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => toast.dismiss()}
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+        theme: "light",
+        toastId: "confirm-delete",
+      }
+    );
+  };
+
+  // -------------------- Delete --------------------
+  const handleDelete = async (id) => {
+    toast.dismiss("confirm-delete");
+    try {
+      const res = await axios.delete(`http://localhost:4000/delete/${id}`);
+      if (res.data.success) {
+        toast.success("🗑️ Deleted successfully!");
+        fetchData();
+      } else {
+        toast.error("Error deleting record");
+      }
+    } catch (err) {
+      toast.error("❌ Server error: " + err.message);
+    }
   };
 
   const handleBack = () => navigate("/consultancy");
   const handleNext = () => navigate("/SeminarsGuided");
 
+  // -------------------- UI --------------------
   return (
     <div
       style={{
         background: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
         minHeight: "100vh",
         padding: "20px 10px",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
       }}
     >
       <Container fluid="md" className="py-4">
@@ -55,12 +200,12 @@ const Projectguided = () => {
           style={{
             border: "2px solid #1565C0",
             borderRadius: "15px",
-            maxWidth: "900px",
+            maxWidth: "950px",
             background: "rgba(255,255,255,0.96)",
           }}
         >
           <Card.Body className="p-4 p-md-5">
-            {/* ===== Header ===== */}
+            {/* Header */}
             <div className="text-center mb-4">
               <h3
                 style={{
@@ -81,20 +226,28 @@ const Projectguided = () => {
               />
             </div>
 
-            {/* ===== Form Section ===== */}
+            {/* Show email */}
+            <div className="text-end mb-3">
+              <small className="text-secondary">
+                Logged in as: <b>{userEmail || "Not logged in"}</b>
+              </small>
+            </div>
+
+            {/* Form */}
             <Form>
               <Row className="gy-3">
                 <Col xs={12}>
                   <Form.Group controlId="formName">
                     <Form.Label className="fw-semibold">
-                      Project / Research Name <span className="text-danger">*</span>
+                      Project / Research Name{" "}
+                      <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
                       type="text"
                       name="name"
-                      placeholder="e.g. Smart Irrigation Monitoring System"
                       value={formData.name}
                       onChange={handleChange}
+                      placeholder="e.g. Smart Irrigation System"
                     />
                   </Form.Group>
                 </Col>
@@ -107,15 +260,15 @@ const Projectguided = () => {
                     <Form.Control
                       type="text"
                       name="academicYear"
-                      placeholder="e.g. 2024-2025"
                       value={formData.academicYear}
                       onChange={handleChange}
+                      placeholder="e.g. 2024-2025"
                     />
                   </Form.Group>
                 </Col>
 
                 <Col xs={12} md={6}>
-                  <Form.Group controlId="formIsFunded">
+                  <Form.Group>
                     <Form.Label className="fw-semibold">Is Funded</Form.Label>
                     <Form.Select
                       name="isFunded"
@@ -130,20 +283,20 @@ const Projectguided = () => {
                 </Col>
 
                 <Col xs={12} md={6}>
-                  <Form.Group controlId="formFundedAgency">
+                  <Form.Group>
                     <Form.Label className="fw-semibold">Funded Agency</Form.Label>
                     <Form.Control
                       type="text"
                       name="fundedAgency"
-                      placeholder="e.g. AICTE / KTU / DST"
                       value={formData.fundedAgency}
                       onChange={handleChange}
+                      placeholder="e.g. AICTE / KTU / DST"
                     />
                   </Form.Group>
                 </Col>
 
                 <Col xs={12} md={6}>
-                  <Form.Group controlId="formCoInvestigator">
+                  <Form.Group>
                     <Form.Label className="fw-semibold">
                       Co-Investigator Available
                     </Form.Label>
@@ -160,7 +313,7 @@ const Projectguided = () => {
                 </Col>
 
                 <Col xs={12} md={6}>
-                  <Form.Group controlId="formLevel">
+                  <Form.Group>
                     <Form.Label className="fw-semibold">Level</Form.Label>
                     <Form.Select
                       name="level"
@@ -176,58 +329,98 @@ const Projectguided = () => {
                 </Col>
               </Row>
 
-              {/* ===== Buttons ===== */}
               <Row className="mt-4">
-                <Col
-                  xs={12}
-                  className="d-flex justify-content-between flex-wrap gap-2"
-                >
-                  <Button
-                    variant="outline-primary"
-                    onClick={handleBack}
-                    className="px-4 py-2"
-                    style={{
-                      borderColor: "#1565C0",
-                      color: "#1565C0",
-                      fontWeight: 600,
-                    }}
-                  >
+                <Col className="d-flex justify-content-between flex-wrap gap-2">
+                  <Button variant="outline-primary" onClick={handleBack}>
                     ← Back
                   </Button>
 
                   <div className="d-flex gap-2">
                     <Button
-                      variant="primary"
+                      variant={editId ? "warning" : "primary"}
                       onClick={handleSave}
-                      className="px-4 py-2"
-                      style={{
-                        background: "linear-gradient(135deg, #1976D2, #1565C0)",
-                        border: "2px solid #0D47A1",
-                        fontWeight: 600,
-                      }}
+                      disabled={loading}
                     >
-                      Save
+                      {loading ? (
+                        <>
+                          <Spinner animation="border" size="sm" /> Saving...
+                        </>
+                      ) : editId ? (
+                        "Update"
+                      ) : (
+                        "Save"
+                      )}
                     </Button>
 
-                    <Button
-                      variant="success"
-                      onClick={handleNext}
-                      className="px-4 py-2"
-                      style={{
-                        background: "linear-gradient(135deg, #4CAF50, #2E7D32)",
-                        border: "2px solid #1B5E20",
-                        fontWeight: 600,
-                      }}
-                    >
+                    <Button variant="success" onClick={handleNext}>
                       Next →
                     </Button>
                   </div>
                 </Col>
               </Row>
             </Form>
+
+            {/* Table */}
+            <hr className="my-4" />
+            <h5 className="text-primary fw-bold">Saved Entries</h5>
+            <div className="table-responsive">
+              <Table striped bordered hover>
+                <thead>
+                  <tr className="text-center bg-primary text-white">
+                    <th>#</th>
+                    <th>Project Name</th>
+                    <th>Academic Year</th>
+                    <th>Funded</th>
+                    <th>Agency</th>
+                    <th>Co-Investigator</th>
+                    <th>Level</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projects.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" className="text-center text-muted">
+                        No records found.
+                      </td>
+                    </tr>
+                  ) : (
+                    projects.map((p, i) => (
+                      <tr key={p._id}>
+                        <td>{i + 1}</td>
+                        <td>{p.name}</td>
+                        <td>{p.academicYear}</td>
+                        <td>{p.isFunded}</td>
+                        <td>{p.fundedAgency}</td>
+                        <td>{p.coInvestigator}</td>
+                        <td>{p.level}</td>
+                        <td className="text-center">
+                          <Button
+                            variant="outline-warning"
+                            size="sm"
+                            className="me-2"
+                            onClick={() => handleEdit(p)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => confirmDelete(p._id)}
+                          >
+                            Delete
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </Table>
+            </div>
           </Card.Body>
         </Card>
       </Container>
+      <ToastContainer />
     </div>
   );
 };

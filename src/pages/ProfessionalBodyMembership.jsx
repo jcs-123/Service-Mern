@@ -1,46 +1,109 @@
-import React, { useState } from "react";
-import { Box, Grid, TextField, Button, Typography, Paper, Divider, IconButton, Fade } from "@mui/material";
-import { Add, Save, Delete, ArrowBack, ArrowForward } from "@mui/icons-material";
+import React, { useState, useEffect } from "react";
+import {
+  Box, Grid, TextField, Button, Typography, Paper, Divider,
+  IconButton, Snackbar, Alert, Dialog, DialogActions,
+  DialogContent, DialogContentText, DialogTitle
+} from "@mui/material";
+import { Add, Save, Delete, Edit, Cancel, ArrowBack } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function ProfessionalBodyMembership() {
   const navigate = useNavigate();
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [memberships, setMemberships] = useState([{
-    id: 1,
-    bodyName: "ISTE LIFE MEMBER since 1985",
-    type: "Lifetime Membership",
-    memberId: "LM 14153",
-    memberSince: "2018-2019",
-    description: "Member from 1985. Life member from 1993. Two times Managing Committee Member (2003 & 2004). Palakkad Chapter President for two terms (2003 & 2004). Obtained Best Chapter Award in Kerala Section (2003 & 2004).",
-  }]);
+  const gmail = localStorage.getItem("gmail");
+  const API_URL = "http://localhost:4000";
 
+  const [memberships, setMemberships] = useState([]);
   const [newMembership, setNewMembership] = useState({
     bodyName: "", type: "", memberId: "", memberSince: "", description: ""
   });
+  const [editId, setEditId] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
 
-  const handleChange = (id, field, value) => {
-    setMemberships(memberships.map(mem => mem.id === id ? { ...mem, [field]: value } : mem));
+  // ✅ Fetch memberships from backend
+  const fetchMemberships = async () => {
+    if (!gmail) return;
+    try {
+      const res = await axios.get(`${API_URL}/getmemberships/${gmail}`);
+      setMemberships(res.data.data || []);
+    } catch (err) {
+      console.error("❌ Error fetching memberships:", err);
+      setSnackbar({ open: true, message: "❌ Failed to load data.", severity: "error" });
+    }
   };
 
-  const handleAdd = () => {
+  useEffect(() => {
+    fetchMemberships();
+  }, [gmail]);
+
+  // ✅ Add new membership
+  const handleAdd = async () => {
     if (!newMembership.bodyName.trim()) return;
-    setMemberships([...memberships, { id: Date.now(), ...newMembership }]);
-    setNewMembership({ bodyName: "", type: "", memberId: "", memberSince: "", description: "" });
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
+    try {
+      const res = await axios.post(`${API_URL}/addmembership`, { gmail, ...newMembership });
+      setMemberships([res.data.data, ...memberships]);
+      setNewMembership({ bodyName: "", type: "", memberId: "", memberSince: "", description: "" });
+      setSnackbar({ open: true, message: "✅ Membership added successfully!", severity: "success" });
+    } catch (err) {
+      console.error("❌ Error adding membership:", err);
+      setSnackbar({ open: true, message: "❌ Failed to add membership.", severity: "error" });
+    }
   };
 
-  const handleDelete = (id) => setMemberships(memberships.filter(mem => mem.id !== id));
-  const handleSave = () => { setShowSuccess(true); setTimeout(() => setShowSuccess(false), 2000); };
+  // ✅ Edit handler
+  const handleChange = (id, field, value) => {
+    setMemberships((prev) =>
+      prev.map((m) => (m._id === id ? { ...m, [field]: value } : m))
+    );
+  };
+
+  // ✅ Save changes
+  const handleSave = async (id) => {
+    const mem = memberships.find((m) => m._id === id);
+    if (!mem) return;
+    try {
+      await axios.put(`${API_URL}/updatemembership/${id}`, mem);
+      setEditId(null);
+      setSnackbar({ open: true, message: "✅ Membership updated successfully!", severity: "success" });
+      fetchMemberships();
+    } catch (err) {
+      console.error("❌ Update error:", err);
+      setSnackbar({ open: true, message: "❌ Failed to update membership.", severity: "error" });
+    }
+  };
+
+  // ✅ Delete with confirmation
+  const confirmDeleteMembership = (id) => setConfirmDelete({ open: true, id });
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`${API_URL}/deletemembership/${confirmDelete.id}`);
+      setMemberships((prev) => prev.filter((m) => m._id !== confirmDelete.id));
+      setConfirmDelete({ open: false, id: null });
+      setSnackbar({ open: true, message: "🗑️ Membership deleted successfully!", severity: "success" });
+    } catch (err) {
+      console.error("❌ Delete error:", err);
+      setSnackbar({ open: true, message: "❌ Failed to delete membership.", severity: "error" });
+    }
+  };
+
+  // ✅ Fields configuration
+  const membershipFields = [
+    { label: "Name of Professional Body", value: "bodyName", xs: 12, sm: 6 },
+    { label: "Type of Membership", value: "type", xs: 12, sm: 6 },
+    { label: "Membership ID", value: "memberId", xs: 12, sm: 4 },
+    { label: "Member Since", value: "memberSince", xs: 12, sm: 4 },
+    { label: "Description / Details", value: "description", xs: 12, multiline: true, minRows: 3 },
+  ];
 
   const textFieldStyles = {
     "& .MuiOutlinedInput-root": {
       borderRadius: "12px", backgroundColor: "#fff",
       "& fieldset": { borderColor: "#e3f2fd", borderWidth: 2 },
       "&:hover fieldset": { borderColor: "#bbdefb" },
-      "&.Mui-focused fieldset": { 
+      "&.Mui-focused fieldset": {
         borderColor: "#1565c0", borderWidth: 2,
         boxShadow: "0 0 0 4px rgba(21,101,192,0.1)"
       }
@@ -48,128 +111,57 @@ function ProfessionalBodyMembership() {
     "& .MuiInputLabel-root": { color: "#1565c0", fontWeight: "500" }
   };
 
-  const membershipFields = [
-    { label: "Name of Professional Body", value: "bodyName", xs: 12, sm: 6 },
-    { label: "Type of Membership", value: "type", xs: 12, sm: 6 },
-    { label: "Membership ID", value: "memberId", xs: 12, sm: 4 },
-    { label: "Member Since", value: "memberSince", xs: 12, sm: 4 },
-    { label: "Description / Details", value: "description", xs: 12, multiline: true, minRows: 3 }
-  ];
+  const buttonStyles = {
+    background: "linear-gradient(135deg, #1565c0, #42a5f5)",
+    borderRadius: "12px", fontWeight: "bold", textTransform: "none",
+    px: 4, py: 1.5, fontSize: "16px",
+    boxShadow: "0 4px 12px rgba(21,101,192,0.3)",
+    "&:hover": {
+      background: "linear-gradient(135deg, #0b3d91, #1565c0)",
+      transform: "translateY(-2px)"
+    }
+  };
 
   return (
     <Box sx={{
-      minHeight: "100vh", background: "linear-gradient(135deg, #f7faff 0%, #e6eeff 100%)",
-      py: 6, px: { xs: 2, md: 4 }, display: "flex", justifyContent: "center", position: "relative"
+      minHeight: "100vh", background: "linear-gradient(135deg,#f7faff 0%,#e6eeff 100%)",
+      py: 6, px: { xs: 2, md: 4 }, display: "flex", justifyContent: "center"
     }}>
-      
-      <Box sx={{
-        position: "absolute", top: 0, left: 0, right: 0, height: "300px",
-        background: "linear-gradient(135deg, rgba(21,101,192,0.1) 0%, rgba(66,165,245,0.05) 100%)", zIndex: 0
-      }}/>
-
       <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-        style={{ width: "100%", maxWidth: "1000px", position: "relative", zIndex: 1 }}>
-
-        <AnimatePresence>
-          {showSuccess && (
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-              <Box sx={{
-                background: "linear-gradient(135deg, #4caf50, #66bb6a)", color: "white", p: 2, borderRadius: 2,
-                textAlign: "center", mb: 3, boxShadow: "0 4px 12px rgba(76,175,80,0.3)"
-              }}>
-                <Typography variant="body1" fontWeight="bold">✅ Membership Saved Successfully!</Typography>
-              </Box>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+        style={{ width: "100%", maxWidth: "1000px" }}>
         <Paper elevation={12} sx={{
           p: { xs: 3, md: 5 }, borderRadius: 4, backgroundColor: "#fff",
-          boxShadow: "0 20px 40px rgba(25,118,210,0.15)", border: "1px solid #e3f2fd"
+          boxShadow: "0 20px 40px rgba(25,118,210,0.15)"
         }}>
-
           {/* Header */}
           <Box sx={{ textAlign: "center", mb: 4 }}>
             <Typography variant="h4" sx={{
-              fontWeight: "bold", background: "linear-gradient(135deg, #0b3d91, #1565c0)",
-              backgroundClip: "text", WebkitBackgroundClip: "text", color: "transparent", mb: 2
+              fontWeight: "bold", background: "linear-gradient(135deg,#0b3d91,#1565c0)",
+              WebkitBackgroundClip: "text", color: "transparent"
             }}>
               Professional Body Membership
             </Typography>
-            <Box sx={{
-              width: 120, height: 4, mx: "auto",
-              background: "linear-gradient(135deg, #1565c0, #42a5f5)", borderRadius: 2
-            }}/>
           </Box>
 
-          {/* Membership List */}
-          <AnimatePresence>
-            {memberships.map((mem, index) => (
-              <motion.div key={mem.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }} transition={{ delay: index * 0.1 }}>
-                <Box sx={{
-                  border: "2px solid #e3f2fd", borderRadius: 3, p: 3, mb: 3,
-                  background: "linear-gradient(135deg, #f9fbff 0%, #f5f8ff 100%)",
-                  boxShadow: "0 4px 16px rgba(25,118,210,0.08)", transition: "all 0.3s ease",
-                  "&:hover": { borderColor: "#bbdefb", boxShadow: "0 6px 20px rgba(25,118,210,0.12)", transform: "translateY(-2px)" }
-                }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
-                    <Typography variant="h6" sx={{ fontWeight: "bold", color: "#1565c0", display: "flex", alignItems: "center", gap: 1 }}>
-                      <Box sx={{
-                        width: 24, height: 24, borderRadius: "50%", background: "linear-gradient(135deg, #1565c0, #42a5f5)",
-                        display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "12px", fontWeight: "bold"
-                      }}>
-                        {index + 1}
-                      </Box>
-                      Membership #{index + 1}
-                    </Typography>
-                    <IconButton onClick={() => handleDelete(mem.id)} sx={{
-                      color: "#f44336", background: "rgba(244,67,54,0.1)",
-                      "&:hover": { background: "rgba(244,67,54,0.2)", transform: "scale(1.1)" }
-                    }}>
-                      <Delete />
-                    </IconButton>
-                  </Box>
-
-                  <Grid container spacing={3}>
-                    {membershipFields.map((field, i) => (
-                      <Grid item xs={field.xs} sm={field.sm} key={i}>
-                        <TextField
-                          label={field.label}
-                          fullWidth
-                          multiline={field.multiline}
-                          minRows={field.minRows}
-                          value={mem[field.value]}
-                          onChange={(e) => handleChange(mem.id, field.value, e.target.value)}
-                          sx={textFieldStyles}
-                        />
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Box>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          {/* Add New Membership */}
-          <Fade in timeout={800}>
-            <Box>
-              <Divider sx={{ my: 4, "&::before, &::after": { borderColor: "#e3f2fd" } }}>
-                <Box sx={{
-                  px: 3, py: 1, background: "linear-gradient(135deg, #1565c0, #42a5f5)", color: "white",
-                  borderRadius: 20, fontSize: "14px", fontWeight: "bold"
-                }}>
-                  ADD NEW MEMBERSHIP
-                </Box>
-              </Divider>
-
+          {/* Memberships */}
+          {memberships.map((mem, index) => (
+            <motion.div key={mem._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Box sx={{
-                border: "2px dashed #bbdefb", borderRadius: 3, p: 4,
-                background: "linear-gradient(135deg, rgba(21,101,192,0.02) 0%, rgba(66,165,245,0.02) 100%)"
+                border: "2px solid #e3f2fd", borderRadius: 3, p: 3, mb: 3, background: "#f9fbff"
               }}>
-                <Typography variant="h6" sx={{ fontWeight: "bold", color: "#0b3d91", mb: 3, display: "flex", alignItems: "center", gap: 1 }}>
-                  <Add sx={{ fontSize: 28 }} /> Add New Membership
-                </Typography>
+                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+                  <Typography variant="h6" sx={{ color: "#1565c0", fontWeight: "bold" }}>
+                    #{index + 1} Membership
+                  </Typography>
+                  <Box>
+                    {editId === mem._id ? (
+                      <IconButton color="error" onClick={() => setEditId(null)}><Cancel /></IconButton>
+                    ) : (
+                      <IconButton color="primary" onClick={() => setEditId(mem._id)}><Edit /></IconButton>
+                    )}
+                    <IconButton color="error" onClick={() => confirmDeleteMembership(mem._id)}><Delete /></IconButton>
+                  </Box>
+                </Box>
 
                 <Grid container spacing={3}>
                   {membershipFields.map((field, i) => (
@@ -179,62 +171,86 @@ function ProfessionalBodyMembership() {
                         fullWidth
                         multiline={field.multiline}
                         minRows={field.minRows}
-                        value={newMembership[field.value]}
-                        onChange={(e) => setNewMembership({ ...newMembership, [field.value]: e.target.value })}
+                        value={mem[field.value] || ""}
+                        onChange={(e) => handleChange(mem._id, field.value, e.target.value)}
                         sx={textFieldStyles}
+                        disabled={editId !== mem._id}
                       />
                     </Grid>
                   ))}
-                  
-                  <Grid item xs={12}>
-                    <Button variant="contained" startIcon={<Add />} onClick={handleAdd} disabled={!newMembership.bodyName.trim()}
-                      sx={{
-                        background: "linear-gradient(135deg, #1565c0, #42a5f5)", borderRadius: "12px", fontWeight: "bold",
-                        textTransform: "none", px: 4, py: 1.5, fontSize: "16px",
-                        boxShadow: "0 4px 12px rgba(21,101,192,0.3)",
-                        "&:hover": { background: "linear-gradient(135deg, #0b3d91, #1565c0)", transform: "translateY(-2px)" },
-                        "&:disabled": { background: "#e0e0e0", color: "#9e9e9e" }
-                      }}>
-                      Add Membership
-                    </Button>
-                  </Grid>
+                  {editId === mem._id && (
+                    <Grid item xs={12}>
+                      <Button variant="contained" sx={buttonStyles}
+                        onClick={() => handleSave(mem._id)}>
+                        <Save sx={{ mr: 1 }} /> Save Changes
+                      </Button>
+                    </Grid>
+                  )}
                 </Grid>
               </Box>
-            </Box>
-          </Fade>
+            </motion.div>
+          ))}
 
-          {/* Navigation */}
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 6, pt: 4, borderTop: "2px solid #e3f2fd" }}>
-            <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => navigate("/AdministrativeWork")}
-              sx={{
-                borderColor: "#1565c0", color: "#1565c0", textTransform: "none", fontWeight: "bold",
-                px: 4, py: 1.5, borderRadius: "12px",
-                "&:hover": { backgroundColor: "rgba(21,101,192,0.08)", transform: "translateX(-4px)" }
-              }}>
+          {/* Add New */}
+          <Divider sx={{ my: 4 }} />
+          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#0b3d91", mb: 2 }}>
+            ➕ Add New Membership
+          </Typography>
+
+          <Grid container spacing={3}>
+            {membershipFields.map((field, i) => (
+              <Grid item xs={field.xs} sm={field.sm} key={i}>
+                <TextField
+                  label={field.label}
+                  fullWidth
+                  multiline={field.multiline}
+                  minRows={field.minRows}
+                  value={newMembership[field.value]}
+                  onChange={(e) => setNewMembership({ ...newMembership, [field.value]: e.target.value })}
+                  sx={textFieldStyles}
+                />
+              </Grid>
+            ))}
+            <Grid item xs={12}>
+              <Button variant="contained" startIcon={<Add />} onClick={handleAdd}
+                disabled={!newMembership.bodyName.trim()} sx={buttonStyles}>
+                Add Membership
+              </Button>
+            </Grid>
+          </Grid>
+
+          {/* Back Button */}
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+            <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => navigate("/AdministrativeWork")}>
               Back
             </Button>
-
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <Button variant="contained" startIcon={<Save />} onClick={handleSave}
-                sx={{
-                  background: "linear-gradient(135deg, #1565c0, #42a5f5)", textTransform: "none", fontWeight: "bold",
-                  px: 4, py: 1.5, borderRadius: "12px", boxShadow: "0 4px 12px rgba(21,101,192,0.3)",
-                  "&:hover": { background: "linear-gradient(135deg, #0b3d91, #1565c0)", transform: "translateY(-2px)" }
-                }}>
-                Save
-              </Button>
-              {/* <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate("/AwardsAndHonours")}
-                sx={{
-                  background: "linear-gradient(135deg, #2e7d32, #4caf50)", textTransform: "none", fontWeight: "bold",
-                  px: 4, py: 1.5, borderRadius: "12px", boxShadow: "0 4px 12px rgba(46,125,50,0.3)",
-                  "&:hover": { background: "linear-gradient(135deg, #1b5e20, #2e7d32)", transform: "translateY(-2px)" }
-                }}>
-                Next
-              </Button> */}
-            </Box>
           </Box>
         </Paper>
       </motion.div>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={2500}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
+      </Snackbar>
+
+      {/* Delete Confirmation */}
+      <Dialog open={confirmDelete.open} onClose={() => setConfirmDelete({ open: false, id: null })}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this membership? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDelete({ open: false, id: null })}>Cancel</Button>
+          <Button color="error" onClick={handleDelete}>Delete</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

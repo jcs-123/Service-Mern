@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
+import { Container, Row, Col, Form, Button, Card, Table, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Consultancy = () => {
   const navigate = useNavigate();
 
+  // -------------------- State --------------------
   const [formData, setFormData] = useState({
     title: "",
     organisedBy: "",
@@ -12,38 +16,151 @@ const Consultancy = () => {
     isFunded: "",
     fundAmount: "",
   });
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [userEmail, setUserEmail] = useState("");
 
+  // -------------------- Load Email --------------------
   useEffect(() => {
-    const saved = localStorage.getItem("consultancyData");
-    if (saved) setFormData(JSON.parse(saved));
+    const gmail = localStorage.getItem("gmail") || localStorage.getItem("email");
+    if (gmail) {
+      setUserEmail(gmail.trim().toLowerCase());
+    } else {
+    }
   }, []);
 
+  // -------------------- Fetch All --------------------
+  const fetchData = async () => {
+    if (!userEmail) return;
+    try {
+      const res = await axios.get(`http://localhost:4000/consultancy/${userEmail}`);
+      if (res.data.success) {
+        setProjects(res.data.data);
+      } else {
+        setProjects([]);
+        toast.info("No consultancy records found.");
+      }
+    } catch (err) {
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [userEmail]);
+
+  // -------------------- Input Change --------------------
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    if (!formData.title || !formData.organisedBy || !formData.academicYear) {
-      alert("Please fill in all required fields");
+  // -------------------- Add / Update --------------------
+  const handleSave = async () => {
+    const { title, organisedBy, academicYear } = formData;
+
+    if (!title || !organisedBy || !academicYear) {
+      toast.warning("⚠️ Please fill in required fields!");
       return;
     }
-    localStorage.setItem("consultancyData", JSON.stringify(formData));
-    alert("Consultancy project saved successfully!");
+
+    if (!userEmail) {
+      toast.error("⚠️ Email not found — please log in again.");
+      return;
+    }
+
+    const payload = { email: userEmail, ...formData };
+
+    try {
+      setLoading(true);
+      if (editId) {
+        // Update existing
+        const res = await axios.put(`http://localhost:4000/consultancy/${editId}`, payload);
+        if (res.data.success) {
+          toast.success("✅ Consultancy updated successfully!");
+          setEditId(null);
+          fetchData();
+        } else toast.error(res.data.message);
+      } else {
+        // Add new
+        const res = await axios.post("http://localhost:4000/consultancy", payload);
+        if (res.data.success) {
+          toast.success("✅ Consultancy added successfully!");
+          fetchData();
+        } else toast.error(res.data.message);
+      }
+
+      // Reset form
+      setFormData({
+        title: "",
+        organisedBy: "",
+        academicYear: "",
+        isFunded: "",
+        fundAmount: "",
+      });
+    } catch (err) {
+      toast.error("❌ Server error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // -------------------- Edit --------------------
+  const handleEdit = (item) => {
+    setFormData({
+      title: item.title,
+      organisedBy: item.organisedBy,
+      academicYear: item.academicYear,
+      isFunded: item.isFunded,
+      fundAmount: item.fundAmount,
+    });
+    setEditId(item._id);
+    toast.info("✏️ Edit mode enabled — update and click Save.");
+  };
+
+  // -------------------- Delete Confirmation --------------------
+  const confirmDelete = (id) => {
+    toast.info(
+      <div className="text-center">
+        <p className="fw-semibold mb-2">⚠️ Delete this consultancy record?</p>
+        <div className="d-flex justify-content-center gap-2">
+          <Button size="sm" variant="danger" onClick={() => handleDelete(id)}>
+            Yes, Delete
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => toast.dismiss()}>
+            Cancel
+          </Button>
+        </div>
+      </div>,
+      { position: "top-center", autoClose: false, toastId: "confirm-delete" }
+    );
+  };
+
+  // -------------------- Delete --------------------
+  const handleDelete = async (id) => {
+    toast.dismiss("confirm-delete");
+    try {
+      const res = await axios.delete(`http://localhost:4000/consultancy/${id}`);
+      if (res.data.success) {
+        toast.success("🗑️ Deleted successfully!");
+        fetchData();
+      } else toast.error("Delete failed!");
+    } catch (err) {
+      toast.error("❌ Server error: " + err.message);
+    }
+  };
+
+  // -------------------- Navigation --------------------
   const handleBack = () => navigate("/FacultyReserach");
   const handleNext = () => navigate("/ProjectGuided");
 
+  // -------------------- UI --------------------
   return (
     <div
       style={{
-        background: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
+        background: "linear-gradient(135deg, #E3F2FD, #BBDEFB)",
         minHeight: "100vh",
         padding: "20px 10px",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
       }}
     >
       <Container fluid="md" className="py-4">
@@ -52,21 +169,14 @@ const Consultancy = () => {
           style={{
             border: "2px solid #1565C0",
             borderRadius: "15px",
-            maxWidth: "900px",
+            maxWidth: "950px",
             background: "rgba(255,255,255,0.96)",
           }}
         >
           <Card.Body className="p-4 p-md-5">
             {/* Header */}
             <div className="text-center mb-4">
-              <h3
-                style={{
-                  color: "#0D47A1",
-                  fontWeight: "700",
-                  textTransform: "uppercase",
-                  fontSize: "clamp(1.2rem, 2vw, 1.8rem)",
-                }}
-              >
+              <h3 style={{ color: "#0D47A1", fontWeight: 700, textTransform: "uppercase" }}>
                 Consultancy Projects / Activities
               </h3>
               <hr
@@ -78,56 +188,63 @@ const Consultancy = () => {
               />
             </div>
 
+            {/* Logged-in email */}
+            <div className="text-end mb-3">
+              <small className="text-secondary">
+                Logged in as: <b>{userEmail || "Not logged in"}</b>
+              </small>
+            </div>
+
             {/* Form */}
             <Form>
               <Row className="gy-3">
                 <Col xs={12}>
-                  <Form.Group controlId="formTitle">
+                  <Form.Group>
                     <Form.Label className="fw-semibold">
                       Title <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
                       type="text"
                       name="title"
-                      placeholder="e.g. Consultancy on Structural Design"
                       value={formData.title}
                       onChange={handleChange}
+                      placeholder="e.g. Consultancy on Structural Design"
                     />
                   </Form.Group>
                 </Col>
 
                 <Col xs={12} md={6}>
-                  <Form.Group controlId="formOrganisedBy">
+                  <Form.Group>
                     <Form.Label className="fw-semibold">
                       Organised By <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
                       type="text"
                       name="organisedBy"
-                      placeholder="e.g. Jyothi Engineering College"
                       value={formData.organisedBy}
                       onChange={handleChange}
+                      placeholder="e.g. Jyothi Engineering College"
                     />
                   </Form.Group>
                 </Col>
 
                 <Col xs={12} md={6}>
-                  <Form.Group controlId="formAcademicYear">
+                  <Form.Group>
                     <Form.Label className="fw-semibold">
                       Academic Year <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
                       type="text"
                       name="academicYear"
-                      placeholder="e.g. 2024-2025"
                       value={formData.academicYear}
                       onChange={handleChange}
+                      placeholder="e.g. 2024-2025"
                     />
                   </Form.Group>
                 </Col>
 
                 <Col xs={12} md={6}>
-                  <Form.Group controlId="formIsFunded">
+                  <Form.Group>
                     <Form.Label className="fw-semibold">Is Funded</Form.Label>
                     <Form.Select
                       name="isFunded"
@@ -142,74 +259,109 @@ const Consultancy = () => {
                 </Col>
 
                 <Col xs={12} md={6}>
-                  <Form.Group controlId="formFundAmount">
-                    <Form.Label className="fw-semibold">
-                      Fund Amount (₹)
-                    </Form.Label>
+                  <Form.Group>
+                    <Form.Label className="fw-semibold">Fund Amount (₹)</Form.Label>
                     <Form.Control
                       type="number"
                       name="fundAmount"
-                      placeholder="e.g. 50000"
                       value={formData.fundAmount}
                       onChange={handleChange}
+                      placeholder="e.g. 50000"
+                      min="0"
                     />
                   </Form.Group>
                 </Col>
               </Row>
 
-              {/* Buttons */}
               <Row className="mt-4">
-                <Col
-                  xs={12}
-                  className="d-flex justify-content-between flex-wrap gap-2"
-                >
-                  <Button
-                    variant="outline-primary"
-                    onClick={handleBack}
-                    className="px-4 py-2"
-                    style={{
-                      borderColor: "#1565C0",
-                      color: "#1565C0",
-                      fontWeight: 600,
-                    }}
-                  >
+                <Col className="d-flex justify-content-between flex-wrap gap-2">
+                  <Button variant="outline-primary" onClick={handleBack}>
                     ← Back
                   </Button>
-
                   <div className="d-flex gap-2">
                     <Button
-                      variant="primary"
+                      variant={editId ? "warning" : "primary"}
                       onClick={handleSave}
-                      className="px-4 py-2"
-                      style={{
-                        background: "linear-gradient(135deg, #1976D2, #1565C0)",
-                        border: "2px solid #0D47A1",
-                        fontWeight: 600,
-                      }}
+                      disabled={loading}
                     >
-                      Save
+                      {loading ? (
+                        <>
+                          <Spinner animation="border" size="sm" /> Saving...
+                        </>
+                      ) : editId ? (
+                        "Update"
+                      ) : (
+                        "Save"
+                      )}
                     </Button>
-
-                    <Button
-                      variant="success"
-                      onClick={handleNext}
-                      className="px-4 py-2"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, #4CAF50, #2E7D32)",
-                        border: "2px solid #1B5E20",
-                        fontWeight: 600,
-                      }}
-                    >
+                    <Button variant="success" onClick={handleNext}>
                       Next →
                     </Button>
                   </div>
                 </Col>
               </Row>
             </Form>
+
+            {/* Table */}
+            <hr className="my-4" />
+            <h5 className="text-primary fw-bold">Saved Entries</h5>
+            <div className="table-responsive">
+              <Table striped bordered hover>
+                <thead className="text-center bg-primary text-white">
+                  <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Organised By</th>
+                    <th>Academic Year</th>
+                    <th>Funded</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projects.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="text-center text-muted">
+                        No records found.
+                      </td>
+                    </tr>
+                  ) : (
+                    projects.map((p, i) => (
+                      <tr key={p._id}>
+                        <td>{i + 1}</td>
+                        <td>{p.title}</td>
+                        <td>{p.organisedBy}</td>
+                        <td>{p.academicYear}</td>
+                        <td>{p.isFunded}</td>
+                        <td>{p.fundAmount}</td>
+                        <td className="text-center">
+                          <Button
+                            size="sm"
+                            variant="outline-warning"
+                            className="me-2"
+                            onClick={() => handleEdit(p)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline-danger"
+                            onClick={() => confirmDelete(p._id)}
+                          >
+                            Delete
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </Table>
+            </div>
           </Card.Body>
         </Card>
       </Container>
+
+      <ToastContainer />
     </div>
   );
 };
