@@ -1,66 +1,88 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
-  Grid,
   TextField,
   Button,
   Typography,
   Paper,
-  Divider,
   IconButton,
-  Fade,
+  Divider,
+  Grid,
+  Tooltip,
 } from "@mui/material";
-import { Save, Add, Delete, ArrowBack, ArrowForward } from "@mui/icons-material";
+import { Add, Delete, Edit, Save, ArrowBack, ArrowForward } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function ResearchInterests() {
   const navigate = useNavigate();
-  const [researchAreas, setResearchAreas] = useState([
-    {
-      id: 1,
-      title: "Big Data Analytics — Sentiment analysis by Deep Learning, WSN, IoT, Mobile Networks, IoT-based Automation",
-    },
-    {
-      id: 2,
-      title: "Cloud Computing Technology — Security aspects in networking and Ethical Hacking.",
-    },
-  ]);
+  const gmail = localStorage.getItem("gmail") || "jeswinjohn@jecc.ac.in";
 
+  const [researchAreas, setResearchAreas] = useState([]);
   const [newInterest, setNewInterest] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // ✅ Auto edit
-  const handleChange = (id, value) => {
-    const updated = researchAreas.map(area =>
-      area.id === id ? { ...area, title: value } : area
-    );
-    setResearchAreas(updated);
-  };
+  // 🔹 Fetch from backend
+  useEffect(() => {
+    fetchInterests();
+  }, []);
 
-  // ✅ Add new row
-  const handleAddInterest = () => {
-    if (newInterest.trim()) {
-      const newArea = {
-        id: Date.now(),
-        title: newInterest,
-      };
-      setResearchAreas([...researchAreas, newArea]);
-      setNewInterest("");
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2000);
+  const fetchInterests = async () => {
+    try {
+      const res = await axios.get(`http://localhost:4000/api/research-interests/${gmail}`);
+      if (res.data.success) setResearchAreas(res.data.data);
+    } catch (error) {
+      console.error("Error fetching interests:", error);
     }
   };
 
-  // ✅ Delete research area
-  const handleDelete = (id) => {
-    setResearchAreas(researchAreas.filter(area => area.id !== id));
+  // ✅ Add / Update interest
+  const handleAdd = async () => {
+    if (!newInterest.trim()) return alert("Please enter a research interest");
+    try {
+      setLoading(true);
+      if (editId) {
+        await axios.put(`http://localhost:4000/api/research-interests/${editId}`, {
+          gmail,
+          title: newInterest,
+        });
+        alert("✅ Updated successfully");
+      } else {
+        await axios.post("http://localhost:4000/api/research-interests", {
+          gmail,
+          title: newInterest,
+        });
+        alert("✅ Added successfully");
+      }
+      setNewInterest("");
+      setEditId(null);
+      fetchInterests();
+    } catch (error) {
+      console.error("Error saving interest:", error);
+      alert("❌ Error saving interest");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSave = () => {
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
+  // ✅ Edit
+  const handleEdit = (item) => {
+    setNewInterest(item.title);
+    setEditId(item._id);
   };
+
+  // ✅ Delete
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this interest?")) {
+      await axios.delete(`http://localhost:4000/api/research-interests/${id}`);
+      fetchInterests();
+    }
+  };
+
+  // ✅ Save Button (optional global save)
+  const handleSave = () => alert("✅ All data already synced to database!");
 
   const handlePrevious = () => navigate("/PositionsHeld");
   const handleNext = () => navigate("/Achievements");
@@ -69,343 +91,192 @@ function ResearchInterests() {
     <Box
       sx={{
         minHeight: "100vh",
+        py: 6,
+        background: "linear-gradient(135deg,#f7faff 0%,#e8f0ff 100%)",
         display: "flex",
         justifyContent: "center",
-        alignItems: "flex-start",
-        background: "linear-gradient(135deg, #f7faff 0%, #e8f0ff 100%)",
-        py: 6,
-        px: 2,
-        position: "relative",
       }}
     >
-      {/* Animated Background Elements */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "300px",
-          background: "linear-gradient(135deg, rgba(21,101,192,0.1) 0%, rgba(66,165,245,0.05) 100%)",
-          zIndex: 0,
-        }}
-      />
-
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        style={{ width: "100%", maxWidth: "900px", position: "relative", zIndex: 1 }}
+        style={{ width: "100%", maxWidth: "900px" }}
       >
-        {/* Success Message */}
-        <AnimatePresence>
-          {showSuccess && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <Box
-                sx={{
-                  background: "linear-gradient(135deg, #4caf50, #66bb6a)",
-                  color: "white",
-                  p: 2,
-                  borderRadius: 2,
-                  textAlign: "center",
-                  mb: 3,
-                  boxShadow: "0 4px 12px rgba(76,175,80,0.3)",
-                }}
-              >
-                <Typography variant="body1" fontWeight="bold">
-                  ✅ Research Interests Saved Successfully!
-                </Typography>
-              </Box>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         <Paper
-          elevation={12}
+          elevation={6}
           sx={{
-            p: { xs: 3, md: 5 },
+            p: 5,
             borderRadius: 4,
-            backgroundColor: "#fff",
-            boxShadow: "0 20px 40px rgba(25,118,210,0.15)",
+            background: "linear-gradient(180deg,#ffffff 0%,#f9fbff 100%)",
+            boxShadow: "0 10px 25px rgba(25,118,210,0.1)",
             border: "1px solid #e3f2fd",
-            background: "linear-gradient(180deg, #ffffff 0%, #fafcff 100%)",
           }}
         >
-          {/* ===== Header ===== */}
-          <Box sx={{ textAlign: "center", mb: 4 }}>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: "bold",
-                background: "linear-gradient(135deg, #0b3d91, #1565c0)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                color: "transparent",
-                mb: 2,
-              }}
-            >
-              Research Interests
-            </Typography>
-            <Box
-              sx={{
-                width: 120,
-                height: 4,
-                mx: "auto",
-                background: "linear-gradient(135deg, #1565c0, #42a5f5)",
-                borderRadius: 2,
-              }}
-            />
-            <Typography
-              variant="subtitle1"
-              sx={{ color: "#666", mt: 2, fontStyle: "italic" }}
-            >
-              Share your research focus areas and academic interests
-            </Typography>
-          </Box>
+          {/* Header */}
+          <Typography
+            variant="h4"
+            align="center"
+            fontWeight="bold"
+            sx={{
+              color: "#0b3d91",
+              mb: 2,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+            }}
+          >
+            Research Interests
+          </Typography>
+          <Box
+            sx={{
+              width: 130,
+              height: 4,
+              mx: "auto",
+              mb: 4,
+              borderRadius: 2,
+              background: "linear-gradient(135deg,#1565c0,#42a5f5)",
+            }}
+          />
 
-          {/* ===== Research Areas List ===== */}
-          <AnimatePresence>
-            {researchAreas.map((area, index) => (
-              <motion.div
-                key={area.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ delay: index * 0.1 }}
-                layout
-              >
-                <Box
+          {/* Add / Edit Section */}
+          <Box
+            sx={{
+              border: "2px dashed #bbdefb",
+              borderRadius: 3,
+              p: 4,
+              mb: 4,
+              background: "linear-gradient(135deg,#f7fbff 0%,#eef5ff 100%)",
+            }}
+          >
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              sx={{ color: "#0b3d91", mb: 2 }}
+            >
+              {editId ? "✏️ Edit Research Interest" : "➕ Add New Research Interest"}
+            </Typography>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} sm={9}>
+                <TextField
+                  fullWidth
+                  placeholder="Enter research area or topic..."
+                  value={newInterest}
+                  onChange={(e) => setNewInterest(e.target.value)}
+                  size="medium"
                   sx={{
-                    border: "2px solid #e3f2fd",
-                    borderRadius: 3,
-                    p: 3,
-                    mb: 3,
-                    background: "linear-gradient(135deg, #f9fbff 0%, #f5f8ff 100%)",
-                    boxShadow: "0 4px 16px rgba(25,118,210,0.08)",
-                    transition: "all 0.3s ease",
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      backgroundColor: "#fff",
+                      "& fieldset": { borderColor: "#e3f2fd" },
+                      "&:hover fieldset": { borderColor: "#64b5f6" },
+                      "&.Mui-focused fieldset": { borderColor: "#1565c0" },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  startIcon={<Add />}
+                  disabled={loading}
+                  onClick={handleAdd}
+                  sx={{
+                    background: "linear-gradient(135deg,#1565c0,#42a5f5)",
+                    textTransform: "none",
+                    fontWeight: "bold",
+                    py: 1.3,
+                    borderRadius: 2,
                     "&:hover": {
-                      borderColor: "#bbdefb",
-                      boxShadow: "0 6px 20px rgba(25,118,210,0.12)",
-                      transform: "translateY(-2px)",
+                      background: "linear-gradient(135deg,#0b3d91,#1565c0)",
                     },
                   }}
                 >
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: "bold",
-                        color: "#1565c0",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
-                    >
-                      <Box
+                  {editId ? "Update" : "Add"}
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
+
+          {/* List of Interests */}
+          <Typography
+            variant="h6"
+            fontWeight="bold"
+            sx={{ color: "#0b3d91", mb: 2 }}
+          >
+            Saved Research Interests
+          </Typography>
+
+          <AnimatePresence>
+            {researchAreas.map((item, index) => (
+              <motion.div
+                key={item._id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Paper
+                  sx={{
+                    p: 3,
+                    mb: 2,
+                    borderRadius: 2,
+                    border: "1px solid #d3e0ff",
+                    background: "#f9fbff",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    "&:hover": {
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 6px 14px rgba(25,118,210,0.1)",
+                    },
+                  }}
+                >
+                  <Typography
+                    variant="body1"
+                    sx={{ fontSize: "16px", color: "#0b3d91", fontWeight: 500 }}
+                  >
+                    {index + 1}. {item.title}
+                  </Typography>
+
+                  <Box>
+                    <Tooltip title="Edit">
+                      <IconButton
+                        onClick={() => handleEdit(item)}
                         sx={{
-                          width: 24,
-                          height: 24,
-                          borderRadius: "50%",
-                          background: "linear-gradient(135deg, #1565c0, #42a5f5)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "white",
-                          fontSize: "12px",
-                          fontWeight: "bold",
+                          color: "#1565c0",
+                          "&:hover": { backgroundColor: "rgba(21,101,192,0.1)" },
                         }}
                       >
-                        {index + 1}
-                      </Box>
-                      Research Interest #{index + 1}
-                    </Typography>
-                    
-                    <IconButton
-                      onClick={() => handleDelete(area.id)}
-                      sx={{
-                        color: "#f44336",
-                        background: "rgba(244,67,54,0.1)",
-                        "&:hover": {
-                          background: "rgba(244,67,54,0.2)",
-                          transform: "scale(1.1)",
-                        },
-                        transition: "all 0.2s ease",
-                      }}
-                    >
-                      <Delete />
-                    </IconButton>
+                        <Edit />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton
+                        onClick={() => handleDelete(item._id)}
+                        sx={{
+                          color: "#f44336",
+                          "&:hover": { backgroundColor: "rgba(244,67,54,0.1)" },
+                        }}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
-
-                  <TextField
-                    fullWidth
-                    multiline
-                    minRows={3}
-                    variant="outlined"
-                    value={area.title}
-                    onChange={(e) => handleChange(area.id, e.target.value)}
-                    placeholder="Describe your research interest in detail..."
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "12px",
-                        backgroundColor: "#fff",
-                        transition: "all 0.3s ease",
-                        "& fieldset": {
-                          borderColor: "#e3f2fd",
-                          borderWidth: 2,
-                        },
-                        "&:hover fieldset": {
-                          borderColor: "#bbdefb",
-                        },
-                        "&.Mui-focused fieldset": {
-                          borderColor: "#1565c0",
-                          borderWidth: 2,
-                          boxShadow: "0 0 0 4px rgba(21,101,192,0.1)",
-                        },
-                      },
-                      "& .MuiOutlinedInput-input": {
-                        fontSize: "16px",
-                        lineHeight: 1.6,
-                      },
-                    }}
-                  />
-                </Box>
+                </Paper>
               </motion.div>
             ))}
           </AnimatePresence>
 
-          {/* ===== Add New Section ===== */}
-          <Fade in timeout={800}>
-            <Box>
-              <Divider 
-                sx={{ 
-                  my: 4,
-                  "&::before, &::after": {
-                    borderColor: "#e3f2fd",
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    px: 3,
-                    py: 1,
-                    background: "linear-gradient(135deg, #1565c0, #42a5f5)",
-                    color: "white",
-                    borderRadius: 20,
-                    fontSize: "14px",
-                    fontWeight: "bold",
-                  }}
-                >
-                  ADD NEW
-                </Box>
-              </Divider>
+          <Divider sx={{ my: 4, borderColor: "#e3f2fd" }} />
 
-              <Box
-                sx={{
-                  border: "2px dashed #bbdefb",
-                  borderRadius: 3,
-                  p: 4,
-                  background: "linear-gradient(135deg, rgba(21,101,192,0.02) 0%, rgba(66,165,245,0.02) 100%)",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    borderColor: "#64b5f6",
-                    background: "linear-gradient(135deg, rgba(21,101,192,0.05) 0%, rgba(66,165,245,0.05) 100%)",
-                  },
-                }}
-              >
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: "bold",
-                    color: "#0b3d91",
-                    mb: 3,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                  }}
-                >
-                  <Add sx={{ fontSize: 28 }} />
-                  Add New Research Interest
-                </Typography>
-
-                <Grid container spacing={2} alignItems="flex-end">
-                  <Grid item xs={12} sm={9}>
-                    <TextField
-                      fullWidth
-                      multiline
-                      minRows={3}
-                      placeholder="Enter a new research area, topic, or specialization..."
-                      value={newInterest}
-                      onChange={(e) => setNewInterest(e.target.value)}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: "12px",
-                          backgroundColor: "#fff",
-                          "& fieldset": {
-                            borderColor: "#e3f2fd",
-                            borderWidth: 2,
-                          },
-                          "&:hover fieldset": {
-                            borderColor: "#bbdefb",
-                          },
-                          "&.Mui-focused fieldset": {
-                            borderColor: "#1565c0",
-                            borderWidth: 2,
-                            boxShadow: "0 0 0 4px rgba(21,101,192,0.1)",
-                          },
-                        },
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={3}>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      startIcon={<Add />}
-                      onClick={handleAddInterest}
-                      disabled={!newInterest.trim()}
-                      sx={{
-                        background: "linear-gradient(135deg, #1565c0, #42a5f5)",
-                        borderRadius: "12px",
-                        fontWeight: "bold",
-                        textTransform: "none",
-                        py: 1.5,
-                        fontSize: "16px",
-                        boxShadow: "0 4px 12px rgba(21,101,192,0.3)",
-                        "&:hover": {
-                          background: "linear-gradient(135deg, #0b3d91, #1565c0)",
-                          transform: "translateY(-2px)",
-                          boxShadow: "0 6px 16px rgba(21,101,192,0.4)",
-                        },
-                        "&:disabled": {
-                          background: "#e0e0e0",
-                          color: "#9e9e9e",
-                          transform: "none",
-                          boxShadow: "none",
-                        },
-                        transition: "all 0.3s ease",
-                      }}
-                    >
-                      Add
-                    </Button>
-                  </Grid>
-                </Grid>
-              </Box>
-            </Box>
-          </Fade>
-
-          {/* ===== Footer Buttons ===== */}
+          {/* Footer Buttons */}
           <Box
             sx={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              mt: 6,
-              pt: 4,
-              borderTop: "2px solid #e3f2fd",
+              mt: 3,
             }}
           >
             <Button
@@ -413,20 +284,11 @@ function ResearchInterests() {
               startIcon={<ArrowBack />}
               onClick={handlePrevious}
               sx={{
-                borderColor: "#1565c0",
                 color: "#1565c0",
+                borderColor: "#1565c0",
                 textTransform: "none",
                 fontWeight: "bold",
-                px: 4,
-                py: 1.5,
-                borderRadius: "12px",
-                fontSize: "16px",
-                "&:hover": {
-                  backgroundColor: "rgba(21,101,192,0.08)",
-                  borderColor: "#0b3d91",
-                  transform: "translateX(-4px)",
-                },
-                transition: "all 0.3s ease",
+                borderRadius: 2,
               }}
             >
               Back
@@ -438,20 +300,10 @@ function ResearchInterests() {
                 startIcon={<Save />}
                 onClick={handleSave}
                 sx={{
-                  background: "linear-gradient(135deg, #1565c0, #42a5f5)",
+                  background: "linear-gradient(135deg,#1565c0,#42a5f5)",
                   textTransform: "none",
                   fontWeight: "bold",
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: "12px",
-                  fontSize: "16px",
-                  boxShadow: "0 4px 12px rgba(21,101,192,0.3)",
-                  "&:hover": {
-                    background: "linear-gradient(135deg, #0b3d91, #1565c0)",
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 6px 16px rgba(21,101,192,0.4)",
-                  },
-                  transition: "all 0.3s ease",
+                  borderRadius: 2,
                 }}
               >
                 Save
@@ -462,20 +314,10 @@ function ResearchInterests() {
                 endIcon={<ArrowForward />}
                 onClick={handleNext}
                 sx={{
-                  background: "linear-gradient(135deg, #2e7d32, #4caf50)",
+                  background: "linear-gradient(135deg,#2e7d32,#4caf50)",
                   textTransform: "none",
                   fontWeight: "bold",
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: "12px",
-                  fontSize: "16px",
-                  boxShadow: "0 4px 12px rgba(46,125,50,0.3)",
-                  "&:hover": {
-                    background: "linear-gradient(135deg, #1b5e20, #2e7d32)",
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 6px 16px rgba(46,125,50,0.4)",
-                  },
-                  transition: "all 0.3s ease",
+                  borderRadius: 2,
                 }}
               >
                 Next

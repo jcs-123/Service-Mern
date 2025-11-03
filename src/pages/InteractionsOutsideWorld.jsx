@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Grid,
@@ -6,56 +6,99 @@ import {
   Button,
   Typography,
   Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { Save, CloudUpload } from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
-function InteractionsOutsideWorld() {
+const InteractionsOutsideWorld = () => {
   const navigate = useNavigate();
+  const gmail = localStorage.getItem("gmail") || "jeswinjohn@jecc.ac.in";
 
-  const [records, setRecords] = useState([
-    {
-      title:
-        "BHARATHIYAAR UTY, COIMBATORE VIVA VOCE AND THESIS EVALUATION A J RAJESWARI JOE 23-07-2020",
-      academicYear: "2019-2020",
-      certificate: "",
-    },
-    {
-      title:
-        "University of Kerala, Karyavattom campus VIVA VOCE AND THESIS EVALUATION RANGANAYAKI 15-07-2019",
-      academicYear: "2019-2020",
-      certificate: "",
-    },
-  ]);
+  const [record, setRecord] = useState({
+    title: "",
+    academicYear: "",
+    certificate: null,
+  });
+  const [records, setRecords] = useState([]);
+  const [editId, setEditId] = useState(null);
 
-  // ✅ Auto-save on edit
-  const handleChange = (index, field, value) => {
-    const updated = [...records];
-    updated[index][field] = value;
-    setRecords(updated);
-    console.log("Auto-saved:", updated[index]);
-  };
+  // 🟢 Fetch all interactions
+  useEffect(() => {
+    fetchRecords();
+  }, []);
 
-  // ✅ File upload
-  const handleFileUpload = (index, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const updated = [...records];
-      updated[index].certificate = file.name;
-      setRecords(updated);
-      console.log("Auto-saved file:", file.name);
+  const fetchRecords = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:4000/api/interactions/${gmail}`
+      );
+      if (res.data.success) setRecords(res.data.data);
+    } catch (err) {
+      console.error("Error fetching records:", err);
     }
   };
 
-  // ✅ Add new row
-  const handleAddRow = () => {
-    setRecords([
-      ...records,
-      { title: "", academicYear: "", certificate: "" },
-    ]);
+  // 🟢 Handle input change
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setRecord((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // 🟢 Handle file upload
+  const handleFileChange = (e) => {
+    setRecord((prev) => ({ ...prev, certificate: e.target.files[0] }));
+  };
+
+  // 🟢 Save / Update record
+  const handleSave = async () => {
+    try {
+      const formData = new FormData();
+      for (const key in record) formData.append(key, record[key]);
+      formData.append("gmail", gmail);
+
+      if (editId) {
+        await axios.put(`http://localhost:4000/api/interactions/${editId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        alert("✅ Interaction updated successfully!");
+      } else {
+        await axios.post("http://localhost:4000/api/interactions", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        alert("✅ Interaction added successfully!");
+      }
+
+      setRecord({ title: "", academicYear: "", certificate: null });
+      setEditId(null);
+      fetchRecords();
+    } catch (err) {
+      console.error("Error saving record:", err);
+      alert("❌ Failed to save record");
+    }
+  };
+
+  // 🟢 Edit record
+  const handleEdit = (item) => {
+    setRecord({ title: item.title, academicYear: item.academicYear, certificate: null });
+    setEditId(item._id);
+  };
+
+  // 🟢 Delete record
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this record?")) {
+      await axios.delete(`http://localhost:4000/api/interactions/${id}`);
+      fetchRecords();
+    }
   };
 
   const handlePrevious = () => navigate("/SeminarsGuided");
@@ -64,233 +107,182 @@ function InteractionsOutsideWorld() {
   return (
     <Box
       sx={{
+        background: "linear-gradient(180deg,#f3f8ff 0%,#e5efff 100%)",
         minHeight: "100vh",
-        background: "linear-gradient(180deg,#f0f6ff 0%,#e8f0ff 100%)",
+        py: 5,
+        px: { xs: 2, md: 6 },
         display: "flex",
         justifyContent: "center",
-        alignItems: "flex-start",
-        py: 5,
-        px: 2,
       }}
     >
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        style={{ width: "100%", maxWidth: "950px" }}
+        style={{ width: "100%", maxWidth: "1200px" }}
       >
-        <Paper
-          elevation={4}
-          sx={{
-            borderRadius: 3,
-            border: "1px solid #b6d0ff",
-            p: { xs: 3, md: 5 },
-            background: "#ffffff",
-            boxShadow: "0 6px 20px rgba(25,118,210,0.1)",
-          }}
-        >
-          {/* ===== Header ===== */}
+        <Paper sx={{ p: 4, borderRadius: 3 }}>
           <Typography
             variant="h5"
             align="center"
             fontWeight="bold"
             sx={{
               color: "#0b3d91",
+              mb: 3,
               textTransform: "uppercase",
-              letterSpacing: 0.5,
-              mb: 1,
+              letterSpacing: 1,
             }}
           >
             Interactions with Outside World
           </Typography>
-          <Box
-            sx={{
-              height: "3px",
-              width: "200px",
-              backgroundColor: "#1565c0",
-              mx: "auto",
-              mb: 4,
-              borderRadius: 2,
-            }}
-          />
 
-          {/* ===== Record List ===== */}
-          {records.map((item, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Paper
-                sx={{
-                  p: 3,
-                  mb: 3,
-                  borderRadius: 2,
-                  border: "1px solid #d3e0ff",
-                  background: "linear-gradient(145deg,#fafcff,#f6f9ff)",
-                  boxShadow: "0 3px 10px rgba(25,118,210,0.05)",
-                }}
+          {/* Form Section */}
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                label="Interaction Title / Details"
+                name="title"
+                value={record.title}
+                onChange={handleChange}
+                fullWidth
+                size="small"
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Academic Year"
+                name="academicYear"
+                value={record.academicYear}
+                onChange={handleChange}
+                fullWidth
+                size="small"
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Button
+                component="label"
+                variant="outlined"
+                fullWidth
+                sx={{ height: "40px" }}
               >
-                <Typography
-                  variant="subtitle1"
-                  fontWeight="bold"
-                  sx={{ color: "#1565c0", mb: 2 }}
-                >
-                  #{index + 1} Interaction Details
-                </Typography>
+                Upload Certificate (PDF/Image)
+                <input
+                  type="file"
+                  hidden
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleFileChange}
+                />
+              </Button>
+            </Grid>
+          </Grid>
 
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                      Title / Details
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={item.title}
-                      onChange={(e) =>
-                        handleChange(index, "title", e.target.value)
-                      }
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                      During Academic Year
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={item.academicYear}
-                      onChange={(e) =>
-                        handleChange(index, "academicYear", e.target.value)
-                      }
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                      Upload Certificate / Document
-                    </Typography>
-                    <Box
-                      sx={{
-                        border: "1px dashed #90caf9",
-                        borderRadius: 2,
-                        p: 1.2,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        background: "#f4f8ff",
-                        mt: 0.5,
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: item.certificate ? "#1565c0" : "#777",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          flex: 1,
-                        }}
-                      >
-                        {item.certificate || "No file selected"}
-                      </Typography>
-                      <Tooltip title="Upload File">
-                        <IconButton component="label" color="primary">
-                          <CloudUpload />
-                          <input
-                            type="file"
-                            hidden
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={(e) => handleFileUpload(index, e)}
-                          />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Paper>
-            </motion.div>
-          ))}
-
-          {/* ➕ Add Row */}
-          <Box sx={{ textAlign: "left", mt: 3 }}>
+          <Box sx={{ textAlign: "right", mt: 3 }}>
             <Button
-              variant="outlined"
-              onClick={handleAddRow}
+              variant="contained"
               sx={{
+                backgroundColor: "#0b3d91",
                 textTransform: "none",
-                fontWeight: 600,
-                borderRadius: 2,
-                color: "#1565c0",
-                borderColor: "#1565c0",
-                "&:hover": { background: "rgba(21,101,192,0.1)" },
+                fontWeight: "bold",
               }}
+              onClick={handleSave}
             >
-              + Add Interaction
+              {editId ? "Update" : "Save"}
             </Button>
           </Box>
 
-          {/* ===== Navigation ===== */}
+          {/* Table Section */}
+          <Typography
+            variant="h6"
+            sx={{
+              mt: 5,
+              mb: 2,
+              color: "#0b3d91",
+              fontWeight: "bold",
+            }}
+          >
+            Saved Records
+          </Typography>
+
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead sx={{ background: "#0b3d91" }}>
+                <TableRow>
+                  <TableCell sx={{ color: "#fff" }}>#</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>Title / Details</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>Academic Year</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>Certificate</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {records.map((item, index) => (
+                  <TableRow key={item._id}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{item.title}</TableCell>
+                    <TableCell>{item.academicYear}</TableCell>
+                    <TableCell>
+                      {item.certificate ? (
+                        <a
+                          href={`http://localhost:4000${item.certificate}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: "#1565c0", textDecoration: "none" }}
+                        >
+                          View
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="Edit">
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleEdit(item)}
+                          size="small"
+                        >
+                          <Edit />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDelete(item._id)}
+                          size="small"
+                        >
+                          <Delete />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Navigation */}
           <Box
             sx={{
               display: "flex",
               justifyContent: "space-between",
               mt: 4,
-              flexWrap: "wrap",
-              gap: 2,
+              borderTop: "1px solid #ccc",
+              pt: 2,
             }}
           >
-            <Button
-              variant="outlined"
-              onClick={handlePrevious}
-              sx={{
-                color: "#0b3d91",
-                borderColor: "#0b3d91",
-                textTransform: "none",
-                fontWeight: 600,
-              }}
-            >
-              ← Back
+            <Button variant="outlined" onClick={handlePrevious}>
+              ← Previous
             </Button>
-
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <Button
-                variant="contained"
-                startIcon={<Save />}
-                sx={{
-                  backgroundColor: "#1565c0",
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  px: 3,
-                  "&:hover": { backgroundColor: "#0b3d91" },
-                }}
-                onClick={() => alert("✅ Auto-saved all interactions!")}
-              >
-                Save
-              </Button>
-
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "#2e7d32",
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  px: 4,
-                  "&:hover": { backgroundColor: "#1b5e20" },
-                }}
-                onClick={handleNext}
-              >
-                Next →
-              </Button>
-            </Box>
+            <Button variant="contained" onClick={handleNext}>
+              Next →
+            </Button>
           </Box>
         </Paper>
       </motion.div>
     </Box>
   );
-}
+};
 
 export default InteractionsOutsideWorld;

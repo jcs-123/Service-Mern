@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
@@ -6,71 +6,87 @@ import {
   Button,
   Typography,
   Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Tooltip,
-  MenuItem,
 } from "@mui/material";
-import { UploadFile, CloudUpload, Save } from "@mui/icons-material";
-import * as XLSX from "xlsx";
+import {
+  Visibility,
+  Edit,
+  Delete,
+  Add,
+  CloudUpload,
+  PictureAsPdf,
+  Image,
+} from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import axios from "axios";
 
-function ProgramsAttended() {
+const ProgramsAttended = () => {
   const navigate = useNavigate();
+  const gmail = localStorage.getItem("gmail") || "jeswinjohn@jecc.ac.in";
 
+  const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState(false);
   const [programs, setPrograms] = useState([
     {
-      category: "Other Programs",
+      category: "",
       subCategory: "",
-      title: "CAS selection committee",
-      period: "Outside this college",
-      fundingAgency: "Uty of Kerala",
-      organisedBy: "Uty of Kerala",
-      fromDate: "2020-02-17",
-      toDate: "2020-02-17",
-      certificate: "",
+      title: "",
+      period: "",
+      fundingAgency: "",
+      organisedBy: "",
+      fromDate: "",
+      toDate: "",
+      certificate: null,
     },
   ]);
 
-  const [bulkData, setBulkData] = useState([]);
+  const [existingPrograms, setExistingPrograms] = useState([]);
+  const [previewDialog, setPreviewDialog] = useState(false);
+  const [previewFile, setPreviewFile] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editData, setEditData] = useState(null);
 
-  // ✅ Excel Upload
-  const handleExcelUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const data = new Uint8Array(evt.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(sheet);
-      setBulkData(json);
-      setPrograms(json);
-      alert(`✅ ${json.length} record(s) uploaded successfully!`);
-    };
-    reader.readAsArrayBuffer(file);
+  // Fetch programs on mount
+  useEffect(() => {
+    fetchPrograms();
+  }, []);
+
+  const fetchPrograms = async () => {
+    try {
+      const res = await axios.get(`http://localhost:4000/api/programs-attended/${gmail}`);
+      if (res.data.success) setExistingPrograms(res.data.data);
+    } catch (error) {
+      console.error("Error fetching programs:", error);
+    }
   };
 
-  // ✅ Auto-save on every change
   const handleChange = (index, field, value) => {
     const updated = [...programs];
     updated[index][field] = value;
     setPrograms(updated);
-    console.log("Auto-saved record:", updated[index]);
   };
 
-  // ✅ File Upload
   const handleFileUpload = (index, e) => {
     const file = e.target.files[0];
     if (file) {
       const updated = [...programs];
-      updated[index].certificate = file.name;
+      updated[index].certificate = file;
       setPrograms(updated);
-      console.log("Auto-saved file:", file.name);
     }
   };
 
-  // ✅ Add New Record
   const handleAddRow = () => {
     setPrograms([
       ...programs,
@@ -83,9 +99,89 @@ function ProgramsAttended() {
         organisedBy: "",
         fromDate: "",
         toDate: "",
-        certificate: "",
+        certificate: null,
       },
     ]);
+  };
+
+  // ✅ Submit to backend
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      for (const prog of programs) {
+        const formData = new FormData();
+        for (const key in prog) formData.append(key, prog[key]);
+        formData.append("gmail", gmail);
+
+        await axios.post("http://localhost:4000/api/programs-attended", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+      alert("✅ Programs Attended saved successfully!");
+      fetchPrograms();
+      setPrograms([
+        {
+          category: "",
+          subCategory: "",
+          title: "",
+          period: "",
+          fundingAgency: "",
+          organisedBy: "",
+          fromDate: "",
+          toDate: "",
+          certificate: null,
+        },
+      ]);
+    } catch (error) {
+      console.error("Error saving programs:", error);
+      alert("Error saving programs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Delete
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this program?")) {
+      await axios.delete(`http://localhost:4000/api/programs-attended/${id}`);
+      fetchPrograms();
+    }
+  };
+
+  // ✅ Preview
+  const handlePreview = (filePath) => {
+    setPreviewFile(`http://localhost:4000${filePath}`);
+    setPreviewDialog(true);
+  };
+
+  // ✅ Edit
+  const handleEdit = (prog) => {
+    setEditData({ ...prog });
+    setEditDialogOpen(true);
+  };
+
+  // ✅ Update
+  const handleUpdate = async () => {
+    try {
+      const formData = new FormData();
+      for (const key in editData) {
+        if (key !== "certificate") formData.append(key, editData[key]);
+      }
+      if (editData.newFile) formData.append("certificate", editData.newFile);
+
+      await axios.put(
+        `http://localhost:4000/api/programs-attended/${editData._id}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      alert("✅ Program updated successfully!");
+      setEditDialogOpen(false);
+      fetchPrograms();
+    } catch (error) {
+      console.error("Error updating program:", error);
+      alert("Failed to update program");
+    }
   };
 
   const handlePrevious = () => navigate("/ProgramsCoordinated");
@@ -95,270 +191,107 @@ function ProgramsAttended() {
     <Box
       sx={{
         minHeight: "100vh",
-        background: "linear-gradient(180deg,#f0f6ff 0%,#e8f0ff 100%)",
+        background: "linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%)",
+        py: 4,
+        px: { xs: 2, md: 4 },
         display: "flex",
         justifyContent: "center",
-        alignItems: "flex-start",
-        py: 5,
-        px: 2,
       }}
     >
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        style={{ width: "100%", maxWidth: "950px" }}
+        style={{ width: "100%", maxWidth: "1200px" }}
       >
-        <Paper
-          elevation={4}
-          sx={{
-            borderRadius: 3,
-            border: "1px solid #b6d0ff",
-            p: { xs: 3, md: 5 },
-            background: "#ffffff",
-            boxShadow: "0 6px 20px rgba(25,118,210,0.1)",
-          }}
-        >
-          {/* ===== Header ===== */}
+        <Paper sx={{ p: 4, borderRadius: 3 }}>
           <Typography
-            variant="h5"
+            variant="h4"
             align="center"
             fontWeight="bold"
-            sx={{
-              color: "#0b3d91",
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-              mb: 1,
-            }}
+            sx={{ color: "#1a237e", mb: 4 }}
           >
-            Programs Attended (STTP / FDP / Workshop)
+            🧑‍🏫 Programs Attended (STTP / FDP / Workshop)
           </Typography>
-          <Box
-            sx={{
-              height: "3px",
-              width: "140px",
-              backgroundColor: "#1565c0",
-              mx: "auto",
-              mb: 4,
-              borderRadius: 2,
-            }}
-          />
 
-          {/* ===== Bulk Upload ===== */}
-          <Box
-            sx={{
-              mb: 4,
-              p: 3,
-              border: "2px dashed #1976d2",
-              borderRadius: 3,
-              textAlign: "center",
-              background: "linear-gradient(135deg,#f8fbff 0%,#f1f7ff 100%)",
-              transition: "0.3s",
-              "&:hover": { boxShadow: "0 0 10px rgba(25,118,210,0.2)" },
-            }}
-          >
-            <Typography sx={{ mb: 1, color: "#0b3d91", fontWeight: 500 }}>
-              Upload Excel File (Bulk Upload)
-            </Typography>
-            <IconButton
-              component="label"
-              color="primary"
-              sx={{
-                border: "1px solid #1976d2",
-                borderRadius: 2,
-                "&:hover": { backgroundColor: "#1976d220" },
-              }}
-            >
-              <UploadFile />
-              <input
-                type="file"
-                accept=".xls,.xlsx"
-                hidden
-                onChange={handleExcelUpload}
-              />
-            </IconButton>
-            {bulkData.length > 0 && (
-              <Typography sx={{ mt: 1, color: "green" }}>
-                {bulkData.length} records uploaded successfully!
-              </Typography>
+          {/* Toggle View/Add */}
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+            {!viewMode ? (
+              <Button variant="outlined" startIcon={<Visibility />} onClick={() => setViewMode(true)}>
+                View All Programs
+              </Button>
+            ) : (
+              <Button variant="outlined" startIcon={<Add />} onClick={() => setViewMode(false)}>
+                Add New Program
+              </Button>
             )}
           </Box>
 
-          {/* ===== Form ===== */}
-          {programs.map((prog, index) => (
-            <Box
-              key={index}
-              component={motion.div}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              sx={{
-                border: "1px solid #d3e0ff",
-                borderRadius: 2,
-                p: 3,
-                mb: 3,
-                background: "linear-gradient(145deg,#fafcff,#f6f9ff)",
-                boxShadow: "0 3px 10px rgba(25,118,210,0.05)",
-              }}
-            >
-              <Typography
-                variant="subtitle1"
-                fontWeight="bold"
+          {/* ADD MODE */}
+          {!viewMode &&
+            programs.map((prog, index) => (
+              <Paper
+                key={index}
                 sx={{
-                  color: "#1565c0",
-                  mb: 2,
-                  textTransform: "capitalize",
+                  p: 3,
+                  mb: 3,
+                  backgroundColor: "#f9f9f9",
+                  border: "1px solid #ddd",
+                  borderRadius: 2,
                 }}
               >
-                #{index + 1} Program Details
-              </Typography>
+                <Typography variant="h6" color="primary" mb={2}>
+                  Program {index + 1}
+                </Typography>
 
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    Category
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    value={prog.category}
-                    onChange={(e) =>
-                      handleChange(index, "category", e.target.value)
-                    }
-                  />
-                </Grid>
+                <Grid container spacing={2}>
+                  {[
+                    ["Category", "category"],
+                    ["Sub Category", "subCategory"],
+                    ["Title", "title"],
+                    ["Period", "period"],
+                    ["Funding Agency", "fundingAgency"],
+                    ["Organised By", "organisedBy"],
+                    ["From Date", "fromDate", "date"],
+                    ["To Date", "toDate", "date"],
+                  ].map(([label, name, type]) => (
+                    <Grid item xs={12} sm={6} md={3} key={name}>
+                      <TextField
+                        label={label}
+                        type={type || "text"}
+                        fullWidth
+                        value={prog[name]}
+                        onChange={(e) => handleChange(index, name, e.target.value)}
+                        InputLabelProps={type === "date" ? { shrink: true } : {}}
+                      />
+                    </Grid>
+                  ))}
 
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    Sub Category
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    value={prog.subCategory}
-                    onChange={(e) =>
-                      handleChange(index, "subCategory", e.target.value)
-                    }
-                  />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    Title
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    value={prog.title}
-                    onChange={(e) =>
-                      handleChange(index, "title", e.target.value)
-                    }
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    Period
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    value={prog.period}
-                    onChange={(e) =>
-                      handleChange(index, "period", e.target.value)
-                    }
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    Funding Agency
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    value={prog.fundingAgency}
-                    onChange={(e) =>
-                      handleChange(index, "fundingAgency", e.target.value)
-                    }
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    Organised By
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    value={prog.organisedBy}
-                    onChange={(e) =>
-                      handleChange(index, "organisedBy", e.target.value)
-                    }
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={3}>
-                  <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    From Date
-                  </Typography>
-                  <TextField
-                    type="date"
-                    fullWidth
-                    size="small"
-                    value={prog.fromDate}
-                    onChange={(e) =>
-                      handleChange(index, "fromDate", e.target.value)
-                    }
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={3}>
-                  <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    To Date
-                  </Typography>
-                  <TextField
-                    type="date"
-                    fullWidth
-                    size="small"
-                    value={prog.toDate}
-                    onChange={(e) =>
-                      handleChange(index, "toDate", e.target.value)
-                    }
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" sx={{ color: "#0b3d91" }}>
-                    Upload Certificate / Document
-                  </Typography>
-                  <Box
-                    sx={{
-                      border: "1px dashed #90caf9",
-                      borderRadius: 2,
-                      p: 1.2,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      background: "#f4f8ff",
-                      mt: 0.5,
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
+                  {/* File Upload */}
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box
                       sx={{
-                        color: prog.certificate ? "#1565c0" : "#777",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        flex: 1,
+                        border: "1px dashed #90caf9",
+                        p: 1.2,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        background: "#f4f8ff",
+                        borderRadius: 2,
                       }}
                     >
-                      {prog.certificate || "No file selected"}
-                    </Typography>
-                    <Tooltip title="Upload Certificate">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: prog.certificate ? "#1565c0" : "#777",
+                          maxWidth: "150px",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {prog.certificate ? prog.certificate.name : "No file selected"}
+                      </Typography>
                       <IconButton component="label" color="primary">
                         <CloudUpload />
                         <input
@@ -368,89 +301,164 @@ function ProgramsAttended() {
                           onChange={(e) => handleFileUpload(index, e)}
                         />
                       </IconButton>
-                    </Tooltip>
-                  </Box>
+                    </Box>
+                  </Grid>
                 </Grid>
-              </Grid>
+              </Paper>
+            ))}
+
+          {!viewMode && (
+            <>
+              <Box sx={{ textAlign: "center", my: 3 }}>
+                <Button variant="outlined" onClick={handleAddRow}>
+                  + Add Another Program
+                </Button>
+              </Box>
+              <Box sx={{ textAlign: "center", mt: 3 }}>
+                <Button
+                  variant="contained"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  sx={{ px: 6, py: 1.2 }}
+                >
+                  {loading ? "Saving..." : "Save Programs"}
+                </Button>
+              </Box>
+            </>
+          )}
+
+          {/* VIEW MODE */}
+          {viewMode && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" sx={{ color: "#1a237e", mb: 2, textAlign: "center" }}>
+                Your Programs Attended ({existingPrograms.length})
+              </Typography>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead sx={{ backgroundColor: "#1a237e" }}>
+                    <TableRow>
+                      <TableCell sx={{ color: "#fff" }}>Title</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Category</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Organised By</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Certificate</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {existingPrograms.map((prog, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{prog.title}</TableCell>
+                        <TableCell>{prog.category}</TableCell>
+                        <TableCell>{prog.organisedBy}</TableCell>
+                        <TableCell>
+                          {prog.certificate ? (
+                            <Tooltip title="View Certificate">
+                              <IconButton color="primary" onClick={() => handlePreview(prog.certificate)}>
+                                {prog.certificate.endsWith(".pdf") ? <PictureAsPdf /> : <Image />}
+                              </IconButton>
+                            </Tooltip>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Tooltip title="Edit">
+                            <IconButton color="secondary" onClick={() => handleEdit(prog)}>
+                              <Edit />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton color="error" onClick={() => handleDelete(prog._id)}>
+                              <Delete />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </Box>
-          ))}
+          )}
 
-          {/* Add Row Button */}
-          <Box sx={{ textAlign: "left", mt: 3 }}>
-            <Button
-              variant="outlined"
-              onClick={handleAddRow}
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                borderRadius: 2,
-                color: "#1565c0",
-                borderColor: "#1565c0",
-                "&:hover": { background: "rgba(21,101,192,0.1)" },
-              }}
-            >
-              + Add Program
+          {/* Navigation */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4, borderTop: "1px solid #ccc", pt: 3 }}>
+            <Button variant="outlined" onClick={handlePrevious}>
+              ← Previous
             </Button>
-          </Box>
-
-          {/* Navigation Buttons */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              mt: 4,
-              flexWrap: "wrap",
-              gap: 2,
-            }}
-          >
-            <Button
-              variant="outlined"
-              onClick={handlePrevious}
-              sx={{
-                color: "#0b3d91",
-                borderColor: "#0b3d91",
-                textTransform: "none",
-                fontWeight: 600,
-              }}
-            >
-              ← Back
+            <Button variant="contained" onClick={handleNext}>
+              Next →
             </Button>
-
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <Button
-                variant="contained"
-                startIcon={<Save />}
-                sx={{
-                  backgroundColor: "#1565c0",
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  px: 3,
-                  "&:hover": { backgroundColor: "#0b3d91" },
-                }}
-                onClick={() => alert("✅ Auto-saved all programs!")}
-              >
-                Save
-              </Button>
-
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "#2e7d32",
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  px: 4,
-                  "&:hover": { backgroundColor: "#1b5e20" },
-                }}
-                onClick={handleNext}
-              >
-                Next →
-              </Button>
-            </Box>
           </Box>
         </Paper>
+
+        {/* File Preview */}
+        <Dialog open={previewDialog} onClose={() => setPreviewDialog(false)} maxWidth="lg" fullWidth>
+          <DialogTitle>Certificate Preview</DialogTitle>
+          <DialogContent>
+            {previewFile && previewFile.endsWith(".pdf") ? (
+              <iframe src={previewFile} width="100%" height="600px" title="PDF Preview"></iframe>
+            ) : (
+              <img src={previewFile} alt="Preview" style={{ width: "100%", borderRadius: "8px" }} />
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPreviewDialog(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
+          <DialogTitle>Edit Program</DialogTitle>
+          <DialogContent>
+            {editData && (
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                {Object.entries(editData)
+                  .filter(([k]) => !["_id", "__v", "gmail", "createdAt", "updatedAt"].includes(k))
+                  .map(([key, value]) => (
+                    <Grid item xs={12} sm={6} key={key}>
+                      {key === "certificate" ? (
+                        <Box>
+                          <Typography variant="body2" sx={{ mb: 1 }}>
+                            Current: {editData.certificate || "No file"}
+                          </Typography>
+                          <Button component="label" variant="outlined" startIcon={<CloudUpload />}>
+                            Upload New
+                            <input
+                              type="file"
+                              hidden
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={(e) =>
+                                setEditData({ ...editData, newFile: e.target.files[0] })
+                              }
+                            />
+                          </Button>
+                        </Box>
+                      ) : (
+                        <TextField
+                          label={key}
+                          value={value || ""}
+                          onChange={(e) =>
+                            setEditData({ ...editData, [key]: e.target.value })
+                          }
+                          fullWidth
+                        />
+                      )}
+                    </Grid>
+                  ))}
+              </Grid>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button variant="contained" onClick={handleUpdate}>
+              Update
+            </Button>
+          </DialogActions>
+        </Dialog>
       </motion.div>
     </Box>
   );
-}
+};
 
 export default ProgramsAttended;

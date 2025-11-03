@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
@@ -6,79 +6,180 @@ import {
   Button,
   Typography,
   Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Tooltip,
 } from "@mui/material";
-import { UploadFile, CloudUpload } from "@mui/icons-material";
-import * as XLSX from "xlsx";
+import {
+  Visibility,
+  Edit,
+  Delete,
+  Add,
+  CloudUpload,
+  PictureAsPdf,
+  Image,
+} from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import axios from "axios";
 
-function ProgramsCoordinated() {
+const ProgramsCoordinated = () => {
   const navigate = useNavigate();
+  const gmail = localStorage.getItem("gmail") || "jeswinjohn@jecc.ac.in";
 
+  const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState(false);
   const [programs, setPrograms] = useState([
     {
-      slNo: "1",
-      title:
-        "Two weeks FDP FOR THE TEACHERS OF AFFILIATED COLLEGES UNDER MG UTY, sponsored by UGC. (BEFORE JOINING THIS COLLEGE)",
-      category: "FDP",
-      organisedBy: "MGU-UGC",
-      fromDate: "2017-01-16",
-      toDate: "2017-01-31",
-      academicYear: "2022-2023",
-      certificate: "",
+      title: "",
+      category: "",
+      organisedBy: "",
+      fromDate: "",
+      toDate: "",
+      academicYear: "",
+      certificate: null,
     },
   ]);
+  const [existingPrograms, setExistingPrograms] = useState([]);
+  const [previewDialog, setPreviewDialog] = useState(false);
+  const [previewFile, setPreviewFile] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editData, setEditData] = useState(null);
 
-  const [bulkData, setBulkData] = useState([]);
+  // 🔹 Fetch programs on mount
+  useEffect(() => {
+    fetchPrograms();
+  }, []);
 
-  // ✅ Excel upload
-  const handleExcelUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const data = new Uint8Array(evt.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(sheet);
-      setBulkData(json);
-      setPrograms(json);
-      alert(`✅ ${json.length} program record(s) uploaded successfully!`);
-    };
-    reader.readAsArrayBuffer(file);
+  const fetchPrograms = async () => {
+    try {
+      const res = await axios.get(`http://localhost:4000/api/programs-coordinated/${gmail}`);
+      if (res.data.success) setExistingPrograms(res.data.data);
+    } catch (error) {
+      console.error("Error fetching programs:", error);
+    }
   };
 
+  // 🔹 Handle field changes
   const handleChange = (index, field, value) => {
     const updated = [...programs];
     updated[index][field] = value;
     setPrograms(updated);
   };
 
+  // 🔹 Handle file upload
   const handleFileUpload = (index, e) => {
     const file = e.target.files[0];
     if (file) {
       const updated = [...programs];
-      updated[index].certificate = file.name;
+      updated[index].certificate = file;
       setPrograms(updated);
     }
   };
 
+  // 🔹 Add new program row
   const handleAddRow = () => {
     setPrograms([
       ...programs,
       {
-        slNo: programs.length + 1,
         title: "",
         category: "",
         organisedBy: "",
         fromDate: "",
         toDate: "",
         academicYear: "",
-        certificate: "",
+        certificate: null,
       },
     ]);
+  };
+
+  // 🔹 Save programs to backend
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      for (const prog of programs) {
+        const formData = new FormData();
+        for (const key in prog) formData.append(key, prog[key]);
+        formData.append("gmail", gmail);
+
+        await axios.post("http://localhost:4000/api/programs-coordinated", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+      alert("✅ Programs Coordinated saved successfully!");
+      fetchPrograms();
+      setPrograms([
+        {
+          title: "",
+          category: "",
+          organisedBy: "",
+          fromDate: "",
+          toDate: "",
+          academicYear: "",
+          certificate: null,
+        },
+      ]);
+    } catch (error) {
+      console.error("Error saving programs:", error);
+      alert("Error saving programs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔹 Delete a record
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this program?")) {
+      await axios.delete(`http://localhost:4000/api/programs-coordinated/${id}`);
+      fetchPrograms();
+    }
+  };
+
+  // 🔹 Preview certificate
+  const handlePreview = (filePath) => {
+    setPreviewFile(`http://localhost:4000${filePath}`);
+    setPreviewDialog(true);
+  };
+
+  // 🔹 Open edit dialog
+  const handleEdit = (prog) => {
+    setEditData({ ...prog });
+    setEditDialogOpen(true);
+  };
+
+  // 🔹 Update program
+  const handleUpdate = async () => {
+    try {
+      const formData = new FormData();
+      for (const key in editData) {
+        if (key !== "certificate") formData.append(key, editData[key]);
+      }
+      if (editData.newFile) formData.append("certificate", editData.newFile);
+
+      await axios.put(
+        `http://localhost:4000/api/programs-coordinated/${editData._id}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      alert("✅ Program updated successfully!");
+      setEditDialogOpen(false);
+      fetchPrograms();
+    } catch (error) {
+      console.error("Error updating program:", error);
+      alert("Failed to update program");
+    }
   };
 
   const handlePrevious = () => navigate("/Publications");
@@ -88,217 +189,104 @@ function ProgramsCoordinated() {
     <Box
       sx={{
         minHeight: "100vh",
-        width: "100%",
-        background: "linear-gradient(180deg, #f3f8ff 0%, #e5efff 100%)",
-        overflowY: "auto",
-        py: 6,
+        background: "linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%)",
+        py: 4,
         px: { xs: 2, md: 4 },
         display: "flex",
         justifyContent: "center",
-        alignItems: "flex-start",
       }}
     >
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        style={{ width: "100%", maxWidth: "1250px" }}
+        style={{ width: "100%", maxWidth: "1200px" }}
       >
-        <Paper
-          elevation={5}
-          sx={{
-            p: { xs: 3, md: 5 },
-            borderRadius: 3,
-            backgroundColor: "#fff",
-            border: "1px solid #d3e0ff",
-            boxShadow: "0 8px 25px rgba(30,90,180,0.1)",
-            mb: 8,
-          }}
-        >
+        <Paper sx={{ p: 4, borderRadius: 3 }}>
           <Typography
-            variant="h5"
+            variant="h4"
             align="center"
             fontWeight="bold"
-            sx={{
-              color: "#0b3d91",
-              letterSpacing: 0.8,
-              mb: 4,
-              textTransform: "uppercase",
-            }}
+            sx={{ color: "#1a237e", mb: 4 }}
           >
             🎓 Programs Coordinated (STTP / FDP / Workshop)
           </Typography>
 
-          {/* Excel Upload */}
-          <Box
-            sx={{
-              mb: 4,
-              p: 3,
-              border: "2px dashed #1976d2",
-              borderRadius: 3,
-              textAlign: "center",
-              background: "linear-gradient(135deg,#f8fbff 0%,#f1f7ff 100%)",
-              transition: "0.3s",
-              "&:hover": { boxShadow: "0 0 10px rgba(25,118,210,0.2)" },
-            }}
-          >
-            <Typography sx={{ mb: 1, color: "#0b3d91", fontWeight: 500 }}>
-              Upload Excel File (Bulk Upload)
-            </Typography>
-            <IconButton
-              component="label"
-              color="primary"
-              sx={{
-                border: "1px solid #1976d2",
-                borderRadius: 2,
-                "&:hover": { backgroundColor: "#1976d220" },
-              }}
-            >
-              <UploadFile />
-              <input
-                type="file"
-                accept=".xls,.xlsx"
-                hidden
-                onChange={handleExcelUpload}
-              />
-            </IconButton>
-            {bulkData.length > 0 && (
-              <Typography sx={{ mt: 1, color: "green" }}>
-                {bulkData.length} records uploaded successfully!
-              </Typography>
+          {/* View / Add Toggle */}
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+            {!viewMode ? (
+              <Button variant="outlined" startIcon={<Visibility />} onClick={() => setViewMode(true)}>
+                View All Programs
+              </Button>
+            ) : (
+              <Button variant="outlined" startIcon={<Add />} onClick={() => setViewMode(false)}>
+                Add New Program
+              </Button>
             )}
           </Box>
 
-          {/* Program Rows */}
-          {programs.map((prog, index) => (
-            <Paper
-              key={index}
-              component={motion.div}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              sx={{
-                p: 3,
-                mb: 3,
-                borderRadius: 3,
-                border: "1px solid #e0e8ff",
-                background: "linear-gradient(145deg,#fafcff 0%,#f6f9ff 100%)",
-                boxShadow: "0 4px 12px rgba(25,118,210,0.06)",
-                "&:hover": {
-                  boxShadow: "0 6px 18px rgba(25,118,210,0.15)",
-                },
-              }}
-            >
-              <Typography
-                variant="subtitle1"
-                fontWeight="bold"
+          {/* ==================== ADD MODE ==================== */}
+          {!viewMode &&
+            programs.map((prog, index) => (
+              <Paper
+                key={index}
                 sx={{
-                  color: "#1565c0",
-                  mb: 2,
-                  textTransform: "capitalize",
+                  p: 3,
+                  mb: 3,
+                  backgroundColor: "#f9f9f9",
+                  border: "1px solid #ddd",
+                  borderRadius: 2,
                 }}
               >
-                #{index + 1} Program Details
-              </Typography>
+                <Typography variant="h6" color="primary" mb={2}>
+                  Program {index + 1}
+                </Typography>
+                <Grid container spacing={2}>
+                  {[
+                    ["Title", "title"],
+                    ["Category", "category"],
+                    ["Organised By", "organisedBy"],
+                    ["From Date", "fromDate", "date"],
+                    ["To Date", "toDate", "date"],
+                    ["Academic Year", "academicYear"],
+                  ].map(([label, name, type]) => (
+                    <Grid item xs={12} sm={6} md={3} key={name}>
+                      <TextField
+                        label={label}
+                        type={type || "text"}
+                        fullWidth
+                        value={prog[name]}
+                        onChange={(e) => handleChange(index, name, e.target.value)}
+                        InputLabelProps={type === "date" ? { shrink: true } : {}}
+                      />
+                    </Grid>
+                  ))}
 
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    label="Title"
-                    value={prog.title}
-                    onChange={(e) =>
-                      handleChange(index, "title", e.target.value)
-                    }
-                    fullWidth
-                    size="small"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={2}>
-                  <TextField
-                    label="Category"
-                    value={prog.category}
-                    onChange={(e) =>
-                      handleChange(index, "category", e.target.value)
-                    }
-                    fullWidth
-                    size="small"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={2}>
-                  <TextField
-                    label="Organised By"
-                    value={prog.organisedBy}
-                    onChange={(e) =>
-                      handleChange(index, "organisedBy", e.target.value)
-                    }
-                    fullWidth
-                    size="small"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={2}>
-                  <TextField
-                    label="From Date"
-                    type="date"
-                    value={prog.fromDate}
-                    onChange={(e) =>
-                      handleChange(index, "fromDate", e.target.value)
-                    }
-                    fullWidth
-                    size="small"
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={2}>
-                  <TextField
-                    label="To Date"
-                    type="date"
-                    value={prog.toDate}
-                    onChange={(e) =>
-                      handleChange(index, "toDate", e.target.value)
-                    }
-                    fullWidth
-                    size="small"
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={2}>
-                  <TextField
-                    label="Academic Year"
-                    value={prog.academicYear}
-                    onChange={(e) =>
-                      handleChange(index, "academicYear", e.target.value)
-                    }
-                    fullWidth
-                    size="small"
-                  />
-                </Grid>
-
-                {/* File Upload Field */}
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box
-                    sx={{
-                      border: "1px dashed #90caf9",
-                      borderRadius: 2,
-                      p: 1.2,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      background: "#f4f8ff",
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
+                  {/* File Upload */}
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box
                       sx={{
-                        color: prog.certificate ? "#1565c0" : "#777",
-                        maxWidth: "150px",
-                        overflow: "hidden",
-                        whiteSpace: "nowrap",
-                        textOverflow: "ellipsis",
+                        border: "1px dashed #90caf9",
+                        p: 1.2,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        background: "#f4f8ff",
+                        borderRadius: 2,
                       }}
                     >
-                      {prog.certificate || "No file selected"}
-                    </Typography>
-                    <Tooltip title="Upload Certificate">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: prog.certificate ? "#1565c0" : "#777",
+                          maxWidth: "150px",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {prog.certificate ? prog.certificate.name : "No file selected"}
+                      </Typography>
                       <IconButton component="label" color="primary">
                         <CloudUpload />
                         <input
@@ -308,77 +296,159 @@ function ProgramsCoordinated() {
                           onChange={(e) => handleFileUpload(index, e)}
                         />
                       </IconButton>
-                    </Tooltip>
-                  </Box>
+                    </Box>
+                  </Grid>
                 </Grid>
-              </Grid>
-            </Paper>
-          ))}
+              </Paper>
+            ))}
 
-          {/* Add Program Button */}
-          <Box sx={{ textAlign: "left", mb: 3 }}>
-            <Button
-              variant="outlined"
-              onClick={handleAddRow}
-              sx={{
-                textTransform: "none",
-                fontWeight: "bold",
-                borderRadius: 2,
-                color: "#1565c0",
-                borderColor: "#1565c0",
-                "&:hover": { background: "rgba(21,101,192,0.1)" },
-              }}
-            >
-              + Add Program
+          {!viewMode && (
+            <>
+              <Box sx={{ textAlign: "center", my: 3 }}>
+                <Button variant="outlined" onClick={handleAddRow}>
+                  + Add Another Program
+                </Button>
+              </Box>
+              <Box sx={{ textAlign: "center", mt: 3 }}>
+                <Button variant="contained" onClick={handleSubmit} disabled={loading} sx={{ px: 6, py: 1.2 }}>
+                  {loading ? "Saving..." : "Save Programs"}
+                </Button>
+              </Box>
+            </>
+          )}
+
+          {/* ==================== VIEW MODE ==================== */}
+          {viewMode && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" sx={{ color: "#1a237e", mb: 2, textAlign: "center" }}>
+                Your Coordinated Programs ({existingPrograms.length})
+              </Typography>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead sx={{ backgroundColor: "#1a237e" }}>
+                    <TableRow>
+                      <TableCell sx={{ color: "#fff" }}>Title</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Category</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Academic Year</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Certificate</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {existingPrograms.map((prog, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{prog.title}</TableCell>
+                        <TableCell>{prog.category}</TableCell>
+                        <TableCell>{prog.academicYear}</TableCell>
+                        <TableCell>
+                          {prog.certificate ? (
+                            <Tooltip title="View Certificate">
+                              <IconButton color="primary" onClick={() => handlePreview(prog.certificate)}>
+                                {prog.certificate.endsWith(".pdf") ? <PictureAsPdf /> : <Image />}
+                              </IconButton>
+                            </Tooltip>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Tooltip title="Edit">
+                            <IconButton color="secondary" onClick={() => handleEdit(prog)}>
+                              <Edit />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton color="error" onClick={() => handleDelete(prog._id)}>
+                              <Delete />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+
+          {/* Navigation */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4, borderTop: "1px solid #ccc", pt: 3 }}>
+            <Button variant="outlined" onClick={handlePrevious}>
+              Previous
             </Button>
-          </Box>
-
-          {/* Navigation Buttons */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              mt: 4,
-            }}
-          >
-            <Button
-              variant="outlined"
-              onClick={handlePrevious}
-              sx={{
-                borderRadius: 3,
-                textTransform: "none",
-                fontWeight: "bold",
-                px: 4,
-                py: 1,
-                color: "#1976d2",
-                borderColor: "#1976d2",
-                "&:hover": { background: "rgba(25,118,210,0.1)" },
-              }}
-            >
-              ← Previous
-            </Button>
-
-            <Button
-              variant="contained"
-              onClick={handleNext}
-              sx={{
-                borderRadius: 3,
-                textTransform: "none",
-                fontWeight: "bold",
-                px: 5,
-                py: 1.2,
-                fontSize: "1rem",
-                background: "linear-gradient(135deg,#1976d2,#42a5f5)",
-                boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
-              }}
-            >
+            <Button variant="contained" onClick={handleNext}>
               Next →
             </Button>
           </Box>
         </Paper>
+
+        {/* FILE PREVIEW DIALOG */}
+        <Dialog open={previewDialog} onClose={() => setPreviewDialog(false)} maxWidth="lg" fullWidth>
+          <DialogTitle>Certificate Preview</DialogTitle>
+          <DialogContent>
+            {previewFile && previewFile.endsWith(".pdf") ? (
+              <iframe src={previewFile} width="100%" height="600px" title="PDF Preview"></iframe>
+            ) : (
+              <img src={previewFile} alt="Preview" style={{ width: "100%", borderRadius: "8px" }} />
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPreviewDialog(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* EDIT DIALOG */}
+        <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
+          <DialogTitle>Edit Program</DialogTitle>
+          <DialogContent>
+            {editData && (
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                {Object.entries(editData)
+                  .filter(([k]) => !["_id", "__v", "gmail", "createdAt", "updatedAt"].includes(k))
+                  .map(([key, value]) => (
+                    <Grid item xs={12} sm={6} key={key}>
+                      {key === "certificate" ? (
+                        <Box>
+                          <Typography variant="body2" sx={{ mb: 1 }}>
+                            Current: {editData.certificate || "No file"}
+                          </Typography>
+                          <Button component="label" variant="outlined" startIcon={<CloudUpload />}>
+                            Upload New
+                            <input
+                              type="file"
+                              hidden
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={(e) =>
+                                setEditData({ ...editData, newFile: e.target.files[0] })
+                              }
+                            />
+                          </Button>
+                        </Box>
+                      ) : (
+                        <TextField
+                          label={key}
+                          value={value || ""}
+                          onChange={(e) =>
+                            setEditData({ ...editData, [key]: e.target.value })
+                          }
+                          fullWidth
+                        />
+                      )}
+                    </Grid>
+                  ))}
+              </Grid>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button variant="contained" onClick={handleUpdate}>
+              Update
+            </Button>
+          </DialogActions>
+        </Dialog>
       </motion.div>
     </Box>
   );
-}
+};
 
 export default ProgramsCoordinated;

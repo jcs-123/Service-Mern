@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
@@ -6,74 +6,92 @@ import {
   Button,
   Typography,
   Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Tooltip,
 } from "@mui/material";
-import { UploadFile, CloudUpload } from "@mui/icons-material";
-import * as XLSX from "xlsx";
+import {
+  Visibility,
+  Edit,
+  Delete,
+  Add,
+  CloudUpload,
+  PictureAsPdf,
+  Image,
+} from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 const Publications = () => {
   const navigate = useNavigate();
+  const gmail = localStorage.getItem("gmail") || "jeswinjohn@jecc.ac.in";
 
+  const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState(false);
   const [publications, setPublications] = useState([
     {
-      slNo: 1,
-      category: "International Journal papers with impact factor <1.5",
-      title:
-        "Optimization driven generative adversarial network for course recommendation in E-Learning",
-      nameOfPublication: "International Journal of Wireless and Mobile Computing",
-      patentNo: "1741-1092",
-      indexing: "SCOPUS",
-      academicYear: "2023-2024",
-      date: "2023-11-01",
-      period: "Outside this college",
-      document: "",
+      category: "",
+      title: "",
+      nameOfPublication: "",
+      patentNo: "",
+      indexing: "",
+      academicYear: "",
+      date: "",
+      period: "",
+      document: null,
     },
   ]);
 
-  const [bulkData, setBulkData] = useState([]);
+  const [existingPublications, setExistingPublications] = useState([]);
+  const [previewDialog, setPreviewDialog] = useState(false);
+  const [previewFile, setPreviewFile] = useState(null);
 
-  // ===== Excel Upload =====
-  const handleExcelUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const data = new Uint8Array(evt.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(sheet);
-      setPublications(json);
-      setBulkData(json);
-    };
-    reader.readAsArrayBuffer(file);
+  // 🟢 Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editData, setEditData] = useState(null);
+
+  useEffect(() => {
+    fetchPublications();
+  }, []);
+
+  const fetchPublications = async () => {
+    try {
+      const res = await axios.get(`http://localhost:4000/api/publications/${gmail}`);
+      if (res.data.success) setExistingPublications(res.data.data);
+    } catch (error) {
+      console.error("Error fetching publications:", error);
+    }
   };
 
-  // ===== Field Change =====
   const handleChange = (index, field, value) => {
     const updated = [...publications];
     updated[index][field] = value;
     setPublications(updated);
   };
 
-  // ===== File Upload =====
   const handleFileUpload = (index, e) => {
     const file = e.target.files[0];
     if (file) {
       const updated = [...publications];
-      updated[index].document = file.name;
+      updated[index].document = file;
       setPublications(updated);
     }
   };
 
-  // ===== Add New Row =====
   const handleAddRow = () => {
     setPublications([
       ...publications,
       {
-        slNo: publications.length + 1,
         category: "",
         title: "",
         nameOfPublication: "",
@@ -82,9 +100,92 @@ const Publications = () => {
         academicYear: "",
         date: "",
         period: "",
-        document: "",
+        document: null,
       },
     ]);
+  };
+
+  const handleRemoveRow = (index) => {
+    const updated = publications.filter((_, i) => i !== index);
+    setPublications(updated);
+  };
+
+  // 🔹 Save new publication(s)
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      for (const pub of publications) {
+        const formData = new FormData();
+        for (const key in pub) formData.append(key, pub[key]);
+        formData.append("gmail", gmail);
+
+        await axios.post("http://localhost:4000/api/publications", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+      alert("✅ Publications saved successfully!");
+      fetchPublications();
+      setPublications([
+        {
+          category: "",
+          title: "",
+          nameOfPublication: "",
+          patentNo: "",
+          indexing: "",
+          academicYear: "",
+          date: "",
+          period: "",
+          document: null,
+        },
+      ]);
+    } catch (error) {
+      console.error("Error saving publications:", error);
+      alert("Error saving publications");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔹 Delete publication
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this publication?")) {
+      await axios.delete(`http://localhost:4000/api/publications/${id}`);
+      fetchPublications();
+    }
+  };
+
+  // 🔹 Preview document
+  const handlePreview = (docPath) => {
+    setPreviewFile(`http://localhost:4000${docPath}`);
+    setPreviewDialog(true);
+  };
+
+  // 🟢 Handle open edit dialog
+  const handleEdit = (pub) => {
+    setEditData({ ...pub });
+    setEditDialogOpen(true);
+  };
+
+  // 🟢 Handle update save
+  const handleUpdate = async () => {
+    try {
+      const formData = new FormData();
+      for (const key in editData) {
+        if (key !== "document") formData.append(key, editData[key]);
+      }
+      if (editData.newFile) formData.append("document", editData.newFile);
+
+      await axios.put(`http://localhost:4000/api/publications/${editData._id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert("✅ Publication updated successfully!");
+      setEditDialogOpen(false);
+      fetchPublications();
+    } catch (error) {
+      console.error("Error updating publication:", error);
+      alert("Failed to update publication");
+    }
   };
 
   const handlePrevious = () => navigate("/SubjectEngaged");
@@ -94,225 +195,91 @@ const Publications = () => {
     <Box
       sx={{
         minHeight: "100vh",
-        background: "linear-gradient(180deg,#f4f8ff 0%,#e9f1ff 100%)",
+        background: "linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%)",
+        py: 4,
+        px: { xs: 2, md: 4 },
         display: "flex",
         justifyContent: "center",
-        alignItems: "flex-start",
-        py: 6,
-        px: { xs: 2, md: 4 },
-        overflowY: "auto",
       }}
     >
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        style={{ width: "100%", maxWidth: "1250px" }}
+        style={{ width: "100%", maxWidth: "1200px" }}
       >
-        <Paper
-          elevation={4}
-          sx={{
-            p: { xs: 3, md: 5 },
-            borderRadius: 3,
-            background: "#fff",
-            border: "1px solid #d4e1ff",
-            boxShadow: "0 8px 25px rgba(30,90,180,0.1)",
-            mb: 8,
-          }}
-        >
-          {/* ===== Header ===== */}
+        <Paper sx={{ p: 4, borderRadius: 3 }}>
           <Typography
-            variant="h5"
+            variant="h4"
             align="center"
-            sx={{
-              color: "#0B2154",
-              fontWeight: 700,
-              letterSpacing: 1,
-              mb: 4,
-              textTransform: "uppercase",
-            }}
+            fontWeight="bold"
+            sx={{ color: "#1a237e", mb: 4 }}
           >
             📘 Publications
           </Typography>
 
-          {/* ===== Bulk Upload ===== */}
-          <Box
-            sx={{
-              mb: 4,
-              p: 3,
-              border: "2px dashed #1976d2",
-              borderRadius: 3,
-              background: "linear-gradient(135deg,#f8fbff 0%,#f1f7ff 100%)",
-              textAlign: "center",
-              transition: "0.3s",
-              "&:hover": { boxShadow: "0 0 10px rgba(25,118,210,0.2)" },
-            }}
-          >
-            <Typography sx={{ mb: 1, color: "#0b3d91", fontWeight: 500 }}>
-              Upload Excel File (Bulk Upload)
-            </Typography>
-            <IconButton
-              component="label"
-              color="primary"
-              sx={{
-                border: "1px solid #1976d2",
-                borderRadius: 2,
-                "&:hover": { backgroundColor: "#1976d220" },
-              }}
-            >
-              <UploadFile />
-              <input
-                type="file"
-                accept=".xls,.xlsx"
-                hidden
-                onChange={handleExcelUpload}
-              />
-            </IconButton>
-            {bulkData.length > 0 && (
-              <Typography sx={{ mt: 1, color: "green" }}>
-                {bulkData.length} record(s) uploaded successfully!
-              </Typography>
+          {/* View / Add Toggle */}
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+            {!viewMode ? (
+              <Button variant="outlined" startIcon={<Visibility />} onClick={() => setViewMode(true)}>
+                View All Publications
+              </Button>
+            ) : (
+              <Button variant="outlined" startIcon={<Add />} onClick={() => setViewMode(false)}>
+                Add New Publication
+              </Button>
             )}
           </Box>
 
-          {/* ===== Publication Rows ===== */}
-          {publications.map((pub, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
+          {/* ==================== ADD MODE ==================== */}
+          {!viewMode &&
+            publications.map((pub, index) => (
               <Paper
+                key={index}
                 sx={{
                   p: 3,
                   mb: 3,
-                  borderRadius: 3,
-                  border: "1px solid #e0e8ff",
-                  background:
-                    "linear-gradient(145deg,#fafcff 0%,#f6f9ff 100%)",
-                  boxShadow: "0 4px 12px rgba(25,118,210,0.06)",
-                  "&:hover": {
-                    boxShadow: "0 6px 18px rgba(25,118,210,0.15)",
-                  },
-                  transition: "0.3s",
+                  backgroundColor: "#f9f9f9",
+                  border: "1px solid #ddd",
+                  borderRadius: 2,
                 }}
               >
-                <Typography
-                  variant="subtitle1"
-                  fontWeight={600}
-                  sx={{
-                    color: "#1565c0",
-                    mb: 2,
-                    textTransform: "capitalize",
-                  }}
-                >
-                  #{index + 1} Publication Details
+                <Typography variant="h6" color="primary" mb={2}>
+                  Publication {index + 1}
                 </Typography>
-
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      label="Category"
-                      value={pub.category}
-                      onChange={(e) =>
-                        handleChange(index, "category", e.target.value)
-                      }
-                      fullWidth
-                      size="small"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField
-                      label="Title of Paper / Patent"
-                      value={pub.title}
-                      onChange={(e) =>
-                        handleChange(index, "title", e.target.value)
-                      }
-                      fullWidth
-                      size="small"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      label="Name of Publication"
-                      value={pub.nameOfPublication}
-                      onChange={(e) =>
-                        handleChange(index, "nameOfPublication", e.target.value)
-                      }
-                      fullWidth
-                      size="small"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={2}>
-                    <TextField
-                      label="Patent No."
-                      value={pub.patentNo}
-                      onChange={(e) =>
-                        handleChange(index, "patentNo", e.target.value)
-                      }
-                      fullWidth
-                      size="small"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={2}>
-                    <TextField
-                      label="Indexing"
-                      value={pub.indexing}
-                      onChange={(e) =>
-                        handleChange(index, "indexing", e.target.value)
-                      }
-                      fullWidth
-                      size="small"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={2}>
-                    <TextField
-                      label="Academic Year"
-                      value={pub.academicYear}
-                      onChange={(e) =>
-                        handleChange(index, "academicYear", e.target.value)
-                      }
-                      fullWidth
-                      size="small"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={2}>
-                    <TextField
-                      label="Date"
-                      type="date"
-                      value={pub.date}
-                      onChange={(e) =>
-                        handleChange(index, "date", e.target.value)
-                      }
-                      fullWidth
-                      size="small"
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      label="Period"
-                      value={pub.period}
-                      onChange={(e) =>
-                        handleChange(index, "period", e.target.value)
-                      }
-                      fullWidth
-                      size="small"
-                    />
-                  </Grid>
-
-                  {/* ===== Document Upload ===== */}
+                  {[
+                    ["Category", "category"],
+                    ["Title", "title"],
+                    ["Name of Publication", "nameOfPublication"],
+                    ["Patent No.", "patentNo"],
+                    ["Indexing", "indexing"],
+                    ["Academic Year", "academicYear"],
+                    ["Date", "date", "date"],
+                    ["Period", "period"],
+                  ].map(([label, name, type]) => (
+                    <Grid item xs={12} sm={6} md={3} key={name}>
+                      <TextField
+                        label={label}
+                        type={type || "text"}
+                        fullWidth
+                        value={pub[name]}
+                        onChange={(e) => handleChange(index, name, e.target.value)}
+                        InputLabelProps={type === "date" ? { shrink: true } : {}}
+                      />
+                    </Grid>
+                  ))}
+                  {/* File Upload */}
                   <Grid item xs={12} sm={6} md={3}>
                     <Box
                       sx={{
                         border: "1px dashed #90caf9",
-                        borderRadius: 2,
                         p: 1.2,
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
                         background: "#f4f8ff",
+                        borderRadius: 2,
                       }}
                     >
                       <Typography
@@ -325,85 +292,175 @@ const Publications = () => {
                           textOverflow: "ellipsis",
                         }}
                       >
-                        {pub.document || "No file selected"}
+                        {pub.document ? pub.document.name : "No file selected"}
                       </Typography>
-                      <Tooltip title="Upload Document">
-                        <IconButton component="label" color="primary">
-                          <CloudUpload />
-                          <input
-                            type="file"
-                            hidden
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={(e) => handleFileUpload(index, e)}
-                          />
-                        </IconButton>
-                      </Tooltip>
+                      <IconButton component="label" color="primary">
+                        <CloudUpload />
+                        <input
+                          type="file"
+                          hidden
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => handleFileUpload(index, e)}
+                        />
+                      </IconButton>
                     </Box>
                   </Grid>
                 </Grid>
+
+                {publications.length > 1 && (
+                  <Box sx={{ textAlign: "right", mt: 2 }}>
+                    <Button color="error" onClick={() => handleRemoveRow(index)}>
+                      Remove
+                    </Button>
+                  </Box>
+                )}
               </Paper>
-            </motion.div>
-          ))}
+            ))}
 
-          {/* ===== Add Button ===== */}
-          <Box sx={{ textAlign: "left", mt: 3 }}>
-            <Button
-              variant="outlined"
-              onClick={handleAddRow}
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                borderRadius: 2,
-                color: "#1565c0",
-                borderColor: "#1565c0",
-                "&:hover": { background: "rgba(21,101,192,0.1)" },
-              }}
-            >
-              + Add Publication
+          {!viewMode && (
+            <>
+              <Box sx={{ textAlign: "center", my: 3 }}>
+                <Button variant="outlined" onClick={handleAddRow}>
+                  + Add Another Publication
+                </Button>
+              </Box>
+              <Box sx={{ textAlign: "center", mt: 3 }}>
+                <Button variant="contained" onClick={handleSubmit} disabled={loading} sx={{ px: 6, py: 1.2 }}>
+                  {loading ? "Saving..." : "Save Publications"}
+                </Button>
+              </Box>
+            </>
+          )}
+
+          {/* ==================== VIEW MODE ==================== */}
+          {viewMode && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" sx={{ color: "#1a237e", mb: 2, textAlign: "center" }}>
+                Your Publications ({existingPublications.length})
+              </Typography>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead sx={{ backgroundColor: "#1a237e" }}>
+                    <TableRow>
+                      <TableCell sx={{ color: "#fff" }}>Title</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Category</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Academic Year</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Document</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {existingPublications.map((pub, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{pub.title}</TableCell>
+                        <TableCell>{pub.category}</TableCell>
+                        <TableCell>{pub.academicYear}</TableCell>
+                        <TableCell>
+                          {pub.document ? (
+                            <Tooltip title="View File">
+                              <IconButton color="primary" onClick={() => handlePreview(pub.document)}>
+                                {pub.document.endsWith(".pdf") ? <PictureAsPdf /> : <Image />}
+                              </IconButton>
+                            </Tooltip>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Tooltip title="Edit">
+                            <IconButton color="secondary" onClick={() => handleEdit(pub)}>
+                              <Edit />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton color="error" onClick={() => handleDelete(pub._id)}>
+                              <Delete />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+
+          {/* Navigation */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4, borderTop: "1px solid #ccc", pt: 3 }}>
+            <Button variant="outlined" onClick={handlePrevious}>
+              Previous
             </Button>
-          </Box>
-
-          {/* ===== Navigation Buttons ===== */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              mt: 5,
-            }}
-          >
-            <Button
-              variant="outlined"
-              onClick={handlePrevious}
-              sx={{
-                px: 4,
-                py: 1,
-                fontWeight: 600,
-                borderRadius: 2,
-                color: "#1976d2",
-                borderColor: "#1976d2",
-                "&:hover": { background: "rgba(25,118,210,0.1)" },
-              }}
-            >
-              ← Previous
-            </Button>
-
-            <Button
-              variant="contained"
-              onClick={handleNext}
-              sx={{
-                px: 5,
-                py: 1.2,
-                fontWeight: 600,
-                borderRadius: 2,
-                fontSize: "1rem",
-                background: "linear-gradient(135deg,#1976d2,#42a5f5)",
-                boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
-              }}
-            >
+            <Button variant="contained" onClick={handleNext}>
               Next →
             </Button>
           </Box>
         </Paper>
+
+        {/* ==================== FILE PREVIEW MODAL ==================== */}
+        <Dialog open={previewDialog} onClose={() => setPreviewDialog(false)} maxWidth="lg" fullWidth>
+          <DialogTitle>Document Preview</DialogTitle>
+          <DialogContent>
+            {previewFile && previewFile.endsWith(".pdf") ? (
+              <iframe src={previewFile} width="100%" height="600px" title="PDF Preview"></iframe>
+            ) : (
+              <img src={previewFile} alt="Preview" style={{ width: "100%", borderRadius: "8px" }} />
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPreviewDialog(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* 🟢 EDIT DIALOG */}
+        <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
+          <DialogTitle>Edit Publication</DialogTitle>
+          <DialogContent>
+            {editData && (
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                {Object.entries(editData)
+                  .filter(([k]) => !["_id", "__v", "gmail", "createdAt", "updatedAt"].includes(k))
+                  .map(([key, value]) => (
+                    <Grid item xs={12} sm={6} key={key}>
+                      {key === "document" ? (
+                        <Box>
+                          <Typography variant="body2" sx={{ mb: 1 }}>
+                            Current: {editData.document || "No file"}
+                          </Typography>
+                          <Button component="label" variant="outlined" startIcon={<CloudUpload />}>
+                            Upload New
+                            <input
+                              type="file"
+                              hidden
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={(e) =>
+                                setEditData({ ...editData, newFile: e.target.files[0] })
+                              }
+                            />
+                          </Button>
+                        </Box>
+                      ) : (
+                        <TextField
+                          label={key}
+                          value={value || ""}
+                          onChange={(e) =>
+                            setEditData({ ...editData, [key]: e.target.value })
+                          }
+                          fullWidth
+                        />
+                      )}
+                    </Grid>
+                  ))}
+              </Grid>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button variant="contained" onClick={handleUpdate}>
+              Update
+            </Button>
+          </DialogActions>
+        </Dialog>
       </motion.div>
     </Box>
   );
