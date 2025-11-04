@@ -20,8 +20,18 @@ import {
   IconButton,
   AppBar,
   Toolbar as MuiToolbar,
+  CircularProgress,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
-import { Download, TableChart, Close, Visibility } from "@mui/icons-material";
+import {
+  Download,
+  TableChart,
+  Close,
+  Visibility,
+  Search,
+} from "@mui/icons-material";
+import { motion, AnimatePresence } from "framer-motion";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import axios from "axios";
@@ -33,104 +43,115 @@ import "react-toastify/dist/ReactToastify.css";
 const drawerWidth = 260;
 
 /* ======================================================
-   ⚙️ Export to Excel (Single)
+   ⚙️ Export to Excel
 ====================================================== */
 const exportToExcel = (sheetName, dataArray) => {
-  // 1️⃣ Create worksheet from JSON
   const ws = XLSX.utils.json_to_sheet(dataArray);
-
-  // 2️⃣ Convert HYPERLINK text formula into real Excel formulas
-  const range = XLSX.utils.decode_range(ws['!ref']);
+  const range = XLSX.utils.decode_range(ws["!ref"]);
   for (let R = range.s.r; R <= range.e.r; ++R) {
     for (let C = range.s.c; C <= range.e.c; ++C) {
       const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
       const cell = ws[cellRef];
-      if (cell && typeof cell.v === "string" && cell.v.startsWith('=HYPERLINK')) {
-        cell.f = cell.v.replace("=", ""); // 🧠 tell XLSX it's a formula
-        delete cell.v; // remove text value
+      if (cell && typeof cell.v === "string" && cell.v.startsWith("=HYPERLINK")) {
+        cell.f = cell.v.replace("=", "");
+        delete cell.v;
       }
     }
   }
-
-  // 3️⃣ Create workbook and add the sheet
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
-
-  // 4️⃣ Export file
   XLSX.writeFile(wb, `${sheetName.replace(/\s+/g, "_")}_Export.xlsx`);
 };
 
 /* ======================================================
-   🧭 Data Modal
+   🧭 Modal Component
 ====================================================== */
 const DataModal = ({ open, onClose, sectionName, sectionData }) => {
-  if (!sectionData || sectionData.length === 0) return null;
+  if (!sectionData?.length) return null;
   const columns = Object.keys(sectionData[0]);
 
   return (
-    <Modal open={open} onClose={onClose}>
-      <Box
-        sx={{
-          width: "90%",
-          maxWidth: 1200,
-          bgcolor: "background.paper",
-          borderRadius: 2,
-          boxShadow: 24,
-          mx: "auto",
-          mt: 5,
-          overflow: "hidden",
-        }}
-      >
-        <AppBar position="static" color="primary">
-          <MuiToolbar>
-            <Typography variant="h6" sx={{ flexGrow: 1 }}>
-              {sectionName} - Data Preview
-            </Typography>
-            <IconButton color="inherit" onClick={onClose}>
-              <Close />
-            </IconButton>
-          </MuiToolbar>
-        </AppBar>
-
-        <Box sx={{ p: 3, maxHeight: "80vh", overflowY: "auto" }}>
-          <TableContainer component={Paper}>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  {columns.map((col, i) => (
-                    <TableCell key={i} sx={{ fontWeight: "bold", background: "#f4f6f8" }}>
-                      {col.replace(/_/g, " ")}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {sectionData.map((row, i) => (
-                  <TableRow key={i}>
-                    {columns.map((col, j) => (
-                      <TableCell key={j}>{row[col] || "-"}</TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          <Box sx={{ mt: 3, textAlign: "right" }}>
-            <Button onClick={onClose} sx={{ mr: 2 }}>
-              Close
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<Download />}
-              onClick={() => exportToExcel(sectionName, sectionData)}
+    <AnimatePresence>
+      {open && (
+        <Modal open={open} onClose={onClose}>
+          <motion.div
+            initial={{ opacity: 0, y: -40, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            <Box
+              sx={{
+                width: "92%",
+                maxWidth: 1200,
+                bgcolor: "background.paper",
+                borderRadius: 3,
+                boxShadow: 24,
+                mx: "auto",
+                mt: 6,
+                overflow: "hidden",
+              }}
             >
-              Export Excel
-            </Button>
-          </Box>
-        </Box>
-      </Box>
-    </Modal>
+              <AppBar position="static" color="primary" elevation={2}>
+                <MuiToolbar>
+                  <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                    {sectionName} — Data Preview
+                  </Typography>
+                  <IconButton color="inherit" onClick={onClose}>
+                    <Close />
+                  </IconButton>
+                </MuiToolbar>
+              </AppBar>
+
+              <Box sx={{ p: 3, maxHeight: "75vh", overflowY: "auto" }}>
+                <TableContainer component={Paper}>
+                  <Table stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        {columns.map((col, i) => (
+                          <TableCell
+                            key={i}
+                            sx={{
+                              fontWeight: "bold",
+                              background: "#E3F2FD",
+                              color: "#0D47A1",
+                            }}
+                          >
+                            {col.replace(/_/g, " ")}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {sectionData.map((row, i) => (
+                        <TableRow key={i}>
+                          {columns.map((col, j) => (
+                            <TableCell key={j}>{row[col] || "-"}</TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+
+                <Box sx={{ mt: 3, textAlign: "right" }}>
+                  <Button onClick={onClose} sx={{ mr: 2 }}>
+                    Close
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<Download />}
+                    onClick={() => exportToExcel(sectionName, sectionData)}
+                  >
+                    Export Excel
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          </motion.div>
+        </Modal>
+      )}
+    </AnimatePresence>
   );
 };
 
@@ -144,44 +165,32 @@ const AdminExcelExport = () => {
   const [selectedSectionData, setSelectedSectionData] = useState([]);
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
-
   const handleLogout = () => {
     localStorage.clear();
     toast.info("Logging out...");
     setTimeout(() => (window.location.href = "/login"), 1000);
   };
 
-  /* ======================================================
-     📡 Fetch All 21 Sections
-  ======================================================= */
+  /* Fetch all data once */
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         const endpoints = {
-          // generalDetails: "/api/general-details",
           qualifications: "/api/qualification/get",
           experience: "/api/experience/get",
-          // subjectsEngaged: "/api/subject",
-          // publications: "/api/publication",
           consultancies: "/api/consultancy/get",
-          // programsCoordinated: "/api/programscoordinated",
-          // programsAttended: "/api/programsattended",
           facultyResearch: "/api/facultyresearch/get",
           projectsGuided: "/api/projectsguided/get",
-          // seminarsGuided: "/api/seminarsguided",
-          // interactionsOutside: "/api/interactions",
-          // positionsHeld: "/api/positions",
           researchInterests: "/api/reserach/get",
           achievements: "/api/achievements/get",
-          interestsubject:"/api/interest/get",
+          interestsubject: "/api/interest/get",
           activityLog: "/api/activity/get",
-          // patents: "/api/patents",
           administrativeWork: "/api/administrative/get",
-          // professionalMemberships: "/api/professionalbody",
         };
 
         const results = await Promise.all(
@@ -194,12 +203,11 @@ const AdminExcelExport = () => {
         setData(Object.fromEntries(results));
       } catch (err) {
         console.error("❌ Error fetching data:", err);
-        toast.error("Failed to load all section data");
+        toast.error("Failed to load data");
       } finally {
         setLoading(false);
       }
     };
-
     fetchAllData();
   }, []);
 
@@ -214,23 +222,15 @@ const AdminExcelExport = () => {
   const userName = localStorage.getItem("name") || "Admin";
   const userGmail = localStorage.getItem("gmail") || "admin@jec.ac.in";
 
-  const sections = Object.keys(data).map((key) => ({
-    name: key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
-    key,
-  }));
-
-  if (loading) {
-    return (
-      <Box sx={{ textAlign: "center", p: 10 }}>
-        <Typography variant="h6" color="text.secondary">
-          ⏳ Loading all Service Book data...
-        </Typography>
-      </Box>
-    );
-  }
+  const sections = Object.keys(data)
+    .map((key) => ({
+      name: key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
+      key,
+    }))
+    .filter((s) => s.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       <CssBaseline />
       <AdminHeader
         handleDrawerToggle={handleDrawerToggle}
@@ -246,111 +246,198 @@ const AdminExcelExport = () => {
       />
 
       <Box
-        component="main"
+        component={motion.main}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
         sx={{
           flexGrow: 1,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          bgcolor: "#F5F9FF",
+          background:
+            "linear-gradient(135deg, #e8f0fe 0%, #f8fbff 60%, #e9f5ec 100%)",
           minHeight: "100vh",
           overflowY: "auto",
           p: { xs: 2, sm: 3 },
         }}
       >
         <Toolbar />
-        <Typography variant="h4" fontWeight={700} color="#0D47A1" textAlign="center" mb={2}>
-          📊 Service Book Data Export
-        </Typography>
-        <Typography variant="subtitle1" color="text.secondary" textAlign="center" mb={5}>
-          View and export each Service Book section or download all 21 sections together.
-        </Typography>
 
-        {/* Section Cards */}
-        <Grid container spacing={3} justifyContent="center">
-          {sections.map((section, i) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={i}>
-              <Card
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
+            <CircularProgress size={50} color="primary" />
+          </Box>
+        ) : (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <Typography
+              variant="h4"
+              fontWeight={700}
+              color="#0D47A1"
+              textAlign="center"
+              mb={2}
+            >
+              📘 Service Book Export Center
+            </Typography>
+
+            <Typography
+              variant="subtitle1"
+              color="text.secondary"
+              textAlign="center"
+              mb={5}
+            >
+              Export, preview, and manage all Service Book sections easily.
+            </Typography>
+
+            {/* 🔍 Top Controls */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 2,
+                flexWrap: "wrap",
+                mb: 4,
+              }}
+            >
+              <TextField
+                size="small"
+                variant="outlined"
+                placeholder="Search section..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ width: "280px" }}
+              />
+              <Button
+                variant="contained"
+                startIcon={<Download />}
                 sx={{
-                  borderRadius: 3,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                  transition: "0.3s",
-                  "&:hover": {
-                    transform: "translateY(-5px)",
-                    boxShadow: "0 8px 20px rgba(25,118,210,0.25)",
-                  },
+                  background: "linear-gradient(135deg, #1976d2, #42a5f5)",
+                  px: 3,
+                }}
+                onClick={() => {
+                  const wb = XLSX.utils.book_new();
+                  Object.entries(data).forEach(([key, value]) => {
+                    const ws = XLSX.utils.json_to_sheet(value);
+                    XLSX.utils.book_append_sheet(wb, ws, key);
+                  });
+                  const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+                  saveAs(
+                    new Blob([wbout], { type: "application/octet-stream" }),
+                    "ServiceBook_All_Sections.xlsx"
+                  );
+                  toast.success("✅ All sections exported successfully!");
                 }}
               >
-                <CardContent sx={{ textAlign: "center" }}>
-                  <Box
-                    sx={{
-                      width: 70,
-                      height: 70,
-                      mx: "auto",
-                      mb: 2,
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg, #1976d2, #42a5f5)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "white",
-                    }}
+                Export All Sections
+              </Button>
+            </Box>
+
+            {/* 🎴 Animated Cards Grid */}
+            <Grid container spacing={3} justifyContent="center">
+              {sections.map((section, i) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={i}>
+                  <motion.div
+                    whileHover={{ scale: 1.05, y: -4 }}
+                    transition={{ duration: 0.25 }}
                   >
-                    <TableChart sx={{ fontSize: 35 }} />
-                  </Box>
-                  <Typography variant="h6" fontWeight={700} color="#1565C0" mb={1}>
-                    {section.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" mb={2}>
-                    {data[section.key]?.length || 0} record(s)
-                  </Typography>
-                  <Divider sx={{ my: 1 }} />
+                    <Card
+                      sx={{
+                        borderRadius: 3,
+                        boxShadow: "0 6px 14px rgba(0,0,0,0.1)",
+                        backdropFilter: "blur(8px)",
+                        backgroundColor: "rgba(255,255,255,0.9)",
+                      }}
+                    >
+                      <CardContent sx={{ textAlign: "center" }}>
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: i * 0.05 }}
+                        >
+                          <Box
+                            sx={{
+                              width: 70,
+                              height: 70,
+                              mx: "auto",
+                              mb: 2,
+                              borderRadius: "50%",
+                              background:
+                                "linear-gradient(135deg, #1976d2, #42a5f5)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "white",
+                              boxShadow: "0 4px 10px rgba(25,118,210,0.3)",
+                            }}
+                          >
+                            <TableChart sx={{ fontSize: 35 }} />
+                          </Box>
+                        </motion.div>
 
-                  <Box sx={{ display: "flex", gap: 1, flexDirection: "column" }}>
-                    <Button
-                      variant="outlined"
-                      fullWidth
-                      startIcon={<Visibility />}
-                      onClick={() => handleViewData(section.name, section.key)}
-                    >
-                      View Data
-                    </Button>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      endIcon={<Download />}
-                      onClick={() => exportToExcel(section.name, data[section.key] || [])}
-                    >
-                      Download Excel
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
+                        <Typography
+                          variant="h6"
+                          fontWeight={700}
+                          color="#1565C0"
+                          mb={1}
+                        >
+                          {section.name}
+                        </Typography>
+
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          mb={2}
+                        >
+                          {data[section.key]?.length || 0} record(s)
+                        </Typography>
+
+                        <Divider sx={{ my: 1 }} />
+                        <Box
+                          sx={{
+                            display: "flex",
+                            gap: 1,
+                            flexDirection: "column",
+                            mt: 1,
+                          }}
+                        >
+                          <Button
+                            variant="outlined"
+                            fullWidth
+                            startIcon={<Visibility />}
+                            onClick={() =>
+                              handleViewData(section.name, section.key)
+                            }
+                          >
+                            View Data
+                          </Button>
+                          <Button
+                            variant="contained"
+                            fullWidth
+                            endIcon={<Download />}
+                            onClick={() =>
+                              exportToExcel(
+                                section.name,
+                                data[section.key] || []
+                              )
+                            }
+                          >
+                            Download Excel
+                          </Button>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </Grid>
+              ))}
             </Grid>
-          ))}
-        </Grid>
-
-        {/* Export All */}
-        <Box sx={{ textAlign: "center", mt: 6, mb: 4 }}>
-          <Divider sx={{ mb: 3 }} />
-          <Button
-            variant="contained"
-            startIcon={<Download />}
-            onClick={() => {
-              const wb = XLSX.utils.book_new();
-              Object.entries(data).forEach(([key, value]) => {
-                const ws = XLSX.utils.json_to_sheet(value);
-                XLSX.utils.book_append_sheet(wb, ws, key);
-              });
-              const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-              saveAs(
-                new Blob([wbout], { type: "application/octet-stream" }),
-                "ServiceBook_All_Sections.xlsx"
-              );
-              toast.success("✅ All sections exported successfully!");
-            }}
-          >
-            Export All Sections (Combined)
-          </Button>
-        </Box>
+          </motion.div>
+        )}
       </Box>
 
       <DataModal
@@ -359,6 +446,7 @@ const AdminExcelExport = () => {
         sectionName={selectedSection}
         sectionData={selectedSectionData}
       />
+
       <ToastContainer position="top-center" autoClose={2000} />
     </Box>
   );
