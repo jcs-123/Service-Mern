@@ -181,12 +181,18 @@ const AdminExcelExport = () => {
     const fetchAllData = async () => {
       try {
         const endpoints = {
+          generalDetails: "/api/general/get",
           qualifications: "/api/qualification/get",
           experience: "/api/experience/get",
+          subjectEngaged: "/api/subjects-engaged/get",
+          publications: "/api/publications/get",
+          programsCoordinated: "/api/programs-coordinated/get",
+          programsAttended: "/api/programs-attended/get",
           consultancies: "/api/consultancy/get",
           facultyResearch: "/api/facultyresearch/get",
           projectsGuided: "/api/projectsguided/get",
           researchInterests: "/api/reserach/get",
+          seminarsGuided: "/api/seminars-guided/get",
           achievements: "/api/achievements/get",
           interestsubject: "/api/interest/get",
           activityLog: "/api/activity/get",
