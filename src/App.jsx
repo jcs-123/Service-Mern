@@ -26,53 +26,91 @@ import ForgotPassword from "./components/ForgotPassword.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import Experience from "./pages/Experience.jsx";
 import AdminExcelExport from "./pages/AdminExcelExport.jsx";
+import React from "react";
 
+/* ======================================================
+   🧩 Protected Route Components
+====================================================== */
 
+// ✅ For normal logged-in users
+const ProtectedRoute = ({ children }) => {
+  const role = localStorage.getItem("role");
+  if (!role) return <Navigate to="/login" replace />;
+  if (role === "admin") return <Navigate to="/adminpanel" replace />;
+  return children;
+};
+
+// ✅ For Admin-only routes
+const AdminRoute = ({ children }) => {
+  const role = localStorage.getItem("role");
+  if (!role) return <Navigate to="/login" replace />;
+  if (role !== "admin") return <Navigate to="/GeneralDetail" replace />;
+  return children;
+};
+
+/* ======================================================
+   🚀 Main App Routes
+====================================================== */
 function App() {
   return (
     <>
       <Routes>
-       <Route path='/login' element={<Login />} />
-        <Route path='/' element={<Login />} />
-                <Route path="/forgotpassword" element={<ForgotPassword/>}/>
-                <Route path="/adminpanel" element={<AdminDashboard/>}/>
-                <Route path="/adminexcelexport" element={<AdminExcelExport/>}/>
+        {/* 🔑 Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/forgotpassword" element={<ForgotPassword />} />
 
-                <Route element={<Layout />}>
+        {/* 🛡️ Admin Protected Routes */}
+        <Route
+          path="/adminpanel"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/adminexcelexport"
+          element={
+            <AdminRoute>
+              <AdminExcelExport />
+            </AdminRoute>
+          }
+        />
 
-        <Route path='/GeneralDetail' element={<Generalsetting />} />
-        <Route path='/Qualification' element={<Qualification />} />
-        <Route path="/SubjectEngaged" element={<SubjectEngaged />} />
-        <Route path="/Publications" element={<Publications />} />
-        <Route path="/ProgramsCoordinated" element={<ProgramsCoordinated />} />
-        <Route path="/ProgramsAttended" element={<ProgramsAttended />} />
-        <Route path='/Experience' element={<Experience/>} />
-        <Route path="/SeminarsGuided" element={<SeminarsGuided />} /> 
-        <Route path="/InteractionsOutsideWorld" element={<InteractionsOutsideWorld />} />
-        <Route path="/PositionsHeld" element={<PositionsHeld />} />
-        <Route path="/ResearchInterests" element={<ResearchInterests />} />
-        <Route path="/Achievements" element={<Achievements />} />
-        <Route path="/InterestedSubjects" element={<InterestedSubjects />} />
-        <Route path="/ActivityLog" element={<ActivityLog />} />
-        <Route path="/Patent" element={<Patent />} />
-        <Route path="/MoocCourseCompleted" element={<MoocCourseCompleted />} />
-        <Route path="/AdministrativeWork" element={<AdministrativeWork />} />
-        <Route path="/Professional" element={<ProfessionalBodyMembership />}
-/>
-        <Route path="/forgotpassword" element={<ForgotPassword/>}/>
-
-
-
-
-
-
-
-        <Route path='/FacultyReserach' element={<FacultyResearch/>} />
-        <Route path='/Consultancy' element={<Consultancy/>} />
-        <Route path='/ProjectGuided' element={<Projectguided/>} />
-
+        {/* 👤 User Protected Routes inside Layout */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/GeneralDetail" element={<Generalsetting />} />
+          <Route path="/Qualification" element={<Qualification />} />
+          <Route path="/SubjectEngaged" element={<SubjectEngaged />} />
+          <Route path="/Publications" element={<Publications />} />
+          <Route path="/ProgramsCoordinated" element={<ProgramsCoordinated />} />
+          <Route path="/ProgramsAttended" element={<ProgramsAttended />} />
+          <Route path="/Experience" element={<Experience />} />
+          <Route path="/SeminarsGuided" element={<SeminarsGuided />} />
+          <Route path="/InteractionsOutsideWorld" element={<InteractionsOutsideWorld />} />
+          <Route path="/PositionsHeld" element={<PositionsHeld />} />
+          <Route path="/ResearchInterests" element={<ResearchInterests />} />
+          <Route path="/Achievements" element={<Achievements />} />
+          <Route path="/InterestedSubjects" element={<InterestedSubjects />} />
+          <Route path="/ActivityLog" element={<ActivityLog />} />
+          <Route path="/Patent" element={<Patent />} />
+          <Route path="/MoocCourseCompleted" element={<MoocCourseCompleted />} />
+          <Route path="/AdministrativeWork" element={<AdministrativeWork />} />
+          <Route path="/Professional" element={<ProfessionalBodyMembership />} />
+          <Route path="/FacultyReserach" element={<FacultyResearch />} />
+          <Route path="/Consultancy" element={<Consultancy />} />
+          <Route path="/ProjectGuided" element={<Projectguided />} />
         </Route>
 
+        {/* 🚫 Fallback route */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </>
   );
