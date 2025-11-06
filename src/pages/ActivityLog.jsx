@@ -12,7 +12,7 @@ import axios from "axios";
 function ActivityLog() {
   const navigate = useNavigate();
   const gmail = localStorage.getItem("gmail");
-  const API_URL = "http://localhost:4000";
+  const API_URL = "https://service-book-backend.onrender.com";
 
   const [activities, setActivities] = useState([]);
   const [newActivity, setNewActivity] = useState({

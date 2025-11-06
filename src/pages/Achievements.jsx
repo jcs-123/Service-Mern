@@ -50,7 +50,7 @@ function Achievements() {
     id: null,
   });
 
-  const API_URL = "http://localhost:4000/achievements";
+  const API_URL = "https://service-book-backend.onrender.com/achievements";
 
   // ✅ Fetch all achievements
   useEffect(() => {

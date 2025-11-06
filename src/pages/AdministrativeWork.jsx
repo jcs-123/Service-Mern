@@ -12,7 +12,7 @@ import axios from "axios";
 function AdministrativeWork() {
   const navigate = useNavigate();
   const gmail = localStorage.getItem("gmail");
-  const API_URL = "http://localhost:4000";
+  const API_URL = "https://service-book-backend.onrender.com";
 
   const [works, setWorks] = useState([]);
   const [newWork, setNewWork] = useState({ nameOfWork: "", academicYear: "" });

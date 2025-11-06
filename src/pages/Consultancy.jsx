@@ -34,7 +34,7 @@ const Consultancy = () => {
   const fetchData = async () => {
     if (!userEmail) return;
     try {
-      const res = await axios.get(`http://localhost:4000/consultancy/${userEmail}`);
+      const res = await axios.get(`https://service-book-backend.onrender.com/consultancy/${userEmail}`);
       if (res.data.success) {
         setProjects(res.data.data);
       } else {
@@ -75,7 +75,7 @@ const Consultancy = () => {
       setLoading(true);
       if (editId) {
         // Update existing
-        const res = await axios.put(`http://localhost:4000/consultancy/${editId}`, payload);
+        const res = await axios.put(`https://service-book-backend.onrender.com/consultancy/${editId}`, payload);
         if (res.data.success) {
           toast.success("✅ Consultancy updated successfully!");
           setEditId(null);
@@ -83,7 +83,7 @@ const Consultancy = () => {
         } else toast.error(res.data.message);
       } else {
         // Add new
-        const res = await axios.post("http://localhost:4000/consultancy", payload);
+        const res = await axios.post("https://service-book-backend.onrender.com/consultancy", payload);
         if (res.data.success) {
           toast.success("✅ Consultancy added successfully!");
           fetchData();
@@ -140,7 +140,7 @@ const Consultancy = () => {
   const handleDelete = async (id) => {
     toast.dismiss("confirm-delete");
     try {
-      const res = await axios.delete(`http://localhost:4000/consultancy/${id}`);
+      const res = await axios.delete(`https://service-book-backend.onrender.com/consultancy/${id}`);
       if (res.data.success) {
         toast.success("🗑️ Deleted successfully!");
         fetchData();

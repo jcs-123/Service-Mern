@@ -62,7 +62,7 @@ const ProgramsCoordinated = () => {
 
   const fetchPrograms = async () => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/programs-coordinated/${gmail}`);
+      const res = await axios.get(`https://service-book-backend.onrender.com/api/programs-coordinated/${gmail}`);
       if (res.data.success) setExistingPrograms(res.data.data);
     } catch (error) {
       console.error("Error fetching programs:", error);
@@ -111,7 +111,7 @@ const ProgramsCoordinated = () => {
         for (const key in prog) formData.append(key, prog[key]);
         formData.append("gmail", gmail);
 
-        await axios.post("http://localhost:4000/api/programs-coordinated", formData, {
+        await axios.post("https://service-book-backend.onrender.com/api/programs-coordinated", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
@@ -139,14 +139,14 @@ const ProgramsCoordinated = () => {
   // 🔹 Delete a record
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this program?")) {
-      await axios.delete(`http://localhost:4000/api/programs-coordinated/${id}`);
+      await axios.delete(`https://service-book-backend.onrender.com/api/programs-coordinated/${id}`);
       fetchPrograms();
     }
   };
 
   // 🔹 Preview certificate
   const handlePreview = (filePath) => {
-    setPreviewFile(`http://localhost:4000${filePath}`);
+    setPreviewFile(`https://service-book-backend.onrender.com${filePath}`);
     setPreviewDialog(true);
   };
 
@@ -166,7 +166,7 @@ const ProgramsCoordinated = () => {
       if (editData.newFile) formData.append("certificate", editData.newFile);
 
       await axios.put(
-        `http://localhost:4000/api/programs-coordinated/${editData._id}`,
+        `https://service-book-backend.onrender.com/api/programs-coordinated/${editData._id}`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

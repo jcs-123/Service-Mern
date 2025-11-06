@@ -57,7 +57,7 @@ const SeminarsGuided = () => {
   const fetchSeminars = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:4000/api/seminars-guided/${gmail}`
+        `https://service-book-backend.onrender.com/api/seminars-guided/${gmail}`
       );
       if (res.data.success) setSeminarList(res.data.data);
     } catch (error) {
@@ -90,13 +90,13 @@ const SeminarsGuided = () => {
 
       if (editId) {
         await axios.put(
-          `http://localhost:4000/api/seminars-guided/${editId}`,
+          `https://service-book-backend.onrender.com/api/seminars-guided/${editId}`,
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
         alert("✅ Seminar updated successfully!");
       } else {
-        await axios.post("http://localhost:4000/api/seminars-guided", formData, {
+        await axios.post("https://service-book-backend.onrender.com/api/seminars-guided", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         alert("✅ Seminar saved successfully!");
@@ -140,7 +140,7 @@ const SeminarsGuided = () => {
   // 🟢 Delete seminar
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
-      await axios.delete(`http://localhost:4000/api/seminars-guided/${id}`);
+      await axios.delete(`https://service-book-backend.onrender.com/api/seminars-guided/${id}`);
       fetchSeminars();
     }
   };
@@ -158,7 +158,7 @@ const SeminarsGuided = () => {
       return;
     }
     
-    const fileUrl = `http://localhost:4000${fileName}`;
+    const fileUrl = `https://service-book-backend.onrender.com${fileName}`;
     setSelectedFile({
       name: fileName.split('/').pop(),
       url: fileUrl,
@@ -174,7 +174,7 @@ const SeminarsGuided = () => {
       return;
     }
     
-    const fileUrl = `http://localhost:4000${fileName}`;
+    const fileUrl = `https://service-book-backend.onrender.com${fileName}`;
     const link = document.createElement('a');
     link.href = fileUrl;
     link.download = fileName.split('/').pop();
@@ -686,7 +686,7 @@ const SeminarsGuided = () => {
                     <Button
                       variant="contained"
                       startIcon={<Download />}
-                      onClick={() => handleDownloadFile(selectedFile.url.replace('http://localhost:4000', ''))}
+                      onClick={() => handleDownloadFile(selectedFile.url.replace('https://service-book-backend.onrender.com', ''))}
                     >
                       Download File
                     </Button>
@@ -703,7 +703,7 @@ const SeminarsGuided = () => {
               <Button 
                 variant="contained" 
                 startIcon={<Download />}
-                onClick={() => handleDownloadFile(selectedFile.url.replace('http://localhost:4000', ''))}
+                onClick={() => handleDownloadFile(selectedFile.url.replace('https://service-book-backend.onrender.com', ''))}
               >
                 Download
               </Button>

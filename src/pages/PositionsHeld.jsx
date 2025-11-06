@@ -37,7 +37,7 @@ function PositionsHeld() {
 
   const fetchPositions = async () => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/positions/${gmail}`);
+      const res = await axios.get(`https://service-book-backend.onrender.com/api/positions/${gmail}`);
       if (res.data.success) setPositions(res.data.data);
     } catch (error) {
       console.error("Error fetching positions:", error);
@@ -57,13 +57,13 @@ function PositionsHeld() {
       setLoading(true);
 
       if (editId) {
-        await axios.put(`http://localhost:4000/api/positions/${editId}`, {
+        await axios.put(`https://service-book-backend.onrender.com/api/positions/${editId}`, {
           ...formData,
           gmail,
         });
         alert("✅ Position updated successfully!");
       } else {
-        await axios.post("http://localhost:4000/api/positions", {
+        await axios.post("https://service-book-backend.onrender.com/api/positions", {
           ...formData,
           gmail,
         });
@@ -102,7 +102,7 @@ function PositionsHeld() {
   // 🟢 Delete
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
-      await axios.delete(`http://localhost:4000/api/positions/${id}`);
+      await axios.delete(`https://service-book-backend.onrender.com/api/positions/${id}`);
       fetchPositions();
     }
   };

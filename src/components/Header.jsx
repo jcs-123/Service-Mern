@@ -81,7 +81,7 @@ function Header({ handleDrawerToggle }) {
       setLoading(true);
 
       // ✅ Correct API endpoint
-      const res = await axios.put("http://localhost:4000/change-password", {
+      const res = await axios.put("https://service-book-backend.onrender.com/change-password", {
         gmail: userGmail,
         oldPassword,
         newPassword,

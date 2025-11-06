@@ -26,7 +26,7 @@ function Patent() {
   // 🟢 Fetch from backend
   const fetchPatents = async () => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/patents/${gmail}`);
+      const res = await axios.get(`https://service-book-backend.onrender.com/api/patents/${gmail}`);
       if (res.data.success) setPatents(res.data.data);
     } catch (err) {
       console.error("Error fetching patents:", err);
@@ -38,12 +38,12 @@ function Patent() {
     if (!newPatent.patentNo.trim()) return alert("Please enter a Patent Number");
     try {
       if (editId) {
-        await axios.put(`http://localhost:4000/api/patents/${editId}`, {
+        await axios.put(`https://service-book-backend.onrender.com/api/patents/${editId}`, {
           ...newPatent, gmail,
         });
         alert("✅ Patent updated successfully!");
       } else {
-        await axios.post("http://localhost:4000/api/patents", {
+        await axios.post("https://service-book-backend.onrender.com/api/patents", {
           ...newPatent, gmail,
         });
         alert("✅ Patent added successfully!");
@@ -75,7 +75,7 @@ function Patent() {
   // 🟢 Delete Patent
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
-      await axios.delete(`http://localhost:4000/api/patents/${id}`);
+      await axios.delete(`https://service-book-backend.onrender.com/api/patents/${id}`);
       fetchPatents();
     }
   };

@@ -65,7 +65,7 @@ const ProgramsAttended = () => {
 
   const fetchPrograms = async () => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/programs-attended/${gmail}`);
+      const res = await axios.get(`https://service-book-backend.onrender.com/api/programs-attended/${gmail}`);
       if (res.data.success) setExistingPrograms(res.data.data);
     } catch (error) {
       console.error("Error fetching programs:", error);
@@ -113,7 +113,7 @@ const ProgramsAttended = () => {
         for (const key in prog) formData.append(key, prog[key]);
         formData.append("gmail", gmail);
 
-        await axios.post("http://localhost:4000/api/programs-attended", formData, {
+        await axios.post("https://service-book-backend.onrender.com/api/programs-attended", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
@@ -143,14 +143,14 @@ const ProgramsAttended = () => {
   // ✅ Delete
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this program?")) {
-      await axios.delete(`http://localhost:4000/api/programs-attended/${id}`);
+      await axios.delete(`https://service-book-backend.onrender.com/api/programs-attended/${id}`);
       fetchPrograms();
     }
   };
 
   // ✅ Preview
   const handlePreview = (filePath) => {
-    setPreviewFile(`http://localhost:4000${filePath}`);
+    setPreviewFile(`https://service-book-backend.onrender.com${filePath}`);
     setPreviewDialog(true);
   };
 
@@ -170,7 +170,7 @@ const ProgramsAttended = () => {
       if (editData.newFile) formData.append("certificate", editData.newFile);
 
       await axios.put(
-        `http://localhost:4000/api/programs-attended/${editData._id}`,
+        `https://service-book-backend.onrender.com/api/programs-attended/${editData._id}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

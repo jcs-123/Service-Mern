@@ -101,7 +101,7 @@ const Generalsetting = () => {
   const fetchRecords = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:4000/api/general-details");
+      const res = await axios.get("https://service-book-backend.onrender.com/api/general-details");
       setRecords(res.data || []);
     } catch (err) {
       console.error(err);
@@ -143,7 +143,7 @@ const Generalsetting = () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        "http://localhost:4000/api/general-details",
+        "https://service-book-backend.onrender.com/api/general-details",
         formData
       );
       if (res.data.success) {
@@ -162,7 +162,7 @@ const Generalsetting = () => {
   const handleUpdate = async (id, updatedData) => {
     try {
       await axios.put(
-        `http://localhost:4000/api/general-details/${id}`,
+        `https://service-book-backend.onrender.com/api/general-details/${id}`,
         updatedData
       );
       toast.success("✅ Updated Successfully!");

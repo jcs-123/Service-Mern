@@ -68,7 +68,7 @@ const Qualification = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `http://localhost:4000/qualification/${encodeURIComponent(userEmail)}`
+        `https://service-book-backend.onrender.com/qualification/${encodeURIComponent(userEmail)}`
       );
       setQualifications(res.data.data || []);
     } catch (error) {
@@ -140,13 +140,13 @@ const Qualification = () => {
 
       if (editItem) {
         await axios.put(
-          `http://localhost:4000/qualification/${editItem._id}`,
+          `https://service-book-backend.onrender.com/qualification/${editItem._id}`,
           form,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
         toast.success("Qualification updated ✅");
       } else {
-        await axios.post("http://localhost:4000/qualification", form, {
+        await axios.post("https://service-book-backend.onrender.com/qualification", form, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Qualification added ✅");
@@ -198,7 +198,7 @@ const Qualification = () => {
     toast.dismiss();
     try {
       await toast.promise(
-        axios.delete(`http://localhost:4000/qualification/${id}`),
+        axios.delete(`https://service-book-backend.onrender.com/qualification/${id}`),
         {
           pending: "Deleting qualification...",
           success: "Deleted successfully ✅",
@@ -348,7 +348,7 @@ const Qualification = () => {
                   <TableCell>
                     {q.certificate ? (
                       <a
-                        href={`http://localhost:4000/uploads/${q.certificate}`}
+                        href={`https://service-book-backend.onrender.com/uploads/${q.certificate}`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

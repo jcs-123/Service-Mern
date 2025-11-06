@@ -32,7 +32,7 @@ import axios from "axios";
 function InterestedSubjects() {
   const navigate = useNavigate();
   const gmail = localStorage.getItem("gmail");
-  const API_URL = "http://localhost:4000"; // ✅ Backend base URL
+  const API_URL = "https://service-book-backend.onrender.com"; // ✅ Backend base URL
 
   const [subjects, setSubjects] = useState([]);
   const [newSubject, setNewSubject] = useState("");

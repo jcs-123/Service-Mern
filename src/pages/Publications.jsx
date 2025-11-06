@@ -66,7 +66,7 @@ const Publications = () => {
 
   const fetchPublications = async () => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/publications/${gmail}`);
+      const res = await axios.get(`https://service-book-backend.onrender.com/api/publications/${gmail}`);
       if (res.data.success) setExistingPublications(res.data.data);
     } catch (error) {
       console.error("Error fetching publications:", error);
@@ -119,7 +119,7 @@ const Publications = () => {
         for (const key in pub) formData.append(key, pub[key]);
         formData.append("gmail", gmail);
 
-        await axios.post("http://localhost:4000/api/publications", formData, {
+        await axios.post("https://service-book-backend.onrender.com/api/publications", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
@@ -149,14 +149,14 @@ const Publications = () => {
   // 🔹 Delete publication
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this publication?")) {
-      await axios.delete(`http://localhost:4000/api/publications/${id}`);
+      await axios.delete(`https://service-book-backend.onrender.com/api/publications/${id}`);
       fetchPublications();
     }
   };
 
   // 🔹 Preview document
   const handlePreview = (docPath) => {
-    setPreviewFile(`http://localhost:4000${docPath}`);
+    setPreviewFile(`https://service-book-backend.onrender.com${docPath}`);
     setPreviewDialog(true);
   };
 
@@ -175,7 +175,7 @@ const Publications = () => {
       }
       if (editData.newFile) formData.append("document", editData.newFile);
 
-      await axios.put(`http://localhost:4000/api/publications/${editData._id}`, formData, {
+      await axios.put(`https://service-book-backend.onrender.com/api/publications/${editData._id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

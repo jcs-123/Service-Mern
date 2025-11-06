@@ -65,7 +65,7 @@ const Experience = () => {
     if (!userEmail) return;
     try {
       setLoading(true);
-      const res = await axios.get(`http://localhost:4000/experience/${userEmail}`);
+      const res = await axios.get(`https://service-book-backend.onrender.com/experience/${userEmail}`);
       if (res.data?.success) setExperiences(res.data.data || []);
       else setExperiences([]);
     } catch (err) {
@@ -144,7 +144,7 @@ const Experience = () => {
   const confirmDelete = async (id) => {
     toast.dismiss();
     try {
-      await toast.promise(axios.delete(`http://localhost:4000/experience/${id}`), {
+      await toast.promise(axios.delete(`https://service-book-backend.onrender.com/experience/${id}`), {
         pending: "Deleting experience...",
         success: "🗑️ Experience deleted successfully ✅",
         error: "Failed to delete experience ❌",
@@ -203,13 +203,13 @@ const Experience = () => {
     try {
       if (editItem) {
         await axios.put(
-          `http://localhost:4000/experience/${editItem._id}`,
+          `https://service-book-backend.onrender.com/experience/${editItem._id}`,
           form,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
         toast.success("✅ Experience updated successfully!");
       } else {
-        await axios.post("http://localhost:4000/experience", form, {
+        await axios.post("https://service-book-backend.onrender.com/experience", form, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("✅ Experience added successfully!");
@@ -343,7 +343,7 @@ const Experience = () => {
                   <TableCell>
                     {exp.certificate ? (
                       <a
-                        href={`http://localhost:4000/uploads/${exp.certificate}`}
+                        href={`https://service-book-backend.onrender.com/uploads/${exp.certificate}`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

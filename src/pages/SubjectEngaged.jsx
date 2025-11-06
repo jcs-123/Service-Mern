@@ -60,7 +60,7 @@ function SubjectEngaged() {
   const fetchExistingSubjects = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:4000/subjects-engaged?gmail=${gmail}`
+        `https://service-book-backend.onrender.com/subjects-engaged?gmail=${gmail}`
       );
       if (res.data.success && res.data.data)
         setExistingSubjects(res.data.data.subjects || []);
@@ -128,7 +128,7 @@ function SubjectEngaged() {
       }
 
       setLoading(true);
-      const res = await axios.post("http://localhost:4000/subjects-engaged", {
+      const res = await axios.post("https://service-book-backend.onrender.com/subjects-engaged", {
         gmail,
         subjects,
       });
@@ -156,12 +156,12 @@ function SubjectEngaged() {
   const handleUpdateSaved = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:4000/subjects-engaged?gmail=${gmail}`
+        `https://service-book-backend.onrender.com/subjects-engaged?gmail=${gmail}`
       );
       if (res.data.success && res.data.data) {
         const allSubjects = res.data.data.subjects;
         allSubjects[editIndex] = editingSubject;
-        await axios.post("http://localhost:4000/subjects-engaged", {
+        await axios.post("https://service-book-backend.onrender.com/subjects-engaged", {
           gmail,
           subjects: allSubjects,
         });
@@ -179,11 +179,11 @@ function SubjectEngaged() {
     if (!window.confirm("Delete this subject permanently?")) return;
     try {
       const res = await axios.get(
-        `http://localhost:4000/subjects-engaged?gmail=${gmail}`
+        `https://service-book-backend.onrender.com/subjects-engaged?gmail=${gmail}`
       );
       if (res.data.success && res.data.data) {
         const updated = res.data.data.subjects.filter((_, i) => i !== index);
-        await axios.post("http://localhost:4000/subjects-engaged", {
+        await axios.post("https://service-book-backend.onrender.com/subjects-engaged", {
           gmail,
           subjects: updated,
         });

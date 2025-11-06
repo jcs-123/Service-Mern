@@ -40,7 +40,7 @@ const InteractionsOutsideWorld = () => {
   const fetchRecords = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:4000/api/interactions/${gmail}`
+        `https://service-book-backend.onrender.com/api/interactions/${gmail}`
       );
       if (res.data.success) setRecords(res.data.data);
     } catch (err) {
@@ -67,12 +67,12 @@ const InteractionsOutsideWorld = () => {
       formData.append("gmail", gmail);
 
       if (editId) {
-        await axios.put(`http://localhost:4000/api/interactions/${editId}`, formData, {
+        await axios.put(`https://service-book-backend.onrender.com/api/interactions/${editId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         alert("✅ Interaction updated successfully!");
       } else {
-        await axios.post("http://localhost:4000/api/interactions", formData, {
+        await axios.post("https://service-book-backend.onrender.com/api/interactions", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         alert("✅ Interaction added successfully!");
@@ -96,7 +96,7 @@ const InteractionsOutsideWorld = () => {
   // 🟢 Delete record
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
-      await axios.delete(`http://localhost:4000/api/interactions/${id}`);
+      await axios.delete(`https://service-book-backend.onrender.com/api/interactions/${id}`);
       fetchRecords();
     }
   };
@@ -225,7 +225,7 @@ const InteractionsOutsideWorld = () => {
                     <TableCell>
                       {item.certificate ? (
                         <a
-                          href={`http://localhost:4000${item.certificate}`}
+                          href={`https://service-book-backend.onrender.com${item.certificate}`}
                           target="_blank"
                           rel="noreferrer"
                           style={{ color: "#1565c0", textDecoration: "none" }}

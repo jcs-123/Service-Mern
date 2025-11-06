@@ -42,7 +42,7 @@ const FacultyResearch = () => {
     if (!userEmail) return;
     try {
       setLoading(true);
-      const res = await axios.get(`http://localhost:4000/faculty-research/${userEmail}`);
+      const res = await axios.get(`https://service-book-backend.onrender.com/faculty-research/${userEmail}`);
       setResearchList(res.data.data || []);
     } catch (err) {
       console.error("❌ Fetch error:", err);
@@ -77,10 +77,10 @@ const FacultyResearch = () => {
       const data = { ...formData, email: userEmail };
 
       if (editItem) {
-        await axios.put(`http://localhost:4000/faculty-research/${editItem._id}`, data);
+        await axios.put(`https://service-book-backend.onrender.com/faculty-research/${editItem._id}`, data);
         toast.success("✅ Faculty Research updated successfully!");
       } else {
-        await axios.post("http://localhost:4000/faculty-research", data);
+        await axios.post("https://service-book-backend.onrender.com/faculty-research", data);
         toast.success("✅ Faculty Research added successfully!");
       }
 
@@ -114,7 +114,7 @@ const FacultyResearch = () => {
             size="sm"
             onClick={async () => {
               try {
-                await axios.delete(`http://localhost:4000/faculty-research/${id}`);
+                await axios.delete(`https://service-book-backend.onrender.com/faculty-research/${id}`);
                 toast.dismiss();
                 toast.success("🗑️ Record deleted successfully!");
                 setDeleteTrigger((prev) => !prev); // 👈 trigger refresh automatically

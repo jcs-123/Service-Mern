@@ -36,7 +36,7 @@ const AdminDashboard = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+  const API_URL = import.meta.env.VITE_API_URL || "https://service-book-backend.onrender.com";
 
   const userName = localStorage.getItem("name") || "Admin";
   const userGmail = localStorage.getItem("gmail") || "admin@jec.ac.in";

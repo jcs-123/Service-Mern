@@ -24,7 +24,7 @@ const ForgotPassword = () => {
 
     try {
       setLoading(true);
-      await axios.post("http://localhost:4000/forgot-password", { gmail: email });
+      await axios.post("https://service-book-backend.onrender.com/forgot-password", { gmail: email });
       toast.success("📧 OTP sent to your Gmail!");
       setShowOtpModal(true);
     } catch (error) {
@@ -41,7 +41,7 @@ const ForgotPassword = () => {
 
     try {
       setLoading(true);
-      await axios.post("http://localhost:4000/verify-otp", { gmail: email, otp });
+      await axios.post("https://service-book-backend.onrender.com/verify-otp", { gmail: email, otp });
       toast.success("✅ OTP Verified Successfully!");
       setShowOtpModal(false);
       setShowResetModal(true);
@@ -60,7 +60,7 @@ const ForgotPassword = () => {
 
     try {
       setLoading(true);
-      await axios.post("http://localhost:4000/reset-password", {
+      await axios.post("https://service-book-backend.onrender.com/reset-password", {
         gmail: email,
         otp,
         newPassword,

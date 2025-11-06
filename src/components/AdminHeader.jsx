@@ -50,7 +50,7 @@ const AdminHeader = ({
 
     try {
       setLoading(true);
-      await axios.put("http://localhost:4000/change-password", {
+      await axios.put("https://service-book-backend.onrender.com/change-password", {
         gmail: userGmail,
         oldPassword,
         newPassword,

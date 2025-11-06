@@ -31,7 +31,7 @@ function ResearchInterests() {
 
   const fetchInterests = async () => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/research-interests/${gmail}`);
+      const res = await axios.get(`https://service-book-backend.onrender.com/api/research-interests/${gmail}`);
       if (res.data.success) setResearchAreas(res.data.data);
     } catch (error) {
       console.error("Error fetching interests:", error);
@@ -44,13 +44,13 @@ function ResearchInterests() {
     try {
       setLoading(true);
       if (editId) {
-        await axios.put(`http://localhost:4000/api/research-interests/${editId}`, {
+        await axios.put(`https://service-book-backend.onrender.com/api/research-interests/${editId}`, {
           gmail,
           title: newInterest,
         });
         alert("✅ Updated successfully");
       } else {
-        await axios.post("http://localhost:4000/api/research-interests", {
+        await axios.post("https://service-book-backend.onrender.com/api/research-interests", {
           gmail,
           title: newInterest,
         });
@@ -76,7 +76,7 @@ function ResearchInterests() {
   // ✅ Delete
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this interest?")) {
-      await axios.delete(`http://localhost:4000/api/research-interests/${id}`);
+      await axios.delete(`https://service-book-backend.onrender.com/api/research-interests/${id}`);
       fetchInterests();
     }
   };

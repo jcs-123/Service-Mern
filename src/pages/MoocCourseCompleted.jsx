@@ -26,7 +26,7 @@ function MoocCourseCompleted() {
   // 🟢 Fetch from backend
   const fetchCourses = async () => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/mooc/${gmail}`);
+      const res = await axios.get(`https://service-book-backend.onrender.com/api/mooc/${gmail}`);
       if (res.data.success) setCourses(res.data.data);
     } catch (err) {
       console.error("Error fetching courses:", err);
@@ -38,12 +38,12 @@ function MoocCourseCompleted() {
     if (!newCourse.title.trim()) return alert("Please enter a Course Title");
     try {
       if (editId) {
-        await axios.put(`http://localhost:4000/api/mooc/${editId}`, {
+        await axios.put(`https://service-book-backend.onrender.com/api/mooc/${editId}`, {
           ...newCourse, gmail,
         });
         alert("✅ Course updated successfully!");
       } else {
-        await axios.post("http://localhost:4000/api/mooc", {
+        await axios.post("https://service-book-backend.onrender.com/api/mooc", {
           ...newCourse, gmail,
         });
         alert("✅ Course added successfully!");
@@ -76,7 +76,7 @@ function MoocCourseCompleted() {
   // 🟢 Delete Course
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
-      await axios.delete(`http://localhost:4000/api/mooc/${id}`);
+      await axios.delete(`https://service-book-backend.onrender.com/api/mooc/${id}`);
       fetchCourses();
     }
   };
