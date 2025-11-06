@@ -55,7 +55,7 @@ const AdminDashboard = () => {
     const fetchCounts = async () => {
       try {
         const endpoints = {
-               generalDetails: "/api/general/get",
+             generalDetails: "/api/general/get",
           qualifications: "/api/qualification/get",
           experience: "/api/experience/get",
           subjectEngaged: "/api/subjects-engaged/get",
@@ -106,27 +106,27 @@ const AdminDashboard = () => {
      🎨 Section Metadata
   ====================================================== */
   const sectionMeta = [
-    { key: "generalDetails", title: "General Details", color: "#667eea", icon: "👤" },
-    { key: "qualifications", title: "Qualifications", color: "#f093fb", icon: "🎓" },
-    { key: "experience", title: "Experience", color: "#4facfe", icon: "💼" },
-    { key: "subjectEngaged", title: "Subject Engaged", color: "#43e97b", icon: "📚" },
-    { key: "publications", title: "Publications", color: "#fa709a", icon: "📄" },
-    { key: "programsCoordinated", title: "Programs Coordinated", color: "#ffecd2", icon: "🎯" },
-    { key: "programsAttended", title: "Programs Attended", color: "#c6ffdd", icon: "🗓️" },
-    { key: "consultancies", title: "Consultancies", color: "#ff9a9e", icon: "💡" },
-    { key: "facultyResearch", title: "Faculty Research", color: "#a18cd1", icon: "🔬" },
-    { key: "projectsGuided", title: "Projects Guided", color: "#fad0c4", icon: "👨‍🏫" },
-    { key: "seminarsGuided", title: "Seminars Guided", color: "#8fd3f4", icon: "🎤" },
-    { key: "interactions", title: "Outside Interactions", color: "#fbc2eb", icon: "🌐" },
-    { key: "positions", title: "Positions Held", color: "#84fab0", icon: "⭐" },
-    { key: "researchInterests", title: "Research Interests", color: "#d299c2", icon: "🎯" },
-    { key: "achievements", title: "Achievements", color: "#fdbb2d", icon: "🏆" },
-    { key: "interestsubject", title: "Interested Subjects", color: "#8EC5FC", icon: "❤️" },
-    { key: "activityLog", title: "Activity Log", color: "#FFDEE9", icon: "📊" },
-    { key: "patents", title: "Patents", color: "#FF9A8B", icon: "📜" },
-    { key: "mooc", title: "MOOC Courses", color: "#6A11CB", icon: "💻" },
-    { key: "administrativeWork", title: "Administrative Work", color: "#3E5151", icon: "⚙️" },
-    { key: "professionalBody", title: "Professional Body", color: "#13547A", icon: "🏛️" },
+    { key: "generalDetails", title: "General Details", icon: "👤" },
+    { key: "qualifications", title: "Qualifications", icon: "🎓" },
+    { key: "experience", title: "Experience", icon: "💼" },
+    { key: "subjectEngaged", title: "Subject Engaged", icon: "📚" },
+    { key: "publications", title: "Publications", icon: "📄" },
+    { key: "programsCoordinated", title: "Programs Coordinated", icon: "🎯" },
+    { key: "programsAttended", title: "Programs Attended", icon: "🗓️" },
+    { key: "consultancies", title: "Consultancies", icon: "💡" },
+    { key: "facultyResearch", title: "Faculty Research", icon: "🔬" },
+    { key: "projectsGuided", title: "Projects Guided", icon: "👨‍🏫" },
+    { key: "seminarsGuided", title: "Seminars Guided", icon: "🎤" },
+    { key: "interactions", title: "Outside Interactions", icon: "🌐" },
+    { key: "positions", title: "Positions Held", icon: "⭐" },
+    { key: "researchInterests", title: "Research Interests", icon: "🎯" },
+    { key: "achievements", title: "Achievements", icon: "🏆" },
+    { key: "interestsubject", title: "Interested Subjects", icon: "❤️" },
+    { key: "activityLog", title: "Activity Log", icon: "📊" },
+    { key: "patents", title: "Patents", icon: "📜" },
+    { key: "mooc", title: "MOOC Courses", icon: "💻" },
+    { key: "administrativeWork", title: "Administrative Work", icon: "⚙️" },
+    { key: "professionalBody", title: "Professional Body", icon: "🏛️" },
   ];
 
   /* ======================================================
@@ -203,9 +203,9 @@ const AdminDashboard = () => {
           </Box>
         ) : (
           <>
-            {/* 🟩 Stat Cards */}
+            {/* 🟦 Uniform Blue Stat Cards */}
             <Grid container spacing={2.5}>
-              {sectionMeta.map(({ key, title, color, icon }, i) => (
+              {sectionMeta.map(({ key, title, icon }, i) => (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={key}>
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -214,7 +214,6 @@ const AdminDashboard = () => {
                     whileHover={{ scale: 1.05 }}
                   >
                     <StatCard
-                      color={color}
                       title={title}
                       value={stats[key] ?? 0}
                       icon={icon}
@@ -237,7 +236,7 @@ const AdminDashboard = () => {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="count" fill="#42A5F5" animationDuration={1500} />
+                    <Bar dataKey="count" fill="#1565C0" animationDuration={1500} />
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
@@ -270,15 +269,15 @@ const AdminDashboard = () => {
 };
 
 /* ======================================================
-   🔹 Stat Card with CountUp Animation
+   🔹 Stat Card (All Same Color)
 ====================================================== */
-const StatCard = ({ color, title, value, icon, isMobile }) => (
+const StatCard = ({ title, value, icon, isMobile }) => (
   <Card
     sx={{
-      background: `linear-gradient(135deg, ${color}, ${color}99)`,
+      background: "linear-gradient(135deg, #1565C0 0%, #1E88E5 100%)",
       borderRadius: 3,
       textAlign: "center",
-      boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+      boxShadow: "0 8px 24px rgba(21,101,192,0.3)",
       transition: "all 0.3s ease-in-out",
       minHeight: isMobile ? 100 : 140,
       display: "flex",
@@ -287,7 +286,7 @@ const StatCard = ({ color, title, value, icon, isMobile }) => (
       color: "white",
       "&:hover": {
         transform: "translateY(-4px)",
-        boxShadow: "0 12px 40px rgba(0,0,0,0.2)",
+        boxShadow: "0 12px 40px rgba(21,101,192,0.5)",
       },
     }}
   >
