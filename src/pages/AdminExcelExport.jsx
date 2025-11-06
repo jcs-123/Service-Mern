@@ -191,12 +191,17 @@ const AdminExcelExport = () => {
           consultancies: "/api/consultancy/get",
           facultyResearch: "/api/facultyresearch/get",
           projectsGuided: "/api/projectsguided/get",
-          researchInterests: "/api/reserach/get",
           seminarsGuided: "/api/seminars-guided/get",
+          interactions: "/api/interactions/get",
+          positions: "/api/positions/get", // ✅ Added
+          researchInterests: "/api/reserach/get",
           achievements: "/api/achievements/get",
           interestsubject: "/api/interest/get",
           activityLog: "/api/activity/get",
+          patents: "/api/patents/get", // ✅ Added
+          mooc: "/api/mooc/get", // ✅ Added
           administrativeWork: "/api/administrative/get",
+           professionalBody: "/api/professional-body/get",
         };
 
         const results = await Promise.all(

@@ -6,6 +6,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+
 const Login = () => {
   const [form, setForm] = useState({ username: "", password: "" });
   const [eyePos, setEyePos] = useState({ x: 0, y: 0 });
@@ -30,7 +31,7 @@ const Login = () => {
     const blinkTimer = setInterval(() => {
       setIsBlinking(true);
       setTimeout(() => setIsBlinking(false), 250);
-    }, 5000);
+    }, 4000);
     return () => clearInterval(blinkTimer);
   }, []);
 
@@ -44,33 +45,29 @@ const Login = () => {
     }
 
     try {
-      // 🌐 Backend login API
       const res = await axios.post("http://localhost:4000/login", form);
-      const user = res.data.user;
+      const { success, user, token, message } = res.data;
 
-      // ✅ Store in localStorage
-      if (res.data.success) {
-        const user = res.data.user;
+      if (success && user) {
+        // ✅ Save full user info & token
+        localStorage.setItem("token", token || "dummy-token");
+        localStorage.setItem("user", JSON.stringify(user));
 
-        // 🔐 Save user info in localStorage
-        localStorage.setItem("staffId", user.staffId);
-        localStorage.setItem("username", user.username);
-        localStorage.setItem("gmail", user.gmail);
-        localStorage.setItem("role", user.role);
+        toast.success(`Welcome ${user.username}! 👋`);
 
-        toast.success("Login successful ✅");
-        navigate("/GeneralDetail"); // go to general details page
+        // ✅ Redirect based on role
+        setTimeout(() => {
+          if (user.role === "admin") {
+            navigate("/adminpanel");
+          } else if (user.role === "department") {
+            navigate("/departmentpanel");
+          } else {
+            navigate("/GeneralDetail");
+          }
+        }, 1000);
+      } else {
+        toast.error(message || "❌ Invalid username or password");
       }
-
-
-      toast.success(`Welcome ${user.username}! 👋`);
-
-      // ⏳ Redirect with delay
-      setTimeout(() => {
-        if (user.role === "admin") navigate("/adminpanel");
-        else if (user.role === "department") navigate("/departmentpanel");
-        else navigate("/GeneralDetail");
-      }, 1000);
     } catch (error) {
       console.error("Login Error:", error);
       toast.error(
@@ -78,6 +75,7 @@ const Login = () => {
       );
     }
   };
+
 
   return (
     <div className="mimo-login-container d-flex align-items-center justify-content-center">
@@ -141,15 +139,17 @@ const Login = () => {
           </button>
         </form>
 
-        {/* 🔁 Forgot Password */}
         <div className="text-center mt-3">
-          <Link to="/forgotpassword" className="text-decoration-none fw-semibold" style={{ color: "#0d6efd" }}>
+          <Link
+            to="/forgotpassword"
+            className="text-decoration-none fw-semibold"
+            style={{ color: "#0d6efd" }}
+          >
             Forgot Password?
           </Link>
         </div>
       </motion.div>
 
-      {/* Toast Notification Container */}
       <ToastContainer position="top-center" autoClose={2000} />
     </div>
   );
