@@ -34,13 +34,15 @@ import {
   AccountTree,
   Logout,
 } from "@mui/icons-material";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const drawerWidth = 240;
 
 const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
   const isMobile = useMediaQuery("(max-width:600px)");
   const location = useLocation();
+  const navigate = useNavigate();
 
   const forms = [
     { text: "1. General Details", icon: <Person />, path: "/GeneralDetail" },
@@ -64,9 +66,16 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
     { text: "19. MOOC Course", icon: <LibraryBooks />, path: "/MoocCourseCompleted" },
     { text: "20. Administrative Work", icon: <WorkspacePremium />, path: "/AdministrativeWork" },
     { text: "21. Professional Body", icon: <MilitaryTech />, path: "/Professional" },
-
-
   ];
+
+  // ✅ Logout Handler
+  const handleLogout = () => {
+    toast.info("Logging out... 👋", { autoClose: 1200 });
+    setTimeout(() => {
+      localStorage.clear(); // remove all saved user data
+      navigate("/login"); // redirect to login
+    }, 1000);
+  };
 
   const drawerContent = (
     <Box
@@ -134,7 +143,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
         <Divider sx={{ borderColor: "rgba(0,0,0,0.2)" }} />
         <Box sx={{ p: 1.5 }}>
           <ListItemButton
-            onClick={() => alert("Logout Clicked")}
+            onClick={handleLogout}
             sx={{
               borderRadius: 2,
               transition: "all 0.3s ease-in-out",
@@ -176,7 +185,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
             boxSizing: "border-box",
             top: "64px",
             height: "calc(100% - 64px)",
-            borderRight: "2px solid black", // 🔥 black border for mobile
+            borderRight: "2px solid black",
           },
         }}
       >
@@ -194,8 +203,8 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
             top: "64px",
             height: "calc(100% - 64px)",
             background: "linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%)",
-            borderRight: "2px solid #000", // ⚫ dark black border
-            boxShadow: "6px 0 12px rgba(0, 0, 0, 0.25)", // 🌫️ stronger sidebar shadow
+            borderRight: "2px solid #000",
+            boxShadow: "6px 0 12px rgba(0, 0, 0, 0.25)",
             transition: "all 0.3s ease-in-out",
           },
         }}
@@ -203,7 +212,6 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
       >
         {drawerContent}
       </Drawer>
-
     </>
   );
 };
