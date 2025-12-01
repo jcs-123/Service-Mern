@@ -68,7 +68,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
     { text: "21. Professional Body", icon: <MilitaryTech />, path: "/Professional" },
   ];
 
-  // ✅ Logout Handler
+  // ✅ Logout Handlerhttps://chat.deepseek.com/a/chat/s/33cee13f-9cf8-47fa-a34a-442afade1f04
   const handleLogout = () => {
     toast.info("Logging out... 👋", { autoClose: 1200 });
     setTimeout(() => {

@@ -134,6 +134,7 @@ const Generalsetting = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  
   // ✅ Submit new record
   const handleSubmit = async () => {
     if (!validateForm()) {
@@ -150,6 +151,8 @@ const Generalsetting = () => {
         toast.success("✅ Saved Successfully");
         setFormData({});
         fetchRecords();
+        // ✅ Navigate to Qualification page after success
+        setTimeout(() => navigate("/Qualification"), 1200);
       } else toast.error("❌ Failed to save details!");
     } catch (err) {
       toast.error("❌ Server error, please try again later.");
@@ -157,6 +160,7 @@ const Generalsetting = () => {
       setLoading(false);
     }
   };
+
 
   // ✅ Update record
   const handleUpdate = async (id, updatedData) => {
