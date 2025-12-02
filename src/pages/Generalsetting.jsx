@@ -96,12 +96,15 @@ const Generalsetting = () => {
   const [viewMode, setViewMode] = useState(false);
   const [records, setRecords] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
-
+  const username = localStorage.getItem("username");
   // ✅ Fetch all records
   const fetchRecords = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("https://service-book-backend.onrender.com/api/general-details");
+      const res = await axios.get(
+        "https://service-book-backend.onrender.com/api/general-details",
+        { params: { username: username } }
+      );
       setRecords(res.data || []);
     } catch (err) {
       console.error(err);
@@ -134,19 +137,22 @@ const Generalsetting = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  
+
   // ✅ Submit new record
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      toast.warning("⚠️ Please fill all required fields before submitting.");
-      return;
-    }
+    if (!validateForm()) return;
+
     try {
       setLoading(true);
+
+      const username = localStorage.getItem("username");
+      const sendData = { ...formData, username };
+
       const res = await axios.post(
         "https://service-book-backend.onrender.com/api/general-details",
-        formData
+        sendData
       );
+
       if (res.data.success) {
         toast.success("✅ Saved Successfully");
         setFormData({});
