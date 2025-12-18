@@ -14,77 +14,54 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Chip,
-  Tooltip,
-  InputAdornment,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
 import {
   Add,
   Delete,
   Edit,
-  UploadFile,
+  Visibility,
   School,
-  Book,
-  LocationOn,
-  Percent,
-  CalendarToday,
-  CalendarMonth,
-  Attachment,
-  ArrowForward,
   ArrowBack,
+  ArrowForward,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 const Qualification = () => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [qualifications, setQualifications] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null); // 👈 custom confirm toast control
-  const navigate = useNavigate();
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
-  /* ======================================================
-     🧠 LOAD USER EMAIL FROM LOCALSTORAGE
-  ====================================================== */
-  useEffect(() => {
-    const gmail = localStorage.getItem("gmail");
-    if (gmail) {
-      setUserEmail(gmail);
-      console.log("📧 Logged-in Gmail:", gmail);
-    } else {
-      toast.error("⚠️ No Gmail found. Please log in again.");
-    }
-  }, []);
+  const userEmail = localStorage.getItem("gmail") || "";
 
-  /* ======================================================
-     📥 FETCH QUALIFICATIONS BY EMAIL
-  ====================================================== */
-  const fetchQualifications = async () => {
-    if (!userEmail) return;
-    try {
-      setLoading(true);
-      const res = await axios.get(
-        `https://service-book-backend.onrender.com/qualification/${encodeURIComponent(userEmail)}`
-      );
-      setQualifications(res.data.data || []);
-    } catch (error) {
-      console.error("❌ Fetch error:", error);
-    } finally {
-      setLoading(false);
-    }
+  // Qualification options
+  const qualificationOptions = {
+    "Post-Doctoral Fellowship (PDF)": [],
+    "Phd": ["Ph.D", "Ph.D (Pursuing)"],
+    "POST GRADUATION": ["M.Tech", "M.E", "M.A.", "M.Sc", "MBA", "MCA", "M.Com", "Other"],
+    "GRADUATION": ["B.Tech", "B.E", "AMIE", "B.A", "B.Sc", "B.Com", "B.P.Ed"],
+    "DIPLOMA": [],
+    "HIGHER SECONDARY": ["Plus Two (State)", "Plus Two (CBSE)", "Plus Two (ICSE)"],
+    "SECONDARY": ["SSLC (State)", "10th (CBSE)", "10th (ICSE)"],
+    "OTHERS": []
   };
 
-  useEffect(() => {
-    if (userEmail) fetchQualifications();
-  }, [userEmail]);
+  const degreeOptions = Object.keys(qualificationOptions);
 
-  /* ======================================================
-     🧾 FORM DATA
-  ====================================================== */
+  // Form state
   const [formData, setFormData] = useState({
     degree: "",
     discipline: "",
@@ -96,6 +73,46 @@ const Qualification = () => {
     certificate: null,
   });
 
+  // Fetch qualifications
+  useEffect(() => {
+    fetchQualifications();
+  }, []);
+
+  const fetchQualifications = async () => {
+    if (!userEmail) return;
+    
+    try {
+      setLoading(true);
+      const res = await axios.get(
+        `https://service-book-backend.onrender.com/qualification/${encodeURIComponent(userEmail)}`
+      );
+      setQualifications(res.data.data || []);
+    } catch (error) {
+      console.error("Error fetching qualifications:", error);
+      alert("Failed to fetch qualifications");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle form input changes
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    
+    if (name === "certificate") {
+      setFormData({ ...formData, certificate: files[0] });
+    } else if (name === "degree") {
+      setFormData({ 
+        ...formData, 
+        degree: value,
+        discipline: ""
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  // Open modal for add/edit
   const handleOpen = () => {
     setEditItem(null);
     setFormData({
@@ -113,21 +130,15 @@ const Qualification = () => {
 
   const handleClose = () => setOpen(false);
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "certificate") {
-      setFormData({ ...formData, certificate: files[0] });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
-
-  /* ======================================================
-     🟢 ADD / UPDATE QUALIFICATION
-  ====================================================== */
+  // Save qualification
   const handleSave = async () => {
     if (!userEmail) {
-      toast.error("User Gmail not found ❌");
+      alert("User email not found");
+      return;
+    }
+
+    if (!formData.degree) {
+      alert("Please select a Degree");
       return;
     }
 
@@ -144,78 +155,25 @@ const Qualification = () => {
           form,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
-        toast.success("Qualification updated ✅");
+        alert("Qualification updated successfully!");
       } else {
-        await axios.post("https://service-book-backend.onrender.com/qualification", form, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        toast.success("Qualification added ✅");
+        await axios.post(
+          "https://service-book-backend.onrender.com/qualification",
+          form,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+        alert("Qualification added successfully!");
       }
 
       setOpen(false);
-      await fetchQualifications();
-    } catch (err) {
-      console.error("Save error:", err);
-      toast.error("Failed to save qualification ❌");
-    }
-  };
-
-  /* ======================================================
-     🗑️ DELETE QUALIFICATION WITH TOAST CONFIRMATION
-  ====================================================== */
-  const handleDeleteClick = (id) => {
-    setConfirmDeleteId(id);
-    toast.info(
-      <div style={{ textAlign: "center" }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          Delete this qualification?
-        </Typography>
-        <div style={{ marginTop: 10 }}>
-          <Button
-            size="small"
-            variant="contained"
-            color="error"
-            onClick={() => confirmDelete(id)}
-            sx={{ mr: 1 }}
-          >
-            Yes
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            color="inherit"
-            onClick={() => toast.dismiss()}
-          >
-            No
-          </Button>
-        </div>
-      </div>,
-      { autoClose: false, closeOnClick: false }
-    );
-  };
-
-  const confirmDelete = async (id) => {
-    toast.dismiss();
-    try {
-      await toast.promise(
-        axios.delete(`https://service-book-backend.onrender.com/qualification/${id}`),
-        {
-          pending: "Deleting qualification...",
-          success: "Deleted successfully ✅",
-          error: "Failed to delete ❌",
-        }
-      );
       fetchQualifications();
     } catch (err) {
-      console.error("Delete error:", err);
-    } finally {
-      setConfirmDeleteId(null);
+      console.error("Save error:", err);
+      alert("Failed to save qualification");
     }
   };
 
-  /* ======================================================
-     ✏️ EDIT QUALIFICATION
-  ====================================================== */
+  // Edit qualification
   const handleEdit = (item) => {
     setEditItem(item);
     setFormData({
@@ -231,212 +189,259 @@ const Qualification = () => {
     setOpen(true);
   };
 
-  /* ======================================================
-     🔙 NAVIGATION
-  ====================================================== */
+  // Delete qualification
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`https://service-book-backend.onrender.com/qualification/${id}`);
+      alert("Qualification deleted successfully!");
+      fetchQualifications();
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Failed to delete qualification");
+    } finally {
+      setDeleteDialog(false);
+      setItemToDelete(null);
+    }
+  };
+
+  // Navigation
   const handleBack = () => navigate("/GeneralDetail");
   const handleNext = () => navigate("/experience");
 
-  /* ======================================================
-     🖼️ UI SECTION
-  ====================================================== */
   return (
-    <Box
-      sx={{
-        p: { xs: 1.5, sm: 3 },
-        background: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
-        borderRadius: 3,
-        border: "2px solid #1565C0",
-        boxShadow: "0 6px 24px rgba(33,150,243,0.2)",
-      }}
-    >
-      <ToastContainer position="top-right" autoClose={2500} />
+    <Box sx={{ p: 3, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+      {/* Header */}
+      <Paper sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: 2 }}>
+        <Grid container alignItems="center" justifyContent="space-between">
+          <Grid item>
+            <Typography variant="h4" fontWeight="bold" color="primary">
+              Academic Qualifications
+            </Typography>
+            <Typography variant="body1" color="textSecondary">
+              Manage your educational background
+            </Typography>
+          </Grid>
+          <Grid item>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={handleOpen}
+              sx={{ borderRadius: 2 }}
+            >
+              Add Qualification
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
 
-      {/* ===== Header ===== */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-          flexWrap: "wrap",
-          gap: 2,
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <School sx={{ fontSize: 32, color: "#1565C0" }} />
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: 700,
-              fontSize: { xs: "1.6rem", sm: "1.9rem" },
-              background: "linear-gradient(135deg, #1565C0, #1976D2)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              textTransform: "uppercase",
-              letterSpacing: 1,
-            }}
-          >
-            Qualifications
-          </Typography>
-        </Box>
-
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleOpen}
-          sx={{
-            background: "linear-gradient(135deg, #1976D2, #1565C0)",
-            border: "2px solid #0D47A1",
-            borderRadius: "10px",
-            fontWeight: 600,
-            px: 3,
-            py: 1,
-          }}
-        >
-          Add Qualification
-        </Button>
-      </Box>
-
-      {/* ===== Table ===== */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead sx={{ background: "linear-gradient(135deg, #42A5F5, #1976D2)" }}>
-            <TableRow>
-              {[
-                "No",
-                "Degree",
-                "Discipline",
-                "University",
-                "Percentage",
-                "Reg. Year",
-                "Passing Year",
-                "Remarks",
-                "Certificate",
-                "Actions",
-              ].map((h) => (
-                <TableCell key={h} sx={{ color: "white", fontWeight: "bold" }}>
-                  {h}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
+      {/* Qualifications Table */}
+      <Paper sx={{ borderRadius: 2, boxShadow: 2, overflow: "hidden" }}>
+        <TableContainer>
+          <Table>
+            <TableHead sx={{ backgroundColor: "#1976d2" }}>
               <TableRow>
-                <TableCell colSpan={10} align="center">
-                  Loading...
-                </TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>#</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Degree</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Discipline</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>University</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Percentage</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Passing Year</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Actions</TableCell>
               </TableRow>
-            ) : qualifications.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={10} align="center">
-                  No qualifications found
-                </TableCell>
-              </TableRow>
-            ) : (
-              qualifications.map((q, i) => (
-                <TableRow key={q._id}>
-                  <TableCell>{i + 1}</TableCell>
-                  <TableCell>{q.degree}</TableCell>
-                  <TableCell>{q.discipline}</TableCell>
-                  <TableCell>{q.university}</TableCell>
-                  <TableCell>{q.percentage}</TableCell>
-                  <TableCell>{q.registrationYear}</TableCell>
-                  <TableCell>{q.passingYear}</TableCell>
-                  <TableCell>{q.remarks}</TableCell>
-                  <TableCell>
-                    {q.certificate ? (
-                      <a
-                        href={`https://service-book-backend.onrender.com/uploads/${q.certificate}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Chip
-                          icon={<Attachment />}
-                          label="View File"
-                          color="info"
-                          size="small"
-                        />
-                      </a>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip title="Edit">
-                      <IconButton color="primary" onClick={() => handleEdit(q)}>
-                        <Edit />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton color="error" onClick={() => handleDeleteClick(q._id)}>
-                        <Delete />
-                      </IconButton>
-                    </Tooltip>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                    <CircularProgress />
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : qualifications.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                    <School sx={{ fontSize: 60, color: "#ccc", mb: 2 }} />
+                    <Typography variant="h6" color="textSecondary">
+                      No qualifications found
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Click "Add Qualification" to get started
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                qualifications.map((q, index) => (
+                  <TableRow key={q._id} hover>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{q.degree}</TableCell>
+                    <TableCell>{q.discipline || "-"}</TableCell>
+                    <TableCell>{q.university}</TableCell>
+                    <TableCell>{q.percentage}%</TableCell>
+                    <TableCell>{q.passingYear}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        <IconButton 
+                          size="small" 
+                          color="primary"
+                          onClick={() => handleEdit(q)}
+                        >
+                          <Edit />
+                        </IconButton>
+                        <IconButton 
+                          size="small" 
+                          color="error"
+                          onClick={() => {
+                            setItemToDelete(q._id);
+                            setDeleteDialog(true);
+                          }}
+                        >
+                          <Delete />
+                        </IconButton>
+                        {q.certificate && (
+                          <IconButton 
+                            size="small" 
+                            color="info"
+                            component="a"
+                            href={`https://service-book-backend.onrender.com/uploads/${q.certificate}`}
+                            target="_blank"
+                          >
+                            <Visibility />
+                          </IconButton>
+                        )}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
 
-      {/* ===== Navigation ===== */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
-        <Button variant="outlined" startIcon={<ArrowBack />} onClick={handleBack}>
+      {/* Navigation */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBack />}
+          onClick={handleBack}
+        >
           Back
         </Button>
-        <Button variant="contained" endIcon={<ArrowForward />} onClick={handleNext}>
-          Next
+        <Typography variant="body2" color="textSecondary" sx={{ alignSelf: "center" }}>
+          {qualifications.length} qualification(s) added
+        </Typography>
+        <Button
+          variant="contained"
+          endIcon={<ArrowForward />}
+          onClick={handleNext}
+        >
+          Continue to Experience
         </Button>
       </Box>
 
-      {/* ===== Modal ===== */}
+      {/* Add/Edit Modal */}
       <Modal open={open} onClose={handleClose}>
-        <Box
-          sx={{
-            width: { xs: "95%", sm: "85%", md: "70%" },
-            maxWidth: 800,
-            bgcolor: "white",
-            borderRadius: 3,
-            border: "2px solid #1976D2",
-            p: { xs: 2.5, sm: 4 },
-            mx: "auto",
-            mt: "5%",
-            overflowY: "auto",
-            maxHeight: "90vh",
-          }}
-        >
-          <Typography variant="h6" sx={{ fontWeight: 700, color: "#1565C0", mb: 3 }}>
-            {editItem ? "Edit Qualification" : "Add Qualification"}
+        <Box sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: { xs: "95%", sm: "90%", md: "700px" },
+          maxHeight: "90vh",
+          overflow: "auto",
+          bgcolor: "background.paper",
+          borderRadius: 2,
+          boxShadow: 24,
+          p: 4,
+        }}>
+          <Typography variant="h5" gutterBottom fontWeight="bold">
+            {editItem ? "Edit Qualification" : "Add New Qualification"}
           </Typography>
 
-          <Grid container spacing={2}>
-            {[
-              { name: "degree", label: "Degree", icon: <School /> },
-              { name: "discipline", label: "Discipline / Stream", icon: <Book /> },
-              { name: "university", label: "University / Institution", icon: <LocationOn /> },
-              { name: "percentage", label: "Percentage / CGPA", icon: <Percent /> },
-              { name: "registrationYear", label: "Year of Registration", icon: <CalendarToday /> },
-              { name: "passingYear", label: "Year of Passing", icon: <CalendarMonth /> },
-            ].map((f) => (
-              <Grid item xs={12} sm={6} key={f.name}>
-                <TextField
-                  label={f.label}
-                  name={f.name}
-                  value={formData[f.name]}
+          <Grid container spacing={3}>
+            {/* Degree */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth required>
+                <InputLabel>Degree</InputLabel>
+                <Select
+                  name="degree"
+                  value={formData.degree}
                   onChange={handleChange}
-                  fullWidth
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">{f.icon}</InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-            ))}
+                  label="Degree"
+                >
+                  {degreeOptions.map((degree) => (
+                    <MenuItem key={degree} value={degree}>{degree}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
 
+            {/* Discipline */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth disabled={!formData.degree || qualificationOptions[formData.degree]?.length === 0}>
+                <InputLabel>Discipline</InputLabel>
+                <Select
+                  name="discipline"
+                  value={formData.discipline}
+                  onChange={handleChange}
+                  label="Discipline"
+                >
+                  <MenuItem value="">Select Discipline</MenuItem>
+                  {qualificationOptions[formData.degree]?.map((disc) => (
+                    <MenuItem key={disc} value={disc}>{disc}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* University */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="University"
+                name="university"
+                value={formData.university}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+
+            {/* Percentage */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Percentage"
+                name="percentage"
+                value={formData.percentage}
+                onChange={handleChange}
+                fullWidth
+                type="number"
+                inputProps={{ min: "0", max: "100", step: "0.01" }}
+              />
+            </Grid>
+
+            {/* Registration Year */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Registration Year"
+                name="registrationYear"
+                value={formData.registrationYear}
+                onChange={handleChange}
+                fullWidth
+                type="number"
+              />
+            </Grid>
+
+            {/* Passing Year */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Passing Year"
+                name="passingYear"
+                value={formData.passingYear}
+                onChange={handleChange}
+                fullWidth
+                type="number"
+              />
+            </Grid>
+
+            {/* Remarks */}
             <Grid item xs={12}>
               <TextField
                 label="Remarks"
@@ -445,30 +450,36 @@ const Qualification = () => {
                 onChange={handleChange}
                 fullWidth
                 multiline
-                rows={3}
+                rows={2}
               />
             </Grid>
 
+            {/* Certificate Upload */}
             <Grid item xs={12}>
-              <Button component="label" variant="outlined" startIcon={<UploadFile />} fullWidth>
-                Upload Certificate
+              <Button
+                variant="outlined"
+                component="label"
+                fullWidth
+                sx={{ py: 2 }}
+              >
+                {formData.certificate ? "Change Certificate" : "Upload Certificate"}
                 <input
                   type="file"
                   name="certificate"
                   hidden
                   onChange={handleChange}
-                  accept=".pdf,.jpg,.png"
+                  accept=".pdf,.jpg,.png,.jpeg"
                 />
               </Button>
               {formData.certificate && (
-                <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
-                  Selected: {formData.certificate.name || formData.certificate}
+                <Typography variant="body2" color="success.main" sx={{ mt: 1 }}>
+                  Selected: {formData.certificate.name}
                 </Typography>
               )}
             </Grid>
           </Grid>
 
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3, gap: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 4 }}>
             <Button variant="outlined" onClick={handleClose}>
               Cancel
             </Button>
@@ -478,6 +489,24 @@ const Qualification = () => {
           </Box>
         </Box>
       </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialog} onClose={() => setDeleteDialog(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete this qualification?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog(false)}>Cancel</Button>
+          <Button 
+            onClick={() => handleDelete(itemToDelete)} 
+            color="error" 
+            variant="contained"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

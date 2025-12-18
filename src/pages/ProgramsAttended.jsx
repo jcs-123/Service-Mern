@@ -41,7 +41,7 @@ const ProgramsAttended = () => {
   const [programs, setPrograms] = useState([
     {
       category: "",
-      subCategory: "",
+      // subCategory: "",
       title: "",
       period: "",
       fundingAgency: "",
@@ -92,7 +92,7 @@ const ProgramsAttended = () => {
       ...programs,
       {
         category: "",
-        subCategory: "",
+        // subCategory: "",
         title: "",
         period: "",
         fundingAgency: "",
@@ -122,7 +122,7 @@ const ProgramsAttended = () => {
       setPrograms([
         {
           category: "",
-          subCategory: "",
+          // subCategory: "",
           title: "",
           period: "",
           fundingAgency: "",
@@ -247,7 +247,7 @@ const ProgramsAttended = () => {
                 <Grid container spacing={2}>
                   {[
                     ["Category", "category"],
-                    ["Sub Category", "subCategory"],
+                    // ["Sub Category", "subCategory"],
                     ["Title", "title"],
                     ["Period", "period"],
                     ["Funding Agency", "fundingAgency"],
