@@ -94,8 +94,8 @@ function ActivityLog() {
   };
 
   // Navigation
-  const handlePrevious = () => navigate("/InterestedSubjects");
-  const handleNext = () => navigate("/Patent");
+  const handlePrevious = () => navigate("/Achievements");
+  const handleNext = () => navigate("/AdministrativeWork");
 
   // Styles
   const textFieldStyles = {

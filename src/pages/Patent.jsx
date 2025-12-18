@@ -292,7 +292,7 @@ function Patent() {
             display: "flex", justifyContent: "space-between",
             alignItems: "center", mt: 6, pt: 4, borderTop: "2px solid #e3f2fd"
           }}>
-            <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => navigate("/ActivityLog")}
+            <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => navigate("/Publications")}
               sx={{
                 borderColor: "#1565c0", color: "#1565c0",
                 textTransform: "none", fontWeight: "bold",
@@ -308,7 +308,7 @@ function Patent() {
                 }}>
                 Save
               </Button>
-              <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate("/MoocCourseCompleted")}
+              <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate("/ProgramsCoordinated")}
                 sx={{
                   background: "linear-gradient(135deg, #2e7d32, #4caf50)",
                   textTransform: "none", fontWeight: "bold",

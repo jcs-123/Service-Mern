@@ -70,7 +70,7 @@ const AdminDashboard = () => {
           positions: "/api/positions/get", // ✅ Added
           researchInterests: "/api/reserach/get",
           achievements: "/api/achievements/get",
-          interestsubject: "/api/interest/get",
+          // interestsubject: "/api/interest/get",
           activityLog: "/api/activity/get",
           patents: "/api/patents/get", // ✅ Added
           mooc: "/api/mooc/get", // ✅ Added
@@ -121,7 +121,7 @@ const AdminDashboard = () => {
     { key: "positions", title: "Positions Held", icon: "⭐" },
     { key: "researchInterests", title: "Research Interests", icon: "🎯" },
     { key: "achievements", title: "Achievements", icon: "🏆" },
-    { key: "interestsubject", title: "Interested Subjects", icon: "❤️" },
+    // { key: "interestsubject", title: "Interested Subjects", icon: "❤️" },
     { key: "activityLog", title: "Activity Log", icon: "📊" },
     { key: "patents", title: "Patents", icon: "📜" },
     { key: "mooc", title: "MOOC Courses", icon: "💻" },

@@ -14,218 +14,404 @@ import {
   TableRow,
   IconButton,
   Tooltip,
+  MenuItem,
+  Chip,
+  CircularProgress,
+  FormHelperText,
+  Divider,
+  useMediaQuery,
+  useTheme
 } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete, CloudUpload, ArrowForward, ArrowBack } from "@mui/icons-material";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Link } from "react-router-dom";
+
+/* ================= ACADEMIC YEAR OPTIONS ================= */
+
+const generateAcademicYears = () => {
+  const years = [];
+  const startYear = 1950;
+  const currentYear = new Date().getFullYear();
+  for (let y = currentYear; y >= startYear; y--) {
+    years.push(`${y}-${y + 1}`);
+  }
+  return years;
+};
+
+const ACADEMIC_YEAR_OPTIONS = generateAcademicYears();
+
+/* ================= VALIDATION ================= */
+
+const validateRecord = (record) => {
+  const errors = {};
+  if (!record.title?.trim()) errors.title = "Title is required";
+  if (!record.description?.trim()) errors.description = "Description is required";
+  if (!record.fromYear || !record.toYear)
+    errors.academicYear = "Academic year range required";
+  if (!record.fromDate) errors.fromDate = "Start date required";
+  return errors;
+};
+
+/* ================= COMPONENT ================= */
 
 const InteractionsOutsideWorld = () => {
-  const navigate = useNavigate();
-  const gmail = localStorage.getItem("gmail") || "jeswinjohn@jecc.ac.in";
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const gmail = localStorage.getItem("gmail") || "";
 
-  const [record, setRecord] = useState({
+  const initialState = {
     title: "",
+    description: "",
+    fromYear: "",
+    toYear: "",
     academicYear: "",
-    certificate: null,
-  });
+    fromDate: "",
+    toDate: "",
+    certificate: null
+  };
+
+  const [record, setRecord] = useState(initialState);
   const [records, setRecords] = useState([]);
   const [editId, setEditId] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
 
-  // 🟢 Fetch all interactions
+  /* ================= FETCH ================= */
+
   useEffect(() => {
     fetchRecords();
   }, []);
 
   const fetchRecords = async () => {
-    try {
-      const res = await axios.get(
-        `https://service-book-backend.onrender.com/api/interactions/${gmail}`
-      );
-      if (res.data.success) setRecords(res.data.data);
-    } catch (err) {
-      console.error("Error fetching records:", err);
-    }
+    const res = await axios.get(
+      `https://service-book-backend.onrender.com/api/interactions/${gmail}`
+    );
+    if (res.data.success) setRecords(res.data.data);
   };
 
-  // 🟢 Handle input change
+  /* ================= HANDLERS ================= */
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setRecord((prev) => ({ ...prev, [name]: value }));
+
+    setRecord((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (name === "fromYear" || name === "toYear") {
+        if (updated.fromYear && updated.toYear) {
+          updated.academicYear =
+            updated.fromYear === updated.toYear
+              ? updated.fromYear
+              : `${updated.fromYear} to ${updated.toYear}`;
+        }
+      }
+      return updated;
+    });
+
+    if (errors[name]) setErrors({ ...errors, [name]: "" });
   };
 
-  // 🟢 Handle file upload
   const handleFileChange = (e) => {
-    setRecord((prev) => ({ ...prev, certificate: e.target.files[0] }));
+    setRecord({ ...record, certificate: e.target.files[0] });
   };
 
-  // 🟢 Save / Update record
+  /* ================= SAVE ================= */
+
   const handleSave = async () => {
+    const validationErrors = validateRecord(record);
+    if (Object.keys(validationErrors).length) {
+      setErrors(validationErrors);
+      toast.error("Fix errors before saving");
+      return;
+    }
+
     try {
+      setSaving(true);
       const formData = new FormData();
-      for (const key in record) formData.append(key, record[key]);
+
+      Object.entries(record).forEach(([k, v]) => {
+        if (k === "toDate") {
+          formData.append("toDate", v || "Present");
+        } else if (k === "certificate" && v) {
+          formData.append("certificate", v);
+        } else if (!["fromYear", "toYear"].includes(k)) {
+          formData.append(k, v);
+        }
+      });
+
       formData.append("gmail", gmail);
 
       if (editId) {
-        await axios.put(`https://service-book-backend.onrender.com/api/interactions/${editId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        alert("✅ Interaction updated successfully!");
+        await axios.put(
+          `https://service-book-backend.onrender.com/api/interactions/${editId}`,
+          formData
+        );
+        toast.success("Updated successfully");
       } else {
-        await axios.post("https://service-book-backend.onrender.com/api/interactions", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        alert("✅ Interaction added successfully!");
+        await axios.post(
+          "https://service-book-backend.onrender.com/api/interactions",
+          formData
+        );
+        toast.success("Saved successfully");
       }
 
-      setRecord({ title: "", academicYear: "", certificate: null });
+      setRecord(initialState);
       setEditId(null);
       fetchRecords();
-    } catch (err) {
-      console.error("Error saving record:", err);
-      alert("❌ Failed to save record");
+    } catch {
+      toast.error("Save failed");
+    } finally {
+      setSaving(false);
     }
   };
 
-  // 🟢 Edit record
+  /* ================= EDIT / DELETE ================= */
+
   const handleEdit = (item) => {
-    setRecord({ title: item.title, academicYear: item.academicYear, certificate: null });
+    const [fromYear, toYear] = item.academicYear.includes(" to ")
+      ? item.academicYear.split(" to ")
+      : [item.academicYear, item.academicYear];
+
+    setRecord({
+      title: item.title,
+      description: item.description,
+      fromYear,
+      toYear,
+      academicYear: item.academicYear,
+      fromDate: item.fromDate,
+      toDate: item.toDate === "Present" ? "" : item.toDate,
+      certificate: null
+    });
+
     setEditId(item._id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // 🟢 Delete record
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this record?")) {
-      await axios.delete(`https://service-book-backend.onrender.com/api/interactions/${id}`);
+    if (window.confirm("Delete this record?")) {
+      await axios.delete(
+        `https://service-book-backend.onrender.com/api/interactions/${id}`
+      );
+      toast.success("Deleted");
       fetchRecords();
     }
   };
 
-  const handlePrevious = () => navigate("/SeminarsGuided");
-  const handleNext = () => navigate("/PositionsHeld");
+  /* ================= UI ================= */
 
   return (
-    <Box
-      sx={{
-        background: "linear-gradient(180deg,#f3f8ff 0%,#e5efff 100%)",
-        minHeight: "100vh",
-        py: 5,
-        px: { xs: 2, md: 6 },
-        display: "flex",
-        justifyContent: "center",
-      }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        style={{ width: "100%", maxWidth: "1200px" }}
-      >
-        <Paper sx={{ p: 4, borderRadius: 3 }}>
-          <Typography
-            variant="h5"
-            align="center"
-            fontWeight="bold"
-            sx={{
-              color: "#0b3d91",
-              mb: 3,
-              textTransform: "uppercase",
-              letterSpacing: 1,
-            }}
-          >
-            Interactions with Outside World
-          </Typography>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: "auto" }}>
+      <ToastContainer />
 
-          {/* Form Section */}
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                label="Interaction Title / Details"
-                name="title"
-                value={record.title}
-                onChange={handleChange}
-                fullWidth
-                size="small"
-              />
-            </Grid>
+      {/* HEADER */}
+      <Typography variant="h5" fontWeight={700} mb={2}>
+        Interactions with Outside World
+      </Typography>
+      <Divider sx={{ mb: 3 }} />
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Academic Year"
-                name="academicYear"
-                value={record.academicYear}
-                onChange={handleChange}
-                fullWidth
-                size="small"
-              />
-            </Grid>
+      {/* FORM CARD */}
+      <Paper sx={{ p: 3, borderRadius: 2, mb: 4 }}>
+        <Typography variant="h6" mb={2}>
+          {editId ? "Edit Interaction" : "Add Interaction"}
+        </Typography>
 
-            <Grid item xs={12} sm={6}>
-              <Button
-                component="label"
-                variant="outlined"
-                fullWidth
-                sx={{ height: "40px" }}
-              >
-                Upload Certificate (PDF/Image)
-                <input
-                  type="file"
-                  hidden
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={handleFileChange}
-                />
-              </Button>
-            </Grid>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              label="Title *"
+              name="title"
+              value={record.title}
+              onChange={handleChange}
+              fullWidth
+              error={!!errors.title}
+              helperText={errors.title}
+            />
           </Grid>
 
-          <Box sx={{ textAlign: "right", mt: 3 }}>
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "#0b3d91",
-                textTransform: "none",
-                fontWeight: "bold",
-              }}
-              onClick={handleSave}
+          <Grid item xs={12}>
+            <TextField
+              label="Description *"
+              name="description"
+              value={record.description}
+              onChange={handleChange}
+              multiline
+              rows={3}
+              fullWidth
+              error={!!errors.description}
+              helperText={errors.description}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              select
+              label="Academic Year From *"
+              name="fromYear"
+              value={record.fromYear}
+              onChange={handleChange}
+              fullWidth
             >
-              {editId ? "Update" : "Save"}
+              {ACADEMIC_YEAR_OPTIONS.map((yr) => (
+                <MenuItem key={yr} value={yr}>
+                  {yr}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              select
+              label="Academic Year To *"
+              name="toYear"
+              value={record.toYear}
+              onChange={handleChange}
+              fullWidth
+            >
+              {ACADEMIC_YEAR_OPTIONS.map((yr) => (
+                <MenuItem key={yr} value={yr}>
+                  {yr}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          {record.academicYear && (
+            <Grid item xs={12}>
+              <Chip label={record.academicYear} color="success" />
+            </Grid>
+          )}
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              type="date"
+              label="From Date"
+              name="fromDate"
+              InputLabelProps={{ shrink: true }}
+              value={record.fromDate}
+              onChange={handleChange}
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              type="date"
+              label="To Date (empty = Present)"
+              name="toDate"
+              InputLabelProps={{ shrink: true }}
+              value={record.toDate}
+              onChange={handleChange}
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <Button component="label" variant="outlined" fullWidth>
+              <CloudUpload sx={{ mr: 1 }} />
+              Upload Certificate
+              <input hidden type="file" onChange={handleFileChange} />
             </Button>
-          </Box>
+          </Grid>
+        </Grid>
 
-          {/* Table Section */}
-          <Typography
-            variant="h6"
-            sx={{
-              mt: 5,
-              mb: 2,
-              color: "#0b3d91",
-              fontWeight: "bold",
-            }}
+        <Box textAlign="right" mt={3}>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={saving}
           >
-            Saved Records
-          </Typography>
+            {saving ? <CircularProgress size={20} /> : editId ? "Update" : "Save"}
+          </Button>
+        </Box>
+      </Paper>
 
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead sx={{ background: "#0b3d91" }}>
-                <TableRow>
-                  <TableCell sx={{ color: "#fff" }}>#</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>Title / Details</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>Academic Year</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>Certificate</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {records.map((item, index) => (
-                  <TableRow key={item._id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{item.title}</TableCell>
-                    <TableCell>{item.academicYear}</TableCell>
-                    <TableCell>
-                      {item.certificate ? (
+      {/* TABLE */}
+    {/* ================= TABLE ================= */}
+<Paper sx={{ p: { xs: 1, md: 2 }, borderRadius: 2 }}>
+  <TableContainer>
+    <Table size={isMobile ? "small" : "medium"}>
+      <TableHead sx={{ backgroundColor: "#0b3d91" }}>
+        <TableRow>
+          <TableCell sx={{ color: "#fff" }}>#</TableCell>
+          <TableCell sx={{ color: "#fff" }}>Title & Description</TableCell>
+          <TableCell sx={{ color: "#fff" }}>Academic Year</TableCell>
+          <TableCell sx={{ color: "#fff" }}>Period</TableCell>
+           <TableCell sx={{ color: "#fff" }}>view File</TableCell>
+          <TableCell sx={{ color: "#fff", width: 120 }}>Actions</TableCell>
+        </TableRow>
+      </TableHead>
+
+      <TableBody>
+        {records.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={5} align="center">
+              <Typography color="text.secondary">
+                No records found
+              </Typography>
+            </TableCell>
+          </TableRow>
+        ) : (
+          records.map((r, index) => (
+            <TableRow key={r._id} hover>
+              {/* SL NO */}
+              <TableCell>{index + 1}</TableCell>
+
+              {/* TITLE + DESCRIPTION */}
+              <TableCell>
+                <Typography fontWeight={600}>
+                  {r.title}
+                </Typography>
+                {r.description && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      mt: 0.5,
+                      maxWidth: 400,
+                      whiteSpace: "normal",
+                      wordBreak: "break-word"
+                    }}
+                  >
+                    {r.description}
+                  </Typography>
+                )}
+              </TableCell>
+
+              {/* ACADEMIC YEAR */}
+              <TableCell>
+                <Chip
+                  label={r.academicYear}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+              </TableCell>
+
+              {/* PERIOD */}
+              <TableCell>
+                <Typography variant="body2">
+                  {r.fromDate}
+                </Typography>
+                {r.toDate === "Present" ? (
+                  <Chip
+                    label="Present"
+                    size="small"
+                    color="success"
+                    sx={{ mt: 0.5 }}
+                  />
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    to {r.toDate}
+                  </Typography>
+                )}
+              </TableCell>
+ <TableCell>
+                      {r.certificate ? (
                         <a
-                          href={`https://service-book-backend.onrender.com${item.certificate}`}
+                          href={`https://service-book-backend.onrender.com${r.certificate}`}
                           target="_blank"
                           rel="noreferrer"
                           style={{ color: "#1565c0", textDecoration: "none" }}
@@ -236,51 +422,59 @@ const InteractionsOutsideWorld = () => {
                         "-"
                       )}
                     </TableCell>
-                    <TableCell>
-                      <Tooltip title="Edit">
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleEdit(item)}
-                          size="small"
-                        >
-                          <Edit />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDelete(item._id)}
-                          size="small"
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+              {/* ACTIONS */}
+              <TableCell>
+                <IconButton
+                  size="small"
+                  onClick={() => handleEdit(r)}
+                >
+                  <Edit fontSize="small" />
+                </IconButton>
 
-          {/* Navigation */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              mt: 4,
-              borderTop: "1px solid #ccc",
-              pt: 2,
-            }}
-          >
-            <Button variant="outlined" onClick={handlePrevious}>
-              ← Previous
-            </Button>
-            <Button variant="contained" onClick={handleNext}>
-              Next →
-            </Button>
-          </Box>
-        </Paper>
-      </motion.div>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleDelete(r._id)}
+                >
+                  <Delete fontSize="small" />
+                </IconButton>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  </TableContainer>
+</Paper>
+{/* ================= NAVIGATION BUTTONS ================= */}
+<Box
+  sx={{
+    display: "flex",
+    justifyContent: "space-between",
+    mt: 4,
+    pt: 3,
+    borderTop: "1px solid #e0e0e0",
+  }}
+>
+  <Button
+    variant="outlined"
+    startIcon={<ArrowBack />}
+    component={Link}
+    to="/SeminarsGuided"
+  >
+    Back
+  </Button>
+
+  <Button
+    variant="contained"
+    endIcon={<ArrowForward />}
+    component={Link}
+    to="/PositionsHeld"
+  >
+    Next
+  </Button>
+</Box>
+
     </Box>
   );
 };

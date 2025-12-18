@@ -185,7 +185,7 @@ const ProgramsAttended = () => {
   };
 
   const handlePrevious = () => navigate("/ProgramsCoordinated");
-  const handleNext = () => navigate("/FacultyReserach");
+  const handleNext = () => navigate("/MoocCourseCompleted");
 
   return (
     <Box

@@ -35,6 +35,7 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const Qualification = () => {
   const navigate = useNavigate();
@@ -157,15 +158,65 @@ const Qualification = () => {
         );
         alert("Qualification updated successfully!");
       } else {
-        await axios.post(
-          "https://service-book-backend.onrender.com/qualification",
-          form,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
-        alert("Qualification added successfully!");
+        await axios.post("https://service-book-backend.onrender.com/qualification", form, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Qualification added ✅");
       }
 
       setOpen(false);
+      await fetchQualifications();
+    } catch (err) {
+      console.error("Save error:", err);
+      toast.error("Failed to save qualification ❌");
+    }
+  };
+
+  /* ======================================================
+     🗑️ DELETE QUALIFICATION WITH TOAST CONFIRMATION
+  ====================================================== */
+  const handleDeleteClick = (id) => {
+    setConfirmDeleteId(id);
+    toast.info(
+      <div style={{ textAlign: "center" }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+          Delete this qualification?
+        </Typography>
+        <div style={{ marginTop: 10 }}>
+          <Button
+            size="small"
+            variant="contained"
+            color="error"
+            onClick={() => confirmDelete(id)}
+            sx={{ mr: 1 }}
+          >
+            Yes
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            color="inherit"
+            onClick={() => toast.dismiss()}
+          >
+            No
+          </Button>
+        </div>
+      </div>,
+      { autoClose: false, closeOnClick: false }
+    );
+  };
+
+  const confirmDelete = async (id) => {
+    toast.dismiss();
+    try {
+      await toast.promise(
+        axios.delete(`https://service-book-backend.onrender.com/qualification/${id}`),
+        {
+          pending: "Deleting qualification...",
+          success: "Deleted successfully ✅",
+          error: "Failed to delete ❌",
+        }
+      );
       fetchQualifications();
     } catch (err) {
       console.error("Save error:", err);

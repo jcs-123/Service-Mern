@@ -165,7 +165,7 @@ function Achievements() {
   };
 
   const handlePrevious = () => navigate("/ResearchInterests");
-  const handleNext = () => navigate("/InterestedSubjects");
+  const handleNext = () => navigate("/ActivityLog");
 
   return (
     <Box

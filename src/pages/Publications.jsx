@@ -189,7 +189,7 @@ const Publications = () => {
   };
 
   const handlePrevious = () => navigate("/SubjectEngaged");
-  const handleNext = () => navigate("/ProgramsCoordinated");
+  const handleNext = () => navigate("/Patent");
 
   return (
     <Box

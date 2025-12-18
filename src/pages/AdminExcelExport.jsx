@@ -196,7 +196,7 @@ const AdminExcelExport = () => {
           positions: "/api/positions/get", // ✅ Added
           researchInterests: "/api/reserach/get",
           achievements: "/api/achievements/get",
-          interestsubject: "/api/interest/get",
+          // interestsubject: "/api/interest/get",
           activityLog: "/api/activity/get",
           patents: "/api/patents/get", // ✅ Added
           mooc: "/api/mooc/get", // ✅ Added

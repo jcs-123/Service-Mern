@@ -209,7 +209,7 @@ const SeminarsGuided = () => {
     }
   };
 
-  const handlePrevious = () => navigate("/ProgramsAttended");
+  const handlePrevious = () => navigate("/ProjectGuided");
   const handleNext = () => navigate("/InteractionsOutsideWorld");
 
   return (

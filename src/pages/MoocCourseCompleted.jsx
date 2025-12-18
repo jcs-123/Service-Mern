@@ -236,7 +236,7 @@ function MoocCourseCompleted() {
 
           {/* 🧭 Navigation */}
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 6, pt: 4, borderTop: "2px solid #e3f2fd" }}>
-            <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => navigate("/Patent")}
+            <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => navigate("/ProgramsAttended")}
               sx={{ borderColor: "#1565c0", color: "#1565c0", textTransform: "none", fontWeight: "bold" }}>
               Back
             </Button>
@@ -246,7 +246,7 @@ function MoocCourseCompleted() {
                 sx={{ background: "linear-gradient(135deg, #1565c0, #42a5f5)", textTransform: "none", fontWeight: "bold" }}>
                 Save
               </Button>
-              <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate("/AdministrativeWork")}
+              <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate("/FacultyReserach")}
                 sx={{ background: "linear-gradient(135deg, #2e7d32, #4caf50)", textTransform: "none", fontWeight: "bold" }}>
                 Next
               </Button>

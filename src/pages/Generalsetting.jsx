@@ -122,11 +122,7 @@ const Generalsetting = () => {
   const fetchRecords = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(
-        "https://service-book-backend.onrender.com/api/general-details",
-        { params: { username: username } }
-      );
-      console.log("Fetched records:", res.data); // Debug log
+      const res = await axios.get("https://service-book-backend.onrender.com/api/general-details");
       setRecords(res.data || []);
     } catch (err) {
       console.error(err);
@@ -243,7 +239,7 @@ const Generalsetting = () => {
 
       const res = await axios.post(
         "https://service-book-backend.onrender.com/api/general-details",
-        sendData
+        formData
       );
 
       console.log("Response from server:", res.data); // Debug log
@@ -315,7 +311,7 @@ const Generalsetting = () => {
   // ✅ Update record
   const handleUpdate = async (id, updatedData) => {
     try {
-      const res = await axios.put(
+      await axios.put(
         `https://service-book-backend.onrender.com/api/general-details/${id}`,
         updatedData
       );

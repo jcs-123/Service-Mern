@@ -87,7 +87,7 @@ function AdministrativeWork() {
   };
 
   // ✅ Navigation
-  const handlePrevious = () => navigate("/MoocCourseCompleted");
+  const handlePrevious = () => navigate("/ActivityLog");
   const handleNext = () => navigate("/Professional");
 
   // ✅ Styles

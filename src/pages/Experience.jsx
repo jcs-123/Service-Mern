@@ -40,54 +40,79 @@ import "react-toastify/dist/ReactToastify.css";
 
 const Experience = () => {
   const navigate = useNavigate();
+
   const [open, setOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [experiences, setExperiences] = useState([]);
   const [loading, setLoading] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
+
+const handleBack = () => navigate("/Qualification");
+const handleNext = () => navigate("/SubjectEngaged");
+
   // ======================================================
-  // 🧠 LOAD LOGGED-IN USER EMAIL
+// SORT EXPERIENCES BY LATEST YEAR (PRESENT FIRST)
+// ======================================================
+const sortedExperiences = [...experiences].sort((a, b) => {
+  const getYear = (date) => {
+    if (!date || date === "Present") return new Date().getFullYear();
+    return new Date(date).getFullYear();
+  };
+
+  const aYear = getYear(a.toDate);
+  const bYear = getYear(b.toDate);
+
+  // Present always on top
+  if (a.toDate === "Present" && b.toDate !== "Present") return -1;
+  if (a.toDate !== "Present" && b.toDate === "Present") return 1;
+
+  // Sort by To Date year (DESC)
+  if (bYear !== aYear) return bYear - aYear;
+
+  // If same To Year → sort by From Date
+  return getYear(b.fromDate) - getYear(a.fromDate);
+});
+
+  // ======================================================
+  // LOAD USER EMAIL
   // ======================================================
   useEffect(() => {
     const gmail = localStorage.getItem("gmail") || localStorage.getItem("email");
-    if (gmail) {
-      setUserEmail(gmail.trim().toLowerCase());
-    } else {
-      toast.error("⚠️ No Gmail found — please log in again.");
-    }
+    if (gmail) setUserEmail(gmail.trim().toLowerCase());
+    else toast.error("Please login again. Email not found.");
   }, []);
 
   // ======================================================
-  // 📥 FETCH EXPERIENCES BY EMAIL
+  // FETCH EXPERIENCES
   // ======================================================
   const fetchExperiences = async () => {
     if (!userEmail) return;
     try {
       setLoading(true);
-      const res = await axios.get(`https://service-book-backend.onrender.com/experience/${userEmail}`);
-      if (res.data?.success) setExperiences(res.data.data || []);
-      else setExperiences([]);
-    } catch (err) {
-      console.error("❌ Error fetching experiences:", err);
-      toast.error("Error loading experiences");
+      const res = await axios.get(
+        `https://service-book-backend.onrender.com/experience/${userEmail}`
+      );
+      setExperiences(res.data?.success ? res.data.data : []);
+    } catch {
+      toast.error("Failed to load experience details");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (userEmail) fetchExperiences();
+    fetchExperiences();
   }, [userEmail]);
 
   // ======================================================
-  // 🧾 FORM DATA
+  // FORM DATA
   // ======================================================
   const [formData, setFormData] = useState({
     title: "",
     organization: "",
     fromDate: "",
-    toDate: "",
+    toDate: "", // empty = Present
     designation: "",
     employmentNature: "",
     dutyNature: "",
@@ -121,7 +146,7 @@ const Experience = () => {
   };
 
   // ======================================================
-  // ✏️ EDIT EXPERIENCE
+  // EDIT EXPERIENCE
   // ======================================================
   const handleEdit = (item) => {
     setEditItem(item);
@@ -129,7 +154,7 @@ const Experience = () => {
       title: item.title,
       organization: item.organization,
       fromDate: item.fromDate,
-      toDate: item.toDate,
+      toDate: item.toDate === "Present" ? "" : item.toDate,
       designation: item.designation,
       employmentNature: item.employmentNature,
       dutyNature: item.dutyNature,
@@ -139,183 +164,101 @@ const Experience = () => {
   };
 
   // ======================================================
-  // 🗑️ DELETE EXPERIENCE — CONFIRMATION
+  // DELETE EXPERIENCE
   // ======================================================
-  const confirmDelete = async (id) => {
+  const handleDelete = async (id) => {
     toast.dismiss();
-    try {
-      await toast.promise(axios.delete(`https://service-book-backend.onrender.com/experience/${id}`), {
+    await toast.promise(
+      axios.delete(
+        `https://service-book-backend.onrender.com/experience/${id}`
+      ),
+      {
         pending: "Deleting experience...",
-        success: "🗑️ Experience deleted successfully ✅",
-        error: "Failed to delete experience ❌",
-      });
-      fetchExperiences();
-    } catch (err) {
-      console.error("❌ Delete error:", err);
-    }
-  };
-
-  const handleDeleteClick = (id) => {
-    toast.info(
-      <div style={{ textAlign: "center" }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          Delete this experience?
-        </Typography>
-        <div style={{ marginTop: 10 }}>
-          <Button
-            size="small"
-            variant="contained"
-            color="error"
-            onClick={() => confirmDelete(id)}
-            sx={{ mr: 1 }}
-          >
-            Yes
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            color="inherit"
-            onClick={() => toast.dismiss()}
-          >
-            No
-          </Button>
-        </div>
-      </div>,
-      { autoClose: false, closeOnClick: false }
+        success: "Experience deleted successfully",
+        error: "Failed to delete experience",
+      }
     );
+    fetchExperiences();
   };
 
   // ======================================================
-  // 🟢 ADD / UPDATE EXPERIENCE
+  // SAVE EXPERIENCE (AUTO PRESENT)
   // ======================================================
   const handleSave = async () => {
-    if (!userEmail) {
-      toast.error("⚠️ Gmail not found — please log in again.");
-      return;
-    }
+    if (!userEmail) return toast.error("Email missing");
 
     const form = new FormData();
+
     Object.entries(formData).forEach(([key, val]) => {
-      if (val) form.append(key, val);
+      if (key === "toDate") {
+        form.append("toDate", val ? val : "Present");
+      } else if (val) {
+        form.append(key, val);
+      }
     });
+
     form.append("email", userEmail);
 
     try {
       if (editItem) {
         await axios.put(
           `https://service-book-backend.onrender.com/experience/${editItem._id}`,
-          form,
-          { headers: { "Content-Type": "multipart/form-data" } }
+          form
         );
-        toast.success("✅ Experience updated successfully!");
+        toast.success("Experience updated successfully");
       } else {
-        await axios.post("https://service-book-backend.onrender.com/experience", form, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        toast.success("✅ Experience added successfully!");
+        await axios.post(
+          "https://service-book-backend.onrender.com/experience",
+          form
+        );
+        toast.success("Experience added successfully");
       }
-
       setOpen(false);
       fetchExperiences();
-    } catch (err) {
-      console.error("❌ Save error:", err);
-      toast.error(err.response?.data?.message || "Error saving experience");
+    } catch {
+      toast.error("Failed to save experience");
     }
   };
 
   // ======================================================
-  // 🔙 NAVIGATION
-  // ======================================================
-  const handleBack = () => navigate("/qualification");
-  const handleNext = () => navigate("/SubjectEngaged");
-
-  // ======================================================
-  // 🧩 UI SECTION
+  // UI
   // ======================================================
   return (
-    <Box
-      sx={{
-        p: { xs: 2, sm: 3 },
-        background: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
-        borderRadius: 3,
-        border: "2px solid #1565C0",
-        boxShadow: "0 6px 20px rgba(25,118,210,0.2)",
-        minHeight: "calc(100vh - 64px)",
-      }}
-    >
+    <Box sx={{ p: 3 }}>
       <ToastContainer position="top-right" autoClose={2500} />
 
-      {/* ===== Header ===== */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-          flexWrap: "wrap",
-          gap: 2,
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <WorkOutline sx={{ fontSize: 34, color: "#1565C0" }} />
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: 700,
-              color: "#0D47A1",
-              textTransform: "uppercase",
-              letterSpacing: 1,
-            }}
-          >
-            Experience
-          </Typography>
-        </Box>
-
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleOpen}
-          sx={{
-            background: "linear-gradient(135deg, #1976D2, #1565C0)",
-            border: "2px solid #0D47A1",
-            borderRadius: "10px",
-            fontWeight: 600,
-            px: 3,
-            py: 1,
-            "&:hover": {
-              background: "linear-gradient(135deg, #1E88E5, #1565C0)",
-              transform: "translateY(-2px)",
-              boxShadow: "0 6px 18px rgba(25,118,210,0.4)",
-            },
-          }}
-        >
+      <Box display="flex" justifyContent="space-between" mb={2}>
+        <Typography variant="h5" fontWeight={700}>
+          Experience
+        </Typography>
+        <Button startIcon={<Add />} variant="contained" onClick={handleOpen}>
           Add Experience
         </Button>
       </Box>
 
-      {/* ===== Table ===== */}
-      <TableContainer component={Paper} sx={{ borderRadius: 3, mb: 3 }}>
+      <TableContainer component={Paper}>
         <Table>
-          <TableHead sx={{ background: "linear-gradient(135deg, #42A5F5, #1976D2)" }}>
+          <TableHead sx={{ bgcolor: "#1976d2" }}>
             <TableRow>
               {[
-                "Sl. No",
+                "Sl",
                 "Title",
                 "Organization",
-                "From Date",
-                "To Date",
+                "From",
+                "To",
                 "Designation",
-                "Nature of Employment",
-                "Nature of Duty",
+                "Employment",
+                "Duty",
                 "Certificate",
-                "Actions",
-              ].map((head) => (
-                <TableCell key={head} sx={{ color: "white", fontWeight: "bold" }}>
-                  {head}
+                "Action",
+              ].map((h) => (
+                <TableCell key={h} sx={{ color: "#fff", fontWeight: 600 }}>
+                  {h}
                 </TableCell>
               ))}
             </TableRow>
           </TableHead>
+
           <TableBody>
             {loading ? (
               <TableRow>
@@ -326,41 +269,51 @@ const Experience = () => {
             ) : experiences.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={10} align="center">
-                  No experiences found.
+                  No experience records found
                 </TableCell>
               </TableRow>
             ) : (
-              experiences.map((exp, i) => (
-                <TableRow key={exp._id}>
+           sortedExperiences.map((e, i) => (
+
+                <TableRow key={e._id}>
                   <TableCell>{i + 1}</TableCell>
-                  <TableCell>{exp.title}</TableCell>
-                  <TableCell>{exp.organization}</TableCell>
-                  <TableCell>{exp.fromDate}</TableCell>
-                  <TableCell>{exp.toDate}</TableCell>
-                  <TableCell>{exp.designation}</TableCell>
-                  <TableCell>{exp.employmentNature}</TableCell>
-                  <TableCell>{exp.dutyNature}</TableCell>
+                  <TableCell>{e.title}</TableCell>
+                  <TableCell>{e.organization}</TableCell>
+                  <TableCell>{e.fromDate}</TableCell>
                   <TableCell>
-                    {exp.certificate ? (
-                      <a
-                        href={`https://service-book-backend.onrender.com/uploads/${exp.certificate}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Chip icon={<Description />} label="View File" color="info" size="small" />
-                      </a>
+                    {e.toDate === "Present" ? (
+                      <Chip label="Present" color="success" size="small" />
                     ) : (
-                      "-"
+                      e.toDate
+                    )}
+                  </TableCell>
+                  <TableCell>{e.designation}</TableCell>
+                  <TableCell>{e.employmentNature}</TableCell>
+                  <TableCell>{e.dutyNature}</TableCell>
+                  <TableCell>
+                    {e.certificate && (
+                      <a
+                        href={`https://service-book-backend.onrender.com/uploads/${e.certificate}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <Chip
+                          icon={<Description />}
+                          label="View"
+                          size="small"
+                          color="info"
+                        />
+                      </a>
                     )}
                   </TableCell>
                   <TableCell>
                     <Tooltip title="Edit">
-                      <IconButton color="primary" onClick={() => handleEdit(exp)}>
+                      <IconButton onClick={() => handleEdit(e)}>
                         <Edit />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete">
-                      <IconButton color="error" onClick={() => handleDeleteClick(exp._id)}>
+                      <IconButton color="error" onClick={() => handleDelete(e._id)}>
                         <Delete />
                       </IconButton>
                     </Tooltip>
@@ -371,89 +324,77 @@ const Experience = () => {
           </TableBody>
         </Table>
       </TableContainer>
+{/* NAVIGATION BUTTONS */}
+<Box
+  sx={{
+    display: "flex",
+    justifyContent: "space-between",
+    mt: 4,
+    pt: 3,
+    borderTop: "1px solid #e0e0e0",
+  }}
+>
+  <Button
+    variant="outlined"
+    startIcon={<ArrowBack />}
+    onClick={handleBack}
+  >
+    Back
+  </Button>
 
-      {/* ===== Navigation ===== */}
-      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-        <Button variant="outlined" startIcon={<ArrowBack />} onClick={handleBack}>
-          Back
-        </Button>
-        <Button variant="contained" endIcon={<ArrowForward />} onClick={handleNext}>
-          Next
-        </Button>
-      </Box>
+  <Button
+    variant="contained"
+    endIcon={<ArrowForward />}
+    onClick={handleNext}
+  >
+    Next
+  </Button>
+</Box>
 
-      {/* ===== Modal ===== */}
+      {/* MODAL */}
       <Modal open={open} onClose={handleClose}>
-        <Box
-          sx={{
-            width: { xs: "95%", sm: "80%", md: "70%" },
-            maxWidth: 800,
-            bgcolor: "white",
-            borderRadius: 3,
-            border: "2px solid #1565C0",
-            p: { xs: 2.5, sm: 4 },
-            mx: "auto",
-            mt: "5%",
-            maxHeight: "90vh",
-            overflowY: "auto",
-          }}
-        >
-          <Typography variant="h6" sx={{ fontWeight: 700, color: "#1565C0", mb: 3 }}>
+        <Box sx={{ p: 4, bgcolor: "#fff", maxWidth: 800, mx: "auto", mt: 5 }}>
+          <Typography fontWeight={700} mb={2}>
             {editItem ? "Edit Experience" : "Add Experience"}
           </Typography>
 
           <Grid container spacing={2}>
             {[
-              { name: "title", label: "Title", icon: <WorkOutline /> },
-              { name: "organization", label: "Organization", icon: <Business /> },
-              { name: "fromDate", label: "From Date", icon: <CalendarToday />, type: "date" },
-              { name: "toDate", label: "To Date", icon: <CalendarMonth />, type: "date" },
-              { name: "designation", label: "Designation", icon: <Badge /> },
-              { name: "employmentNature", label: "Nature of Employment", icon: <AssignmentTurnedIn /> },
-              { name: "dutyNature", label: "Nature of Duty", icon: <WorkOutline /> },
-            ].map((f) => (
-              <Grid item xs={12} sm={6} key={f.name}>
+              ["title", "Title"],
+              ["organization", "Organization"],
+              ["fromDate", "From Date", "date"],
+              ["toDate", "To Date (Leave empty = Present)", "date"],
+              ["designation", "Designation"],
+              ["employmentNature", "Nature of Employment"],
+              ["dutyNature", "Nature of Duty"],
+            ].map(([name, label, type]) => (
+              <Grid item xs={12} sm={6} key={name}>
                 <TextField
                   fullWidth
-                  label={f.label}
-                  name={f.name}
-                  type={f.type || "text"}
-                  value={formData[f.name]}
+                  label={label}
+                  type={type || "text"}
+                  name={name}
+                  value={formData[name]}
                   onChange={handleChange}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">{f.icon}</InputAdornment>
-                    ),
-                  }}
+                  InputLabelProps={{ shrink: true }}
                 />
               </Grid>
             ))}
 
             <Grid item xs={12}>
-              <Button component="label" variant="outlined" startIcon={<UploadFile />} fullWidth>
+              <Button component="label" startIcon={<UploadFile />}>
                 Upload Certificate
-                <input
-                  type="file"
-                  name="certificate"
-                  hidden
-                  onChange={handleChange}
-                  accept=".pdf,.jpg,.png"
-                />
+                <input hidden type="file" name="certificate" onChange={handleChange} />
               </Button>
-              {formData.certificate && (
-                <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
-                  Selected: {formData.certificate.name || formData.certificate}
-                </Typography>
-              )}
             </Grid>
           </Grid>
 
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3, gap: 2 }}>
-            <Button variant="outlined" onClick={handleClose}>
+          <Box mt={3} textAlign="right">
+            <Button onClick={handleClose} sx={{ mr: 2 }}>
               Cancel
             </Button>
             <Button variant="contained" onClick={handleSave}>
-              {editItem ? "Update" : "Save"}
+              Save
             </Button>
           </Box>
         </Box>
