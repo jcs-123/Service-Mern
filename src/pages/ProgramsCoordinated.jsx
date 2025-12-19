@@ -85,21 +85,21 @@ const FUNDED_BY_OPTIONS = [
 const generateAcademicYearOptions = () => {
   const options = [];
   const currentYear = new Date().getFullYear();
-  const startYear = 1950;
-  
-  // Generate from 1950-1951 to currentYear+1-currentYear+2
-  for (let year = currentYear + 1; year >= startYear; year--) {
+  const startYear = 2001;
+
+  for (let year = currentYear; year >= startYear; year--) {
     const academicYear = `${year}-${year + 1}`;
     options.push({
       value: academicYear,
       label: academicYear,
     });
   }
-  
+
   return options;
 };
 
 const ACADEMIC_YEAR_OPTIONS = generateAcademicYearOptions();
+
 
 /* ================= VALIDATION ================= */
 
@@ -173,9 +173,7 @@ const ProgramsCoordinated = () => {
       toDate: "",
       academicYear: "",
       certificate: null,
-      // Temporary fields for UI only (not sent to backend)
-      tempFromYear: "",
-      tempToYear: "",
+ 
     },
   ]);
   
@@ -240,46 +238,18 @@ const ProgramsCoordinated = () => {
 
   /* ================= FORM HANDLERS ================= */
 
-  const handleChange = (index, field, value) => {
-    const updated = [...programs];
-    updated[index][field] = value;
-    
-    // Handle academic year logic
-    if (field === 'tempFromYear' || field === 'tempToYear') {
-      const fromYear = field === 'tempFromYear' ? value : updated[index].tempFromYear;
-      const toYear = field === 'tempToYear' ? value : updated[index].tempToYear;
-      
-      // Update the actual academicYear field for backend
-      if (fromYear && toYear) {
-        if (fromYear === toYear) {
-          updated[index].academicYear = fromYear;
-        } else {
-          const fromYearNum = parseInt(fromYear.split("-")[0]);
-          const toYearNum = parseInt(toYear.split("-")[0]);
-          
-          if (toYearNum < fromYearNum) {
-            // Swap if toYear is before fromYear
-            updated[index].academicYear = `${toYear} to ${fromYear}`;
-          } else {
-            updated[index].academicYear = `${fromYear} to ${toYear}`;
-          }
-        }
-      } else if (fromYear) {
-        updated[index].academicYear = fromYear;
-      } else if (toYear) {
-        updated[index].academicYear = toYear;
-      }
-    }
-    
-    setPrograms(updated);
-    
-    // Clear error for this field
-    if (errors[index]?.[field]) {
-      const updatedErrors = [...errors];
-      delete updatedErrors[index][field];
-      setErrors(updatedErrors);
-    }
-  };
+const handleChange = (index, field, value) => {
+  const updated = [...programs];
+  updated[index][field] = value;
+  setPrograms(updated);
+
+  if (errors[index]?.[field]) {
+    const updatedErrors = [...errors];
+    delete updatedErrors[index][field];
+    setErrors(updatedErrors);
+  }
+};
+
 
   const handleFileUpload = (index, e) => {
     const file = e.target.files[0];
@@ -309,8 +279,7 @@ const ProgramsCoordinated = () => {
         toDate: "",
         academicYear: "",
         certificate: null,
-        tempFromYear: "",
-        tempToYear: "",
+      
       },
     ]);
     setErrors([...errors, {}]);
@@ -358,18 +327,18 @@ const ProgramsCoordinated = () => {
         const formData = new FormData();
         
         // Only send fields that exist in the schema
-        Object.entries(prog).forEach(([key, val]) => {
-          if (val !== null && val !== undefined) {
-            if (key === "toDate") {
-              formData.append("toDate", val ? val : "Present");
-            } else if (key === "certificate" && val instanceof File) {
-              formData.append("certificate", val);
-            } else if (!['tempFromYear', 'tempToYear'].includes(key)) {
-              // Don't send temporary fields
-              formData.append(key, val);
-            }
-          }
-        });
+     Object.entries(prog).forEach(([key, val]) => {
+  if (val !== null && val !== undefined) {
+    if (key === "certificate" && val instanceof File) {
+      formData.append("certificate", val);
+    } else if (key === "toDate") {
+      formData.append("toDate", val || "Present");
+    } else {
+      formData.append(key, val);
+    }
+  }
+});
+
         
         formData.append("gmail", gmail);
         
@@ -715,173 +684,184 @@ const ProgramsCoordinated = () => {
                       )}
                     </Typography>
                     
-                    <Grid container spacing={2}>
-                      {/* Title */}
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          label="Program Title"
-                          fullWidth
-                          value={prog.title}
-                          onChange={(e) => handleChange(index, "title", e.target.value)}
-                          error={!!errors[index]?.title}
-                          helperText={errors[index]?.title}
-                          required
-                        />
-                      </Grid>
+                   <Grid container spacing={3}>
+  {/* Row 1: Title, Category, Funded By */}
+  <Grid item xs={12} md={4}>
+    <TextField
+      label="Program Title"
+      fullWidth
+      value={prog.title}
+      onChange={(e) => handleChange(index, "title", e.target.value)}
+      error={!!errors[index]?.title}
+      helperText={errors[index]?.title || " "}
+      required
+      margin="normal"
+    />
+  </Grid>
 
-                      {/* Category */}
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          select
-                          label="Category"
-                          fullWidth
-                          value={prog.category}
-                          onChange={(e) => handleChange(index, "category", e.target.value)}
-                          error={!!errors[index]?.category}
-                          helperText={errors[index]?.category}
-                          required
-                        >
-                          {CATEGORY_OPTIONS.map((option) => (
-                            <MenuItem key={option.value} value={option.value}>
-                              {option.label}
-                            </MenuItem>
-                          ))}
-                        </TextField>
-                      </Grid>
+  <Grid item xs={12} md={4}>
+    <TextField
+      select
+      label="Category"
+      fullWidth
+      value={prog.category}
+      onChange={(e) => handleChange(index, "category", e.target.value)}
+      error={!!errors[index]?.category}
+      helperText={errors[index]?.category || "Select program category"}
+      required
+      margin="normal"
+    >
+      {CATEGORY_OPTIONS.map((option) => (
+        <MenuItem key={option.value} value={option.value}>
+          {option.label}
+        </MenuItem>
+      ))}
+    </TextField>
+  </Grid>
 
-                      {/* Funded By */}
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          select
-                          label="Funded By"
-                          fullWidth
-                          value={prog.organisedBy}
-                          onChange={(e) => handleChange(index, "organisedBy", e.target.value)}
-                          error={!!errors[index]?.organisedBy}
-                          helperText={errors[index]?.organisedBy}
-                          required
-                        >
-                          {FUNDED_BY_OPTIONS.map((option) => (
-                            <MenuItem key={option.value} value={option.value}>
-                              {option.label}
-                            </MenuItem>
-                          ))}
-                        </TextField>
-                      </Grid>
+  <Grid item xs={12} md={4}>
+    <TextField
+      select
+      label="Funded By"
+      fullWidth
+      value={prog.organisedBy}
+      onChange={(e) => handleChange(index, "organisedBy", e.target.value)}
+      error={!!errors[index]?.organisedBy}
+      helperText={errors[index]?.organisedBy || "Select funding organization"}
+      required
+      margin="normal"
+    >
+      {FUNDED_BY_OPTIONS.map((option) => (
+        <MenuItem key={option.value} value={option.value}>
+          {option.label}
+        </MenuItem>
+      ))}
+    </TextField>
+  </Grid>
 
-                      {/* Academic Year Range - TWO DROPDOWNS */}
-                      <Grid item xs={12} md={6}>
-                        <Typography variant="body2" gutterBottom sx={{ color: 'text.secondary' }}>
-                          Academic Year *
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <TextField
-                            select
-                            label="From"
-                            fullWidth
-                            value={prog.tempFromYear}
-                            onChange={(e) => handleChange(index, "tempFromYear", e.target.value)}
-                            error={!!errors[index]?.academicYear}
-                            size="small"
-                          >
-                            <MenuItem value="">
-                              <em>Select Year</em>
-                            </MenuItem>
-                            {ACADEMIC_YEAR_OPTIONS.map((option) => (
-                              <MenuItem key={`from-${option.value}`} value={option.value}>
-                                {option.label}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                          
-                          <Typography variant="body1" sx={{ color: 'text.secondary', mx: 1 }}>
-                            to
-                          </Typography>
-                          
-                          <TextField
-                            select
-                            label="To"
-                            fullWidth
-                            value={prog.tempToYear}
-                            onChange={(e) => handleChange(index, "tempToYear", e.target.value)}
-                            error={!!errors[index]?.academicYear}
-                            size="small"
-                          >
-                            <MenuItem value="">
-                              <em>Select Year</em>
-                            </MenuItem>
-                            {ACADEMIC_YEAR_OPTIONS.map((option) => (
-                              <MenuItem key={`to-${option.value}`} value={option.value}>
-                                {option.label}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                        </Box>
-                        {errors[index]?.academicYear && (
-                          <FormHelperText error>{errors[index].academicYear}</FormHelperText>
-                        )}
-                        {prog.academicYear && !errors[index]?.academicYear && (
-                          <Typography variant="caption" color="success" sx={{ display: 'block', mt: 0.5 }}>
-                            {prog.academicYear}
-                          </Typography>
-                        )}
-                      </Grid>
+  {/* Row 2: Academic Year Range (Spans full width on desktop, shows as row on mobile) */}
+<Grid item xs={12} md={4}>
+  <TextField
+    select
+    label="Academic Year"
+    fullWidth
+    value={prog.academicYear}
+    onChange={(e) =>
+      handleChange(index, "academicYear", e.target.value)
+    }
+    error={!!errors[index]?.academicYear}
+    helperText={
+      errors[index]?.academicYear || "Select academic year"
+    }
+    required
+    margin="normal"
+  >
+    <MenuItem value="">
+      <em>Select Academic Year</em>
+    </MenuItem>
 
-                      {/* From Date */}
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          type="date"
-                          label="Start Date"
-                          InputLabelProps={{ shrink: true }}
-                          fullWidth
-                          value={prog.fromDate}
-                          onChange={(e) => handleChange(index, "fromDate", e.target.value)}
-                          error={!!errors[index]?.fromDate}
-                          helperText={errors[index]?.fromDate}
-                          required
-                        />
-                      </Grid>
+    {ACADEMIC_YEAR_OPTIONS.map((option) => (
+      <MenuItem key={option.value} value={option.value}>
+        {option.label}
+      </MenuItem>
+    ))}
+  </TextField>
+</Grid>
 
-                      {/* To Date */}
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          type="date"
-                          label="End Date (Leave empty = Present)"
-                          InputLabelProps={{ shrink: true }}
-                          fullWidth
-                          value={prog.toDate}
-                          onChange={(e) => handleChange(index, "toDate", e.target.value)}
-                          error={!!errors[index]?.toDate}
-                          helperText={errors[index]?.toDate}
-                        />
-                      </Grid>
 
-                      {/* Certificate */}
-                      <Grid item xs={12}>
-                        <Button
-                          component="label"
-                          variant="outlined"
-                          startIcon={<CloudUpload />}
-                          fullWidth={isMobile}
-                        >
-                          Upload Certificate
-                          <input
-                            hidden
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={(e) => handleFileUpload(index, e)}
-                          />
-                        </Button>
-                        {prog.certificate && (
-                          <Typography variant="caption" color="success" sx={{ display: 'block', mt: 1 }}>
-                            ✓ {prog.certificate.name}
-                          </Typography>
-                        )}
-                        {errors[index]?.certificate && (
-                          <FormHelperText error>{errors[index].certificate}</FormHelperText>
-                        )}
-                      </Grid>
-                    </Grid>
+  {/* Row 3: Start Date, End Date, Certificate (3 columns on desktop, stacked on mobile) */}
+  <Grid item xs={12} md={4}>
+    <TextField
+      type="date"
+      label="Start Date"
+      InputLabelProps={{ shrink: true }}
+      fullWidth
+      value={prog.fromDate}
+      onChange={(e) => handleChange(index, "fromDate", e.target.value)}
+      error={!!errors[index]?.fromDate}
+      helperText={errors[index]?.fromDate || "Program start date"}
+      required
+      margin="normal"
+    />
+  </Grid>
+
+  <Grid item xs={12} md={4}>
+    <TextField
+      type="date"
+      label="End Date"
+      InputLabelProps={{ shrink: true }}
+      fullWidth
+      value={prog.toDate}
+      onChange={(e) => handleChange(index, "toDate", e.target.value)}
+      error={!!errors[index]?.toDate}
+      helperText={errors[index]?.toDate || "Leave empty if currently ongoing"}
+      margin="normal"
+    />
+  </Grid>
+
+  <Grid item xs={12} md={4}>
+    <Box sx={{ mt: 2 }}>
+      <Button
+        component="label"
+        variant="outlined"
+        startIcon={<CloudUpload />}
+        fullWidth
+        sx={{ 
+          py: 1.5,
+          height: '56px', // Match TextField height
+          justifyContent: 'flex-start'
+        }}
+      >
+        <Box sx={{ textAlign: 'left' }}>
+          <Typography variant="body2" fontWeight="medium">
+            Upload Certificate
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            PDF, JPG, PNG (Max 5MB)
+          </Typography>
+        </Box>
+        <input
+          hidden
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          onChange={(e) => handleFileUpload(index, e)}
+        />
+      </Button>
+      
+      {/* Certificate Feedback */}
+      <Box sx={{ mt: 1, minHeight: '24px' }}>
+        {prog.certificate && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <CheckCircle fontSize="small" color="success" />
+            <Box>
+              <Typography variant="caption" fontWeight="medium" color="success.main">
+                {prog.certificate.name}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                ({Math.round(prog.certificate.size / 1024)} KB)
+              </Typography>
+            </Box>
+          </Box>
+        )}
+        
+        {errors[index]?.certificate && (
+          <FormHelperText 
+            error 
+            sx={{ 
+              m: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5
+            }}
+          >
+            <ErrorOutline fontSize="small" />
+            {errors[index].certificate}
+          </FormHelperText>
+        )}
+      </Box>
+    </Box>
+  </Grid>
+</Grid>
                   </Paper>
                 ))}
                 
@@ -1117,62 +1097,31 @@ const ProgramsCoordinated = () => {
                 </Grid>
 
                 {/* Academic Year Range */}
-                <Grid item xs={12}>
-                  <Typography variant="body2" gutterBottom sx={{ color: 'text.secondary' }}>
-                    Academic Year *
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <TextField
-                      select
-                      label="From"
-                      fullWidth
-                      value={editData.tempFromYear || ''}
-                      onChange={(e) => handleEditChange('tempFromYear', e.target.value)}
-                      error={!!editErrors.academicYear}
-                      size="small"
-                    >
-                      <MenuItem value="">
-                        <em>Select Year</em>
-                      </MenuItem>
-                      {ACADEMIC_YEAR_OPTIONS.map((option) => (
-                        <MenuItem key={`edit-from-${option.value}`} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                    
-                    <Typography variant="body1" sx={{ color: 'text.secondary', mx: 1 }}>
-                      to
-                    </Typography>
-                    
-                    <TextField
-                      select
-                      label="To"
-                      fullWidth
-                      value={editData.tempToYear || ''}
-                      onChange={(e) => handleEditChange('tempToYear', e.target.value)}
-                      error={!!editErrors.academicYear}
-                      size="small"
-                    >
-                      <MenuItem value="">
-                        <em>Select Year</em>
-                      </MenuItem>
-                      {ACADEMIC_YEAR_OPTIONS.map((option) => (
-                        <MenuItem key={`edit-to-${option.value}`} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  </Box>
-                  {editErrors.academicYear && (
-                    <FormHelperText error>{editErrors.academicYear}</FormHelperText>
-                  )}
-                  {editData.academicYear && !editErrors.academicYear && (
-                    <Typography variant="caption" color="success" sx={{ display: 'block', mt: 0.5 }}>
-                      {editData.academicYear}
-                    </Typography>
-                  )}
-                </Grid>
+          <Grid item xs={12}>
+  <TextField
+    select
+    label="Academic Year"
+    fullWidth
+    value={editData.academicYear || ""}
+    onChange={(e) =>
+      handleEditChange("academicYear", e.target.value)
+    }
+    error={!!editErrors.academicYear}
+    helperText={editErrors.academicYear}
+    required
+  >
+    <MenuItem value="">
+      <em>Select Academic Year</em>
+    </MenuItem>
+
+    {ACADEMIC_YEAR_OPTIONS.map((option) => (
+      <MenuItem key={option.value} value={option.value}>
+        {option.label}
+      </MenuItem>
+    ))}
+  </TextField>
+</Grid>
+
 
                 {/* From Date */}
                 <Grid item xs={12} md={6}>

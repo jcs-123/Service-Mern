@@ -252,7 +252,7 @@ const Publications = () => {
                     ["Category", "category"],
                     ["Title", "title"],
                     ["Name of Publication", "nameOfPublication"],
-                    ["Patent No.", "patentNo"],
+                    ["Publication Number.", "patentNo"],
                     ["Indexing", "indexing"],
                     ["Academic Year", "academicYear"],
                     ["Date", "date", "date"],

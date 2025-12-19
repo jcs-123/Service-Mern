@@ -95,7 +95,7 @@ const sortedExperiences = [...experiences].sort((a, b) => {
       );
       setExperiences(res.data?.success ? res.data.data : []);
     } catch {
-      toast.error("Failed to load experience details");
+      // toast.error("Failed to load experience details");
     } finally {
       setLoading(false);
     }
