@@ -16,22 +16,18 @@ import {
   IconButton,
   Tooltip,
   Chip,
-  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import {
   Add,
   Delete,
   Edit,
-  Business,
-  CalendarToday,
-  CalendarMonth,
-  WorkOutline,
-  AssignmentTurnedIn,
-  Badge,
   UploadFile,
   ArrowBack,
   ArrowForward,
-  Description,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -47,32 +43,48 @@ const Experience = () => {
   const [loading, setLoading] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
+  // Dropdown options
+  const employmentNatureOptions = [
+    "Permanent",
+    "Contract",
+    "Adjunct",
+    "Ad hoc",
+    "Temporary"
+  ];
 
-const handleBack = () => navigate("/Qualification");
-const handleNext = () => navigate("/SubjectEngaged");
+  const dutyNatureOptions = [
+    "Teaching / Academic",
+    "Administrative / Office Work",
+    "Research",
+    "Technical / Support Staff"
+  ];
+
+  // Navigation handlers
+  const handleBack = () => navigate("/Qualification");
+  const handleNext = () => navigate("/SubjectEngaged");
 
   // ======================================================
-// SORT EXPERIENCES BY LATEST YEAR (PRESENT FIRST)
-// ======================================================
-const sortedExperiences = [...experiences].sort((a, b) => {
-  const getYear = (date) => {
-    if (!date || date === "Present") return new Date().getFullYear();
-    return new Date(date).getFullYear();
-  };
+  // SORT EXPERIENCES BY LATEST YEAR (PRESENT FIRST)
+  // ======================================================
+  const sortedExperiences = [...experiences].sort((a, b) => {
+    const getYear = (date) => {
+      if (!date || date === "Present") return new Date().getFullYear();
+      return new Date(date).getFullYear();
+    };
 
-  const aYear = getYear(a.toDate);
-  const bYear = getYear(b.toDate);
+    const aYear = getYear(a.toDate);
+    const bYear = getYear(b.toDate);
 
-  // Present always on top
-  if (a.toDate === "Present" && b.toDate !== "Present") return -1;
-  if (a.toDate !== "Present" && b.toDate === "Present") return 1;
+    // Present always on top
+    if (a.toDate === "Present" && b.toDate !== "Present") return -1;
+    if (a.toDate !== "Present" && b.toDate === "Present") return 1;
 
-  // Sort by To Date year (DESC)
-  if (bYear !== aYear) return bYear - aYear;
+    // Sort by To Date year (DESC)
+    if (bYear !== aYear) return bYear - aYear;
 
-  // If same To Year → sort by From Date
-  return getYear(b.fromDate) - getYear(a.fromDate);
-});
+    // If same To Year → sort by From Date
+    return getYear(b.fromDate) - getYear(a.fromDate);
+  });
 
   // ======================================================
   // LOAD USER EMAIL
@@ -109,10 +121,9 @@ const sortedExperiences = [...experiences].sort((a, b) => {
   // FORM DATA
   // ======================================================
   const [formData, setFormData] = useState({
-    title: "",
     organization: "",
     fromDate: "",
-    toDate: "", // empty = Present
+    toDate: "",
     designation: "",
     employmentNature: "",
     dutyNature: "",
@@ -122,7 +133,6 @@ const sortedExperiences = [...experiences].sort((a, b) => {
   const handleOpen = () => {
     setEditItem(null);
     setFormData({
-      title: "",
       organization: "",
       fromDate: "",
       toDate: "",
@@ -151,7 +161,6 @@ const sortedExperiences = [...experiences].sort((a, b) => {
   const handleEdit = (item) => {
     setEditItem(item);
     setFormData({
-      title: item.title,
       organization: item.organization,
       fromDate: item.fromDate,
       toDate: item.toDate === "Present" ? "" : item.toDate,
@@ -189,6 +198,7 @@ const sortedExperiences = [...experiences].sort((a, b) => {
 
     const form = new FormData();
 
+    // Add all form data
     Object.entries(formData).forEach(([key, val]) => {
       if (key === "toDate") {
         form.append("toDate", val ? val : "Present");
@@ -198,6 +208,8 @@ const sortedExperiences = [...experiences].sort((a, b) => {
     });
 
     form.append("email", userEmail);
+    // Add empty title field to maintain backend compatibility
+    form.append("title", "");
 
     try {
       if (editItem) {
@@ -242,13 +254,12 @@ const sortedExperiences = [...experiences].sort((a, b) => {
             <TableRow>
               {[
                 "Sl",
-                "Title",
                 "Organization",
                 "From",
                 "To",
                 "Designation",
-                "Employment",
-                "Duty",
+                "Nature of Employment",
+                "Nature of Duty",
                 "Certificate",
                 "Action",
               ].map((h) => (
@@ -262,22 +273,20 @@ const sortedExperiences = [...experiences].sort((a, b) => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={10} align="center">
+                <TableCell colSpan={9} align="center">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : experiences.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} align="center">
+                <TableCell colSpan={9} align="center">
                   No experience records found
                 </TableCell>
               </TableRow>
             ) : (
-           sortedExperiences.map((e, i) => (
-
+              sortedExperiences.map((e, i) => (
                 <TableRow key={e._id}>
                   <TableCell>{i + 1}</TableCell>
-                  <TableCell>{e.title}</TableCell>
                   <TableCell>{e.organization}</TableCell>
                   <TableCell>{e.fromDate}</TableCell>
                   <TableCell>
@@ -324,77 +333,209 @@ const sortedExperiences = [...experiences].sort((a, b) => {
           </TableBody>
         </Table>
       </TableContainer>
-{/* NAVIGATION BUTTONS */}
-<Box
-  sx={{
-    display: "flex",
-    justifyContent: "space-between",
-    mt: 4,
-    pt: 3,
-    borderTop: "1px solid #e0e0e0",
-  }}
->
-  <Button
-    variant="outlined"
-    startIcon={<ArrowBack />}
-    onClick={handleBack}
-  >
-    Back
-  </Button>
 
-  <Button
-    variant="contained"
-    endIcon={<ArrowForward />}
-    onClick={handleNext}
-  >
-    Next
-  </Button>
-</Box>
+      {/* NAVIGATION BUTTONS */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          mt: 4,
+          pt: 3,
+          borderTop: "1px solid #e0e0e0",
+        }}
+      >
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBack />}
+          onClick={handleBack}
+        >
+          Back
+        </Button>
+
+        <Button
+          variant="contained"
+          endIcon={<ArrowForward />}
+          onClick={handleNext}
+        >
+          Next
+        </Button>
+      </Box>
 
       {/* MODAL */}
       <Modal open={open} onClose={handleClose}>
-        <Box sx={{ p: 4, bgcolor: "#fff", maxWidth: 800, mx: "auto", mt: 5 }}>
-          <Typography fontWeight={700} mb={2}>
+        <Box sx={{ 
+          p: 4, 
+          bgcolor: "#fff", 
+          maxWidth: 900, // Increased width
+          mx: "auto", 
+          mt: 5,
+          borderRadius: 2,
+          boxShadow: 24
+        }}>
+          <Typography variant="h6" fontWeight={700} mb={3}>
             {editItem ? "Edit Experience" : "Add Experience"}
           </Typography>
 
-          <Grid container spacing={2}>
-            {[
-              ["title", "Title"],
-              ["organization", "Organization"],
-              ["fromDate", "From Date", "date"],
-              ["toDate", "To Date (Leave empty = Present)", "date"],
-              ["designation", "Designation"],
-              ["employmentNature", "Nature of Employment"],
-              ["dutyNature", "Nature of Duty"],
-            ].map(([name, label, type]) => (
-              <Grid item xs={12} sm={6} key={name}>
-                <TextField
-                  fullWidth
-                  label={label}
-                  type={type || "text"}
-                  name={name}
-                  value={formData[name]}
-                  onChange={handleChange}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-            ))}
+          <Grid container spacing={3}>
+            {/* Organization */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Organization / Institution *"
+                name="organization"
+                value={formData.organization}
+                onChange={handleChange}
+                required
+                size="medium"
+              />
+            </Grid>
 
+            {/* Designation */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Designation / Role *"
+                name="designation"
+                value={formData.designation}
+                onChange={handleChange}
+                required
+                size="medium"
+              />
+            </Grid>
+
+            {/* From Date */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="From Date *"
+                type="date"
+                name="fromDate"
+                value={formData.fromDate}
+                onChange={handleChange}
+                InputLabelProps={{ shrink: true }}
+                required
+                size="medium"
+              />
+            </Grid>
+
+            {/* To Date */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="To Date (Leave empty for Present)"
+                type="date"
+                name="toDate"
+                value={formData.toDate}
+                onChange={handleChange}
+                InputLabelProps={{ shrink: true }}
+                size="medium"
+              />
+            </Grid>
+
+            {/* Nature of Employment Dropdown - WITH SEPARATE VISIBLE LABEL */}
+            <Grid item xs={12} sm={6}>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, color: '#333' }}>
+                Nature of Employment *
+              </Typography>
+              <FormControl fullWidth required>
+                <Select
+                  name="employmentNature"
+                  value={formData.employmentNature}
+                  onChange={handleChange}
+                  displayEmpty
+                  size="medium"
+                  sx={{
+                    height: '56px', // Match TextField height
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    <em>Select Nature of Employment</em>
+                  </MenuItem>
+                  {employmentNatureOptions.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Nature of Duty Dropdown - WITH SEPARATE VISIBLE LABEL */}
+            <Grid item xs={12} sm={6}>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, color: '#333' }}>
+                Nature of Duty *
+              </Typography>
+              <FormControl fullWidth required>
+                <Select
+                  name="dutyNature"
+                  value={formData.dutyNature}
+                  onChange={handleChange}
+                  displayEmpty
+                  size="medium"
+                  sx={{
+                    height: '56px', // Match TextField height
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    <em>Select Nature of Duty</em>
+                  </MenuItem>
+                  {dutyNatureOptions.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Certificate Upload */}
             <Grid item xs={12}>
-              <Button component="label" startIcon={<UploadFile />}>
-                Upload Certificate
-                <input hidden type="file" name="certificate" onChange={handleChange} />
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, color: '#333' }}>
+                Certificate Upload *
+              </Typography>
+              <Button 
+                variant="outlined" 
+                component="label" 
+                fullWidth
+                startIcon={<UploadFile />}
+                sx={{
+                  py: 2,
+                  borderStyle: 'dashed',
+                  borderWidth: '2px',
+                  backgroundColor: '#f5f5f5'
+                }}
+              >
+                {formData.certificate ? formData.certificate.name : "Click to Upload Certificate *"}
+                <input 
+                  hidden 
+                  type="file" 
+                  name="certificate" 
+                  onChange={handleChange} 
+                  accept=".pdf,.jpg,.jpeg,.png"
+                />
               </Button>
+              {formData.certificate && (
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  Selected: {formData.certificate.name} (Size: {(formData.certificate.size / 1024).toFixed(2)} KB)
+                </Typography>
+              )}
             </Grid>
           </Grid>
 
-          <Box mt={3} textAlign="right">
-            <Button onClick={handleClose} sx={{ mr: 2 }}>
+          <Box mt={4} display="flex" justifyContent="flex-end" gap={2}>
+            <Button variant="outlined" onClick={handleClose} size="large">
               Cancel
             </Button>
-            <Button variant="contained" onClick={handleSave}>
-              Save
+            <Button 
+              variant="contained" 
+              onClick={handleSave}
+              size="large"
+              sx={{ minWidth: 120 }}
+              disabled={!formData.organization || !formData.designation || !formData.fromDate || !formData.employmentNature || !formData.dutyNature || !formData.certificate}
+            >
+              {editItem ? "Update" : "Save"}
             </Button>
           </Box>
         </Box>
@@ -402,5 +543,8 @@ const sortedExperiences = [...experiences].sort((a, b) => {
     </Box>
   );
 };
+
+// Add missing imports at the top if needed
+import { Description } from "@mui/icons-material";
 
 export default Experience;
