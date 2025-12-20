@@ -58,7 +58,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
     { text: "10. Faculty Research", icon: <Science />, path: "/FacultyReserach" },
     { text: "11. Consultancies", icon: <Build />, path: "/Consultancy" },
     { text: "12. Project Guided", icon: <Folder />, path: "/ProjectGuided" },
-    { text: "13. Seminars Guided", icon: <Forum />, path: "/SeminarsGuided" },
+    { text: "13. Seminar Guided", icon: <Forum />, path: "/SeminarsGuided" },
     { text: "14. Outside Interactions", icon: <Public />, path: "/InteractionsOutsideWorld" },
     { text: "15. Positions Held/ Other Responsibilities", icon: <AccountTree />, path: "/PositionsHeld" },
     { text: "16. Research Interests", icon: <Interests />, path: "/ResearchInterests" },

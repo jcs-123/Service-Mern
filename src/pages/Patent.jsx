@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import {
   Box, Grid, TextField, Button, Typography, Paper, Divider,
-  IconButton, Fade, Tooltip
+  IconButton, Fade, Tooltip,
+  MenuItem
 } from "@mui/material";
 import { Add, Save, Delete, ArrowBack, ArrowForward, Edit } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +23,19 @@ function Patent() {
   useEffect(() => {
     fetchPatents();
   }, []);
+const generatePatentYearOptions = () => {
+  const options = [];
+  const currentYear = new Date().getFullYear();
+  const startYear = 2018;
+
+  for (let year = currentYear; year >= startYear; year--) {
+    options.push(`${year}-${year + 1}`);
+  }
+
+  return options;
+};
+
+const PATENT_YEAR_OPTIONS = generatePatentYearOptions();
 
   // 🟢 Fetch from backend
   const fetchPatents = async () => {
@@ -164,60 +178,125 @@ function Patent() {
           </Box>
 
           {/* 🟩 Form Section (TOP) */}
-          <Fade in timeout={800}>
-            <Box>
-              <Divider sx={{ my: 3, "&::before, &::after": { borderColor: "#e3f2fd" } }}>
-                <Box sx={{
-                  px: 3, py: 1,
-                  background: "linear-gradient(135deg, #1565c0, #42a5f5)",
-                  color: "white", borderRadius: 20,
-                  fontSize: "14px", fontWeight: "bold",
-                }}>
-                  {editId ? "EDIT PATENT" : "ADD NEW PATENT"}
-                </Box>
-              </Divider>
+    <Fade in timeout={800}>
+  <Box>
+    <Divider sx={{ my: 3, "&::before, &::after": { borderColor: "#e3f2fd" } }}>
+      <Box
+        sx={{
+          px: 3,
+          py: 1,
+          background: "linear-gradient(135deg, #1565c0, #42a5f5)",
+          color: "white",
+          borderRadius: 20,
+          fontSize: "14px",
+          fontWeight: "bold",
+        }}
+      >
+        {editId ? "EDIT PATENT" : "ADD NEW PATENT"}
+      </Box>
+    </Divider>
 
-              <Grid container spacing={3}>
-                {[
-                  { label: "Patent Number", field: "patentNo", xs: 6 },
-                  { label: "Inventor(s) Name", field: "inventors", xs: 6 },
-                  { label: "Year", field: "year", xs: 4 },
-                  { label: "Status", field: "status", xs: 4 },
-                  { label: "Type", field: "sort", xs: 4 },
-                ].map((field, i) => (
-                  <Grid item xs={field.xs} key={i}>
-                    <TextField
-                      label={field.label}
-                      fullWidth
-                      value={newPatent[field.field]}
-                      onChange={(e) =>
-                        setNewPatent({ ...newPatent, [field.field]: e.target.value })
-                      }
-                      sx={textFieldStyles}
-                    />
-                  </Grid>
-                ))}
+    <Grid container spacing={3}>
+      {/* Patent Number */}
+      <Grid item xs={12} md={6}>
+        <TextField
+          label="Patent Number"
+          fullWidth
+          value={newPatent.patentNo}
+          onChange={(e) =>
+            setNewPatent({ ...newPatent, patentNo: e.target.value })
+          }
+          sx={textFieldStyles}
+          required
+        />
+      </Grid>
 
-                <Grid item xs={12}>
-                  <Button
-                    variant="contained"
-                    startIcon={<Add />}
-                    onClick={handleAdd}
-                    disabled={!newPatent.patentNo.trim()}
-                    sx={{
-                      background: "linear-gradient(135deg, #1565c0, #42a5f5)",
-                      borderRadius: "12px",
-                      fontWeight: "bold",
-                      textTransform: "none",
-                      px: 4, py: 1.5,
-                    }}
-                  >
-                    {editId ? "Update Patent" : "Add Patent"}
-                  </Button>
-                </Grid>
-              </Grid>
-            </Box>
-          </Fade>
+      {/* Inventors */}
+      <Grid item xs={12} md={6}>
+        <TextField
+          label="Inventor(s) Name"
+          fullWidth
+          value={newPatent.inventors}
+          onChange={(e) =>
+            setNewPatent({ ...newPatent, inventors: e.target.value })
+          }
+          sx={textFieldStyles}
+        />
+      </Grid>
+
+      {/* Patent Year (DROPDOWN) */}
+      <Grid item xs={12} md={4}>
+        <TextField
+          select
+          label="Year of Patent"
+          fullWidth
+          value={newPatent.year}
+          onChange={(e) =>
+            setNewPatent({ ...newPatent, year: e.target.value })
+          }
+          sx={textFieldStyles}
+          required
+        >
+          <MenuItem value="">
+            <em>Select Year</em>
+          </MenuItem>
+          {PATENT_YEAR_OPTIONS.map((year) => (
+            <MenuItem key={year} value={year}>
+              {year}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Grid>
+
+      {/* Status */}
+      <Grid item xs={12} md={4}>
+        <TextField
+          label="Status"
+          fullWidth
+          value={newPatent.status}
+          onChange={(e) =>
+            setNewPatent({ ...newPatent, status: e.target.value })
+          }
+          sx={textFieldStyles}
+        />
+      </Grid>
+
+      {/* Type */}
+      <Grid item xs={12} md={4}>
+        <TextField
+          label="Type"
+          fullWidth
+          value={newPatent.sort}
+          onChange={(e) =>
+            setNewPatent({ ...newPatent, sort: e.target.value })
+          }
+          sx={textFieldStyles}
+        />
+      </Grid>
+
+      {/* Submit Button */}
+      <Grid item xs={12}>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={handleAdd}
+          disabled={!newPatent.patentNo.trim() || !newPatent.year}
+          sx={{
+            background: "linear-gradient(135deg, #1565c0, #42a5f5)",
+            borderRadius: "12px",
+            fontWeight: "bold",
+            textTransform: "none",
+            px: 4,
+            py: 1.5,
+          }}
+        >
+          {editId ? "Update Patent" : "Add Patent"}
+        </Button>
+      </Grid>
+    </Grid>
+  </Box>
+</Fade>
+
 
           {/* 📜 Saved Data Section (BOTTOM) */}
           <Typography
