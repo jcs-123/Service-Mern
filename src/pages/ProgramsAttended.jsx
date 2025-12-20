@@ -27,8 +27,6 @@ import {
   Select,
   InputLabel,
   FormControl,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import {
   Visibility,
@@ -44,9 +42,6 @@ import {
   Info,
   Download,
   ErrorOutline,
-  Bookmark,
-  ArrowBack,
-  ArrowForward,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -155,9 +150,6 @@ const validateProgram = (program) => {
 
 const ProgramsAttended = () => {
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
   const gmail = localStorage.getItem("gmail") || "jeswinjohn@jecc.ac.in";
 
   const [loading, setLoading] = useState(false);
@@ -196,7 +188,6 @@ const ProgramsAttended = () => {
       setLoading(true);
       const res = await axios.get(`https://service-book-backend.onrender.com/api/programs-attended/${gmail}`);
       if (res.data.success) {
-        console.log("Fetched programs:", res.data.data);
         setExistingPrograms(res.data.data);
       }
     } catch (error) {
@@ -377,7 +368,6 @@ const ProgramsAttended = () => {
   /* ================= EDIT ================= */
 
   const handleEdit = (prog) => {
-    console.log("Editing program:", prog);
     setEditData({
       ...prog,
       certificate: null, // Reset file input
@@ -450,7 +440,7 @@ const ProgramsAttended = () => {
       return parseInt(firstPart) || 0;
     };
     
-    return getYear(b.academicYear || b.fromDate) - getYear(a.academicYear || a.fromDate);
+    return getYear(b.academicYear) - getYear(a.academicYear);
   });
 
   /* ================= RENDER FUNCTIONS ================= */
@@ -484,76 +474,37 @@ const ProgramsAttended = () => {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        style={{ width: "100%", maxWidth: "1400px" }}
+        style={{ width: "100%", maxWidth: "1200px" }}
       >
-        <Paper sx={{ 
-          p: { xs: 2, sm: 3, md: 4 },
-          borderRadius: 3,
-          overflow: 'hidden'
-        }}>
-          {/* Header Section - FIXED VERSION */}
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: isMobile ? 'column' : 'row',
-            justifyContent: 'space-between',
-            alignItems: isMobile ? 'flex-start' : 'center',
-            mb: 4,
-            gap: 2
-          }}>
-            <Box>
-              <Typography
-                variant={isMobile ? "h5" : "h4"}
-                fontWeight="bold"
-                sx={{ 
-                  color: "#1a237e",
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1
-                }}
+        <Paper sx={{ p: 4, borderRadius: 3 }}>
+          <Typography
+            variant="h4"
+            align="center"
+            fontWeight="bold"
+            sx={{ color: "#1a237e", mb: 4 }}
+          >
+            🧑‍🏫 Programs Attended (STTP / FDP / Workshop)
+          </Typography>
+
+          {/* Toggle View/Add */}
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 3, gap: 2 }}>
+            {!viewMode ? (
+              <Button 
+                variant="outlined" 
+                startIcon={<Visibility />} 
+                onClick={() => setViewMode(true)}
               >
-                <Bookmark />
-                Programs Attended
-              </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-                STTP / FDP / Workshop / Seminar / Conference / Industrial Training
-              </Typography>
-            </Box>
-            
-            <Box sx={{ 
-              display: 'flex', 
-              gap: 1,
-              flexWrap: 'wrap',
-              width: isMobile ? '100%' : 'auto'
-            }}>
-              <Button
-                variant={viewMode ? "outlined" : "contained"}
-                startIcon={viewMode ? <Add /> : <Visibility />}
-                onClick={() => setViewMode(!viewMode)}
-                fullWidth={isMobile}
-              >
-                {viewMode ? "Add New" : "View All"}
+                View All Programs
               </Button>
-              
-              {!viewMode && (
-                <Button
-                  variant="contained"
-                  color="success"
-                  startIcon={<Save />}
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  fullWidth={isMobile}
-                >
-                  {submitting ? (
-                    <>
-                      <CircularProgress size={20} sx={{ mr: 1 }} />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save All"
-                  )}
-                </Button>
-              )}
-            </Box>
+            ) : (
+              <Button 
+                variant="outlined" 
+                startIcon={<Add />} 
+                onClick={() => setViewMode(false)}
+              >
+                Add New Program
+              </Button>
+            )}
           </Box>
 
           {/* Loading State */}
@@ -597,18 +548,7 @@ const ProgramsAttended = () => {
                       </IconButton>
                     )}
                     
-                    <Typography 
-                      variant="h6" 
-                      color="primary" 
-                      mb={3} 
-                      sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 1,
-                        borderBottom: '1px solid #e0e0e0',
-                        pb: 1
-                      }}
-                    >
+                    <Typography variant="h6" color="primary" mb={2} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       Program {index + 1}
                       {Object.keys(errors[index] || {}).length === 0 && prog.title && (
                         <CheckCircle color="success" fontSize="small" />
@@ -616,28 +556,19 @@ const ProgramsAttended = () => {
                     </Typography>
 
                     <Grid container spacing={3}>
-                      {/* Row 1: Title (Full width on mobile, 2/3 on desktop) */}
-                      <Grid item xs={12} md={8}>
+                      {/* Row 1: Title, Category, Period */}
+                      <Grid item xs={12} md={4}>
                         <TextField
                           label="Program Title *"
                           fullWidth
                           value={prog.title}
                           onChange={(e) => handleChange(index, "title", e.target.value)}
                           error={!!errors[index]?.title}
-                          helperText={errors[index]?.title || "Enter the complete program title"}
+                          helperText={errors[index]?.title || "Enter program title"}
                           required
-                          multiline
-                          minRows={1}
-                          maxRows={3}
-                          sx={{
-                            '& .MuiInputBase-root': {
-                              minHeight: '56px',
-                            }
-                          }}
                         />
                       </Grid>
 
-                      {/* Row 1: Category (Full width on mobile, 1/3 on desktop) */}
                       <Grid item xs={12} md={4}>
                         <FormControl fullWidth error={!!errors[index]?.category}>
                           <InputLabel>Category *</InputLabel>
@@ -645,20 +576,9 @@ const ProgramsAttended = () => {
                             value={prog.category}
                             label="Category *"
                             onChange={(e) => handleChange(index, "category", e.target.value)}
-                            sx={{
-                              '& .MuiSelect-select': {
-                                display: 'flex',
-                                alignItems: 'center',
-                                minHeight: '56px',
-                              }
-                            }}
                           >
                             {CATEGORY_OPTIONS.map((option) => (
-                              <MenuItem 
-                                key={option.value} 
-                                value={option.value}
-                                sx={{ minHeight: '48px' }}
-                              >
+                              <MenuItem key={option.value} value={option.value}>
                                 {option.label}
                               </MenuItem>
                             ))}
@@ -669,8 +589,7 @@ const ProgramsAttended = () => {
                         </FormControl>
                       </Grid>
 
-                      {/* Row 2: Period, Organised By */}
-                      <Grid item xs={12} md={6}>
+                      <Grid item xs={12} md={4}>
                         <FormControl fullWidth>
                           <InputLabel>Period</InputLabel>
                           <Select
@@ -687,7 +606,18 @@ const ProgramsAttended = () => {
                         </FormControl>
                       </Grid>
 
-                      <Grid item xs={12} md={6}>
+                      {/* Row 2: Funding Agency, Organised By, Academic Year */}
+                      <Grid item xs={12} md={4}>
+                        <TextField
+                          label="Funding Agency"
+                          fullWidth
+                          value={prog.fundingAgency}
+                          onChange={(e) => handleChange(index, "fundingAgency", e.target.value)}
+                          helperText="Optional"
+                        />
+                      </Grid>
+
+                      <Grid item xs={12} md={4}>
                         <FormControl fullWidth error={!!errors[index]?.organisedBy}>
                           <InputLabel>Organised By *</InputLabel>
                           <Select
@@ -707,18 +637,7 @@ const ProgramsAttended = () => {
                         </FormControl>
                       </Grid>
 
-                      {/* Row 3: Funding Agency, Academic Year */}
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          label="Funding Agency"
-                          fullWidth
-                          value={prog.fundingAgency}
-                          onChange={(e) => handleChange(index, "fundingAgency", e.target.value)}
-                          helperText="Optional - Leave blank if not applicable"
-                        />
-                      </Grid>
-
-                      <Grid item xs={12} md={6}>
+                      <Grid item xs={12} md={4}>
                         <FormControl fullWidth error={!!errors[index]?.academicYear}>
                           <InputLabel>Academic Year *</InputLabel>
                           <Select
@@ -741,8 +660,8 @@ const ProgramsAttended = () => {
                         </FormControl>
                       </Grid>
 
-                      {/* Row 4: From Date, To Date */}
-                      <Grid item xs={12} md={6}>
+                      {/* Row 3: From Date, To Date, Certificate */}
+                      <Grid item xs={12} md={4}>
                         <TextField
                           type="date"
                           label="From Date *"
@@ -753,15 +672,10 @@ const ProgramsAttended = () => {
                           error={!!errors[index]?.fromDate}
                           helperText={errors[index]?.fromDate || "Program start date"}
                           required
-                          sx={{
-                            '& .MuiInputBase-root': {
-                              minHeight: '56px',
-                            }
-                          }}
                         />
                       </Grid>
 
-                      <Grid item xs={12} md={6}>
+                      <Grid item xs={12} md={4}>
                         <TextField
                           type="date"
                           label="To Date"
@@ -770,93 +684,70 @@ const ProgramsAttended = () => {
                           value={prog.toDate}
                           onChange={(e) => handleChange(index, "toDate", e.target.value)}
                           error={!!errors[index]?.toDate}
-                          helperText={errors[index]?.toDate || "Leave blank if still ongoing"}
-                          sx={{
-                            '& .MuiInputBase-root': {
-                              minHeight: '56px',
-                            }
-                          }}
+                          helperText={errors[index]?.toDate || "Leave empty if still ongoing"}
                         />
                       </Grid>
 
-                      {/* Row 5: Certificate Upload */}
-                      <Grid item xs={12}>
-                        <Box sx={{ 
-                          border: '1px dashed #90caf9', 
-                          borderRadius: 2,
-                          p: 2,
-                          backgroundColor: '#f8fbff',
-                          mt: 1
-                        }}>
-                          <Typography variant="subtitle2" gutterBottom>
-                            Certificate Upload
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Button
-                              component="label"
-                              variant="outlined"
-                              startIcon={<CloudUpload />}
-                              sx={{ flexShrink: 0 }}
-                            >
-                              Choose File
-                              <input
-                                hidden
-                                type="file"
-                                accept=".pdf,.jpg,.jpeg,.png"
-                                onChange={(e) => handleFileUpload(index, e)}
-                              />
-                            </Button>
-                            
-                            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                              {prog.certificate ? (
-                                <Box sx={{ 
-                                  display: 'flex', 
-                                  alignItems: 'center', 
-                                  gap: 1,
-                                  bgcolor: '#e8f5e9',
-                                  p: 1,
-                                  borderRadius: 1
-                                }}>
-                                  <CheckCircle fontSize="small" color="success" />
-                                  <Box sx={{ minWidth: 0 }}>
-                                    <Typography 
-                                      variant="body2" 
-                                      fontWeight="medium"
-                                      noWrap
-                                      sx={{ 
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis'
-                                      }}
-                                    >
-                                      {prog.certificate.name}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                      {Math.round(prog.certificate.size / 1024)} KB
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              ) : (
-                                <Typography variant="body2" color="text.secondary">
-                                  No file selected (PDF, JPG, PNG up to 5MB)
-                                </Typography>
-                              )}
+                      <Grid item xs={12} md={4}>
+                        <Box sx={{ mt: 1 }}>
+                          <Button
+                            component="label"
+                            variant="outlined"
+                            startIcon={<CloudUpload />}
+                            fullWidth
+                            sx={{ 
+                              py: 1.5,
+                              height: '56px',
+                              justifyContent: 'flex-start'
+                            }}
+                          >
+                            <Box sx={{ textAlign: 'left' }}>
+                              <Typography variant="body2" fontWeight="medium">
+                                Upload Certificate
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                PDF, JPG, PNG (Max 5MB)
+                              </Typography>
                             </Box>
-                          </Box>
+                            <input
+                              hidden
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={(e) => handleFileUpload(index, e)}
+                            />
+                          </Button>
                           
-                          {errors[index]?.certificate && (
-                            <FormHelperText 
-                              error 
-                              sx={{ 
-                                mt: 1,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 0.5
-                              }}
-                            >
-                              <ErrorOutline fontSize="small" />
-                              {errors[index].certificate}
-                            </FormHelperText>
-                          )}
+                          {/* Certificate Feedback */}
+                          <Box sx={{ mt: 1, minHeight: '24px' }}>
+                            {prog.certificate && (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <CheckCircle fontSize="small" color="success" />
+                                <Box>
+                                  <Typography variant="caption" fontWeight="medium" color="success.main">
+                                    {prog.certificate.name}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                    ({Math.round(prog.certificate.size / 1024)} KB)
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            )}
+                            
+                            {errors[index]?.certificate && (
+                              <FormHelperText 
+                                error 
+                                sx={{ 
+                                  m: 0,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 0.5
+                                }}
+                              >
+                                <ErrorOutline fontSize="small" />
+                                {errors[index].certificate}
+                              </FormHelperText>
+                            )}
+                          </Box>
                         </Box>
                       </Grid>
                     </Grid>
@@ -864,20 +755,30 @@ const ProgramsAttended = () => {
                 ))}
 
                 {/* Add Another Program Button */}
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  gap: 2, 
-                  my: 3,
-                  flexWrap: 'wrap'
-                }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, my: 3 }}>
                   <Button
                     variant="outlined"
                     startIcon={<Add />}
                     onClick={handleAddRow}
-                    size="large"
                   >
                     Add Another Program
+                  </Button>
+                  
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<Save />}
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <>
+                        <CircularProgress size={20} sx={{ mr: 1 }} />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save All Programs"
+                    )}
                   </Button>
                 </Box>
               </motion.div>
@@ -892,24 +793,8 @@ const ProgramsAttended = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <Typography 
-                  variant="h5" 
-                  sx={{ 
-                    color: "#1a237e", 
-                    mb: 3, 
-                    textAlign: "center",
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 1
-                  }}
-                >
-                  Your Programs Attended 
-                  <Chip 
-                    label={existingPrograms.length} 
-                    color="primary" 
-                    size="small" 
-                  />
+                <Typography variant="h5" sx={{ color: "#1a237e", mb: 3, textAlign: "center" }}>
+                  Your Programs Attended ({existingPrograms.length})
                 </Typography>
                 
                 {existingPrograms.length === 0 ? (
@@ -926,100 +811,57 @@ const ProgramsAttended = () => {
                     <Typography>No programs found. Add your first program!</Typography>
                   </Alert>
                 ) : (
-                  <TableContainer 
-                    component={Paper}
-                    sx={{ 
-                      maxHeight: '70vh',
-                      overflow: 'auto'
-                    }}
-                  >
-                    <Table stickyHeader>
+                  <TableContainer component={Paper}>
+                    <Table>
                       <TableHead sx={{ backgroundColor: "#1a237e" }}>
                         <TableRow>
-                          <TableCell sx={{ color: "#fff", fontWeight: 'bold', width: '50px' }}>#</TableCell>
-                          <TableCell sx={{ color: "#fff", fontWeight: 'bold', minWidth: '200px' }}>Title</TableCell>
-                          <TableCell sx={{ color: "#fff", fontWeight: 'bold', width: '120px' }}>Category</TableCell>
-                          <TableCell sx={{ color: "#fff", fontWeight: 'bold', width: '150px' }}>Period</TableCell>
-                          <TableCell sx={{ color: "#fff", fontWeight: 'bold', width: '150px' }}>Organised By</TableCell>
-                          <TableCell sx={{ color: "#fff", fontWeight: 'bold', width: '120px' }}>Academic Year</TableCell>
-                          <TableCell sx={{ color: "#fff", fontWeight: 'bold', width: '100px' }}>Certificate</TableCell>
-                          <TableCell sx={{ color: "#fff", fontWeight: 'bold', width: '100px' }}>Actions</TableCell>
+                          <TableCell sx={{ color: "#fff" }}>#</TableCell>
+                          <TableCell sx={{ color: "#fff" }}>Title</TableCell>
+                          <TableCell sx={{ color: "#fff" }}>Category</TableCell>
+                          <TableCell sx={{ color: "#fff" }}>Period</TableCell>
+                          <TableCell sx={{ color: "#fff" }}>Organised By</TableCell>
+                          <TableCell sx={{ color: "#fff" }}>Academic Year</TableCell>
+                          <TableCell sx={{ color: "#fff" }}>Certificate</TableCell>
+                          <TableCell sx={{ color: "#fff" }}>Actions</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {sortedPrograms.map((prog, index) => (
-                          <TableRow 
-                            key={index} 
-                            hover
-                            sx={{ 
-                              '&:hover': { backgroundColor: '#f5f5f5' }
-                            }}
-                          >
+                          <TableRow key={index} hover>
+                            <TableCell>{index + 1}</TableCell>
                             <TableCell>
-                              <Typography variant="body2" fontWeight="bold">
-                                {index + 1}
+                              <Typography variant="body2" fontWeight="medium">
+                                {prog.title}
                               </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Box sx={{ maxWidth: '300px' }}>
-                                <Typography 
-                                  variant="body2" 
-                                  fontWeight="medium"
-                                  sx={{ 
-                                    wordBreak: 'break-word',
-                                    overflowWrap: 'break-word'
-                                  }}
-                                >
-                                  {prog.title}
+                              {prog.fundingAgency && (
+                                <Typography variant="caption" color="text.secondary">
+                                  Funded by: {prog.fundingAgency}
                                 </Typography>
-                                {prog.fundingAgency && (
-                                  <Typography 
-                                    variant="caption" 
-                                    color="text.secondary"
-                                    sx={{ 
-                                      display: 'block',
-                                      mt: 0.5
-                                    }}
-                                  >
-                                    Funded by: {prog.fundingAgency}
-                                  </Typography>
-                                )}
-                                <Box sx={{ display: 'flex', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
-                                  <Typography variant="caption" color="text.secondary">
-                                    From: {prog.fromDate || 'N/A'}
-                                  </Typography>
-                                  <Typography variant="caption" color="text.secondary">
-                                    To: {prog.toDate || 'N/A'}
-                                  </Typography>
-                                </Box>
-                              </Box>
+                              )}
                             </TableCell>
                             <TableCell>
                               <Chip
-                                label={prog.category || "N/A"}
+                                label={prog.category}
                                 size="small"
                                 color="primary"
                                 variant="outlined"
-                                sx={{ fontWeight: 'medium' }}
                               />
                             </TableCell>
                             <TableCell>
-                              <Typography variant="body2">
-                                {prog.period || "Not specified"}
-                              </Typography>
+                              <Chip
+                                label={prog.period || "Not specified"}
+                                size="small"
+                                color="default"
+                                variant="outlined"
+                              />
                             </TableCell>
-                            <TableCell>
-                              <Typography variant="body2" fontWeight="medium">
-                                {prog.organisedBy || "N/A"}
-                              </Typography>
-                            </TableCell>
+                            <TableCell>{prog.organisedBy}</TableCell>
                             <TableCell>
                               <Chip
                                 label={prog.academicYear || "Not set"}
                                 size="small"
                                 color="success"
                                 variant="outlined"
-                                sx={{ fontWeight: 'medium' }}
                               />
                             </TableCell>
                             <TableCell>
@@ -1028,38 +870,25 @@ const ProgramsAttended = () => {
                                   <IconButton 
                                     color="primary" 
                                     onClick={() => handlePreview(prog.certificate)}
-                                    size="small"
                                   >
                                     {renderFileIcon(prog.certificate)}
                                   </IconButton>
                                 </Tooltip>
                               ) : (
-                                <Typography variant="caption" color="text.secondary">
-                                  No file
-                                </Typography>
+                                "-"
                               )}
                             </TableCell>
                             <TableCell>
-                              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                <Tooltip title="Edit">
-                                  <IconButton 
-                                    color="secondary" 
-                                    onClick={() => handleEdit(prog)}
-                                    size="small"
-                                  >
-                                    <Edit fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Delete">
-                                  <IconButton 
-                                    color="error" 
-                                    onClick={() => handleDelete(prog._id)}
-                                    size="small"
-                                  >
-                                    <Delete fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                              </Box>
+                              <Tooltip title="Edit">
+                                <IconButton color="secondary" onClick={() => handleEdit(prog)}>
+                                  <Edit />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete">
+                                <IconButton color="error" onClick={() => handleDelete(prog._id)}>
+                                  <Delete />
+                                </IconButton>
+                              </Tooltip>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1072,41 +901,18 @@ const ProgramsAttended = () => {
           </AnimatePresence>
 
           {/* Navigation */}
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            mt: 4, 
-            pt: 3,
-            borderTop: '1px solid',
-            borderColor: 'divider',
-            flexWrap: 'wrap',
-            gap: 2
-          }}>
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBack />}
-              onClick={() => navigate("/ProgramsCoordinated")}
-            >
-              Previous
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4, borderTop: "1px solid #ccc", pt: 3 }}>
+            <Button variant="outlined" onClick={() => navigate("/ProgramsCoordinated")}>
+              ← Previous
             </Button>
-            <Button
-              variant="contained"
-              endIcon={<ArrowForward />}
-              onClick={() => navigate("/MoocCourseCompleted")}
-            >
-              Next
+            <Button variant="contained" onClick={() => navigate("/MoocCourseCompleted")}>
+              Next →
             </Button>
           </Box>
         </Paper>
 
         {/* File Preview Dialog */}
-        <Dialog 
-          open={previewDialog} 
-          onClose={() => setPreviewDialog(false)} 
-          maxWidth="lg" 
-          fullWidth
-          fullScreen={isMobile}
-        >
+        <Dialog open={previewDialog} onClose={() => setPreviewDialog(false)} maxWidth="lg" fullWidth>
           <DialogTitle>
             Certificate Preview
             <IconButton
@@ -1123,22 +929,21 @@ const ProgramsAttended = () => {
                 <iframe 
                   src={previewFile} 
                   width="100%" 
-                  height={isMobile ? "400px" : "600px"}
+                  height="600px" 
                   title="PDF Preview"
                   style={{ border: 'none' }}
                 />
               ) : (
-                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                  <img 
-                    src={previewFile} 
-                    alt="Certificate Preview" 
-                    style={{ 
-                      maxWidth: '100%', 
-                      maxHeight: '70vh',
-                      objectFit: 'contain' 
-                    }}
-                  />
-                </Box>
+                <img 
+                  src={previewFile} 
+                  alt="Preview" 
+                  style={{ 
+                    width: "100%", 
+                    borderRadius: "8px",
+                    maxHeight: "70vh",
+                    objectFit: "contain"
+                  }} 
+                />
               )
             ) : (
               <Typography>No file to preview</Typography>
@@ -1159,13 +964,7 @@ const ProgramsAttended = () => {
         </Dialog>
 
         {/* Edit Dialog */}
-        <Dialog 
-          open={editDialogOpen} 
-          onClose={() => setEditDialogOpen(false)} 
-          maxWidth="md" 
-          fullWidth
-          fullScreen={isMobile}
-        >
+        <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
           <DialogTitle>
             Edit Program
             <IconButton
@@ -1179,23 +978,20 @@ const ProgramsAttended = () => {
           <DialogContent dividers>
             {editData && (
               <Grid container spacing={3} sx={{ mt: 1, pt: 1 }}>
-                {/* Title - Full width */}
+                {/* Title */}
                 <Grid item xs={12}>
                   <TextField
-                    label="Program Title *"
+                    label="Program Title"
                     fullWidth
                     value={editData.title || ""}
                     onChange={(e) => handleEditChange("title", e.target.value)}
                     error={!!editErrors.title}
-                    helperText={editErrors.title || "Enter the complete program title"}
+                    helperText={editErrors.title}
                     required
-                    multiline
-                    minRows={1}
-                    maxRows={3}
                   />
                 </Grid>
 
-                {/* Category and Organised By */}
+                {/* Category */}
                 <Grid item xs={12} md={6}>
                   <FormControl fullWidth error={!!editErrors.category}>
                     <InputLabel>Category *</InputLabel>
@@ -1216,6 +1012,7 @@ const ProgramsAttended = () => {
                   </FormControl>
                 </Grid>
 
+                {/* Organised By */}
                 <Grid item xs={12} md={6}>
                   <FormControl fullWidth error={!!editErrors.organisedBy}>
                     <InputLabel>Organised By *</InputLabel>
@@ -1236,24 +1033,7 @@ const ProgramsAttended = () => {
                   </FormControl>
                 </Grid>
 
-                {/* Period and Academic Year */}
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Period</InputLabel>
-                    <Select
-                      value={editData.period || ""}
-                      label="Period"
-                      onChange={(e) => handleEditChange("period", e.target.value)}
-                    >
-                      {PERIOD_OPTIONS.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
+                {/* Academic Year */}
                 <Grid item xs={12} md={6}>
                   <FormControl fullWidth error={!!editErrors.academicYear}>
                     <InputLabel>Academic Year *</InputLabel>
@@ -1277,18 +1057,25 @@ const ProgramsAttended = () => {
                   </FormControl>
                 </Grid>
 
-                {/* Funding Agency */}
+                {/* Period */}
                 <Grid item xs={12} md={6}>
-                  <TextField
-                    label="Funding Agency"
-                    fullWidth
-                    value={editData.fundingAgency || ""}
-                    onChange={(e) => handleEditChange("fundingAgency", e.target.value)}
-                    helperText="Optional"
-                  />
+                  <FormControl fullWidth>
+                    <InputLabel>Period</InputLabel>
+                    <Select
+                      value={editData.period || ""}
+                      label="Period"
+                      onChange={(e) => handleEditChange("period", e.target.value)}
+                    >
+                      {PERIOD_OPTIONS.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                 </Grid>
 
-                {/* Dates */}
+                {/* From Date */}
                 <Grid item xs={12} md={6}>
                   <TextField
                     type="date"
@@ -1303,6 +1090,7 @@ const ProgramsAttended = () => {
                   />
                 </Grid>
 
+                {/* To Date */}
                 <Grid item xs={12} md={6}>
                   <TextField
                     type="date"
@@ -1316,24 +1104,27 @@ const ProgramsAttended = () => {
                   />
                 </Grid>
 
+                {/* Funding Agency */}
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Funding Agency"
+                    fullWidth
+                    value={editData.fundingAgency || ""}
+                    onChange={(e) => handleEditChange("fundingAgency", e.target.value)}
+                  />
+                </Grid>
+
                 {/* Certificate Upload */}
-                <Grid item xs={12}>
-                  <Box sx={{ 
-                    border: '1px dashed #90caf9', 
-                    borderRadius: 2,
-                    p: 2,
-                    backgroundColor: '#f8fbff'
-                  }}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Update Certificate
-                    </Typography>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mt: 1 }}>
                     <Button
                       component="label"
                       variant="outlined"
                       startIcon={<CloudUpload />}
-                      sx={{ mb: 1 }}
+                      fullWidth
+                      sx={{ py: 1.5 }}
                     >
-                      Choose New File
+                      Update Certificate
                       <input
                         type="file"
                         hidden
@@ -1342,8 +1133,8 @@ const ProgramsAttended = () => {
                       />
                     </Button>
                     {editData.certificate && typeof editData.certificate === 'string' && (
-                      <Typography variant="body2" sx={{ mt: 1 }}>
-                        Current: {editData.certificate.split('/').pop()}
+                      <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+                        Current file: {editData.certificate.split('/').pop()}
                       </Typography>
                     )}
                     {editErrors.certificate && (
