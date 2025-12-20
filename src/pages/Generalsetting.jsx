@@ -116,13 +116,21 @@ const Generalsetting = () => {
   const [viewMode, setViewMode] = useState(false);
   const [records, setRecords] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
-  const username = localStorage.getItem("username");
 
-  // ✅ Fetch all records
+  // ✅ Fetch only logged-in user's records
   const fetchRecords = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("https://service-book-backend.onrender.com/api/general-details");
+      const username = localStorage.getItem("username");
+      
+      if (!username) {
+        toast.error("User not logged in");
+        setLoading(false);
+        return;
+      }
+      
+      // Pass username as query parameter
+      const res = await axios.get(`https://service-book-backend.onrender.com/api/general-details?username=${username}`);
       setRecords(res.data || []);
     } catch (err) {
       console.error(err);
@@ -217,7 +225,7 @@ const Generalsetting = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // ✅ Submit new record - FIXED VERSION
+  // ✅ Submit new record - UPDATED VERSION
   const handleSubmit = async () => {
     if (!validateForm()) {
       toast.error("Please fill all required fields correctly");
@@ -229,24 +237,30 @@ const Generalsetting = () => {
 
       const username = localStorage.getItem("username");
       
-      // Create a clean copy of formData with all fields
+      if (!username) {
+        toast.error("User not logged in");
+        setLoading(false);
+        return;
+      }
+      
+      // Create a clean copy of formData with username
       const sendData = { 
         ...formData,
         username,
       };
 
-      console.log("Sending data:", sendData); // Debug log
+      console.log("Sending data:", sendData);
 
       const res = await axios.post(
         "https://service-book-backend.onrender.com/api/general-details",
-        formData
+        sendData
       );
 
-      console.log("Response from server:", res.data); // Debug log
+      console.log("Response from server:", res.data);
 
       if (res.data.success) {
         toast.success("✅ Saved Successfully");
-        // Reset form with all fields
+        // Reset form
         setFormData({
           title: "",
           name: "",
@@ -291,7 +305,7 @@ const Generalsetting = () => {
           accountNo: "",
           bankBranch: "",
           ifsc: "",
-          username: localStorage.getItem("username") || "",
+          username: username,
           password: "",
         });
         fetchRecords();
@@ -327,6 +341,14 @@ const Generalsetting = () => {
   // ✅ Download Excel for Admin
   const handleDownloadExcel = async () => {
     try {
+      const username = localStorage.getItem("username");
+      const userRole = localStorage.getItem("role"); // assuming you store role
+      
+      if (userRole !== "admin") {
+        toast.error("Access denied. Admin only feature.");
+        return;
+      }
+      
       setLoading(true);
       const response = await axios.get(
         "https://service-book-backend.onrender.com/api/general/get",
@@ -353,22 +375,6 @@ const Generalsetting = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // ✅ Format field name for display
-  const formatFieldName = (fieldName) => {
-    return fieldName
-      .replace(/([A-Z])/g, " $1")
-      .replace(/^./, (s) => s.toUpperCase())
-      .replace("Present ", "")
-      .replace("Permanent ", "");
-  };
-
-  // ✅ Check if field is an address field
-  const isAddressField = (fieldName) => {
-    return fieldName.includes('present') || 
-           fieldName.includes('permanent') || 
-           fieldName === 'sameAsPresent';
   };
 
   return (
@@ -414,7 +420,7 @@ const Generalsetting = () => {
             </Typography>
             
             <Box display="flex" gap={2}>
-              {viewMode && (
+              {viewMode && localStorage.getItem("role") === "admin" && (
                 <Button
                   variant="contained"
                   startIcon={<DownloadIcon />}
@@ -433,7 +439,12 @@ const Generalsetting = () => {
               
               <Button
                 variant="outlined"
-                onClick={() => setViewMode(!viewMode)}
+                onClick={() => {
+                  setViewMode(!viewMode);
+                  if (!viewMode) {
+                    fetchRecords(); // Refresh data when switching to view mode
+                  }
+                }}
                 sx={{
                   color: "#1976d2",
                   borderColor: "#1976d2",
@@ -446,6 +457,11 @@ const Generalsetting = () => {
             </Box>
           </Box>
 
+          {/* Display current logged-in user */}
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Logged in as: <strong>{localStorage.getItem("username") || "Not logged in"}</strong>
+          </Alert>
+
           {/* ===== View/Edit Mode ===== */}
           {viewMode ? (
             loading ? (
@@ -453,13 +469,13 @@ const Generalsetting = () => {
                 <CircularProgress />
               </Box>
             ) : records.length === 0 ? (
-              <Typography textAlign="center" py={3}>
-                No records found.
-              </Typography>
+              <Alert severity="info">
+                No records found for your account. Click "Add New" to create your profile.
+              </Alert>
             ) : (
               <>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  Viewing and editing mode. Click the edit icon to modify records.
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  Showing {records.length} record(s) for your account.
                 </Alert>
                 
                 {records.map((record, index) => (
