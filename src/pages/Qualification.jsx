@@ -46,8 +46,8 @@ const Qualification = () => {
   const qualificationOptions = {
     "Post-Doctoral Fellowship (PDF)": [],
     "PhD": ["PhD", "PhD (Pursuing)"],
-    "POST GRADUATION": ["M.Tech", "M.E", "M.A.", "M.Sc", "MBA", "MCA", "M.Com", "Other"],
-    "GRADUATION": ["B.Tech", "B.E", "AMIE", "B.A", "B.Sc", "B.Com", "B.P.Ed"],
+    "POST GRADUATION": ["M.Tech", "M.E", "M.A.", "M.Sc", "MBA", "MCA", "M.Com", "M.Phil","M.Lib.Sc.(Library Sciences)" ,"Other"],
+    "GRADUATION": ["B.Tech", "B.E", "AMIE", "B.A", "B.Sc", "B.Com", "B.P.Ed",".Lib.Sc. (Library Sciences)","BCA"],
     "DIPLOMA": [],
     "HIGHER SECONDARY": ["Plus Two (State)", "Plus Two (CBSE)", "Plus Two (ICSE)"],
     "SECONDARY": ["SSLC (State)", "10th (CBSE)", "10th (ICSE)"],
@@ -137,16 +137,32 @@ const handleSave = async () => {
     return;
   }
 
-  // Validations - Degree is NOT required
-  if (!formData.qualification) {
-    toast.warning("Please select Qualification");
-    return;
-  }
+ // Validations
+if (!formData.qualification) {
+  toast.warning("Please select Qualification");
+  return;
+}
 
-  if (!formData.university) {
-    toast.warning("Please enter University");
-    return;
-  }
+if (!formData.discipline) {
+  toast.warning("Please enter Discipline");
+  return;
+}
+
+if (!formData.university) {
+  toast.warning("Please enter University");
+  return;
+}
+
+if (!formData.passingYear) {
+  toast.warning("Please enter Year of Passing");
+  return;
+}
+
+if (!editItem && !formData.certificate) {
+  toast.warning("Please upload Certificate");
+  return;
+}
+
 
   try {
     const form = new FormData();
@@ -577,6 +593,7 @@ const handleSave = async () => {
     <TextField
       label="Discipline"
       name="discipline"
+      required
       value={formData.discipline}
       onChange={handleChange}
       fullWidth
@@ -605,6 +622,7 @@ const handleSave = async () => {
       name="percentage"
       value={formData.percentage}
       onChange={handleChange}
+      required
       fullWidth
       type="number"
       InputLabelProps={{ shrink: true }}
@@ -621,6 +639,7 @@ const handleSave = async () => {
       onChange={handleChange}
       fullWidth
       type="number"
+      required
       InputLabelProps={{ shrink: true }}
     />
   </Grid>
@@ -634,6 +653,7 @@ const handleSave = async () => {
       onChange={handleChange}
       fullWidth
       type="number"
+      required
       InputLabelProps={{ shrink: true }}
     />
   </Grid>
@@ -664,6 +684,7 @@ const handleSave = async () => {
       <input
         type="file"
         name="certificate"
+        
         hidden
         onChange={handleChange}
         accept=".pdf,.jpg,.png,.jpeg"

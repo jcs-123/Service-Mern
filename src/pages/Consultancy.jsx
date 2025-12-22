@@ -44,6 +44,19 @@ const Consultancy = () => {
     } catch (err) {
     }
   };
+// ================= ACADEMIC YEAR OPTIONS =================
+const generateAcademicYears = (startYear = 2001) => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+
+  for (let y = startYear; y <= currentYear; y++) {
+    years.push(`${y}-${y + 1}`);
+  }
+
+  return years.reverse(); // latest year first
+};
+
+const academicYearOptions = generateAcademicYears();
 
   useEffect(() => {
     fetchData();
@@ -228,20 +241,30 @@ const Consultancy = () => {
                   </Form.Group>
                 </Col>
 
-                <Col xs={12} md={6}>
-                  <Form.Group>
-                    <Form.Label className="fw-semibold">
-                      Academic Year <span className="text-danger">*</span>
-                    </Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="academicYear"
-                      value={formData.academicYear}
-                      onChange={handleChange}
-                      placeholder="e.g. 2024-2025"
-                    />
-                  </Form.Group>
-                </Col>
+             <Col xs={12} md={6}>
+  <Form.Group className="w-100">
+    <Form.Label className="fw-semibold">
+      Academic Year <span className="text-danger">*</span>
+    </Form.Label>
+
+    <Form.Select
+      name="academicYear"
+      value={formData.academicYear}
+      onChange={handleChange}
+      className="w-100"
+      size="lg"   // 👈 touch-friendly on mobile
+      required
+    >
+      <option value="">-- Select Academic Year --</option>
+      {academicYearOptions.map((year) => (
+        <option key={year} value={year}>
+          {year}
+        </option>
+      ))}
+    </Form.Select>
+  </Form.Group>
+</Col>
+
 
                 <Col xs={12} md={6}>
                   <Form.Group>

@@ -20,6 +20,7 @@ import {
   DialogActions,
   Chip,
   Link,
+  MenuItem,
 } from "@mui/material";
 import { Edit, Delete, Visibility, Download, PictureAsPdf, Image, InsertDriveFile } from "@mui/icons-material";
 import axios from "axios";
@@ -211,6 +212,19 @@ const SeminarsGuided = () => {
 
   const handlePrevious = () => navigate("/ProjectGuided");
   const handleNext = () => navigate("/InteractionsOutsideWorld");
+// ================= ACADEMIC YEAR OPTIONS =================
+const generateAcademicYears = (startYear = 2001) => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+
+  for (let y = startYear; y <= currentYear; y++) {
+    years.push(`${y}-${y + 1}`);
+  }
+
+  return years.reverse(); // Latest first
+};
+
+const academicYearOptions = generateAcademicYears();
 
   return (
     <Box
@@ -305,16 +319,17 @@ const SeminarsGuided = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="academicYear"
-                label="Academic Year *"
-                value={seminars.academicYear}
-                onChange={handleChange}
-                fullWidth
-                required
-              />
-            </Grid>
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    name="academicYear"
+    label="Academic Year *"
+    value={seminars.academicYear}
+    onChange={handleChange}
+    fullWidth
+    required
+  />
+</Grid>
 
             <Grid item xs={12} sm={6}>
               <TextField
