@@ -53,10 +53,13 @@ const Experience = () => {
   ];
 
   const dutyNatureOptions = [
-    "Teaching / Academic",
-    "Administrative / Office Work",
+    "Teaching ",
+     "Academic",
+    "Administrative",
+     "Office Work",
     "Research",
-    "Technical / Support Staff"
+    "Technical",
+    "Support Staff"
   ];
 
   // Navigation handlers
