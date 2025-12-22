@@ -17,6 +17,10 @@ import {
   Checkbox,
   Alert,
   Divider,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import EditIcon from "@mui/icons-material/Edit";
@@ -36,6 +40,67 @@ const tabLabels = [
   "Contact Details",
   "Bank Details",
 ];
+
+// Dropdown options
+const titleOptions = ["Dr.", "Sr.", "Prof.", "Mr.", "Mrs.", "Ms.", "Fr."];
+
+const categoryOptions = [
+  "Teaching Staff",
+  "Non Teaching Staff", 
+  "Technical Staff"
+];
+
+const genderOptions = ["Male", "Female", "Other"];
+
+const religionOptions = ["Christian", "Hindu", "Muslim", "Other"];
+
+const contractTypeOptions = ["Regular", "Adhoc", "Adjunct"];
+
+const departmentOptions = [
+  "Artificial Intelligence and Data Science",
+  "Civil Engineering",
+  "Computer Science & Engineering",
+  "CSE(Cyber Security)",
+  "Electronics and Communication Engineering",
+  "Electrical and Electronics Engineering",
+  "Mechanical Engineering",
+  "Mechatronics Engineering",
+  "Robotics and Automation",
+  "Basic Science and Humanities",
+  "Administrative Office",
+  "Accounts Office",
+  "Project Office",
+  "TBI",
+  "Library",
+  "Computer Centre & PRD",
+  "Store"
+];
+
+const maritalStatusOptions = ["Single", "Married", "Divorced"];
+
+const bloodGroupOptions = [
+  "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-", "Others", "Unknown"
+];
+
+const districtOptions = [
+  "Thrissur",
+  "Palakkad",
+  "Thiruvananthapuram",
+  "Kollam",
+  "Pathanamthitta",
+  "Alappuzha",
+  "Kottayam",
+  "Idukki",
+  "Ernakulam",
+  "Malappuram",
+  "Kozhikode",
+  "Wayanad",
+  "Kannur",
+  "Kasaragod",
+  "Other"
+];
+
+const stateOptions = ["Kerala", "Tamil Nadu", "Other"];
 
 const Generalsetting = () => {
   const navigate = useNavigate();
@@ -377,6 +442,116 @@ const Generalsetting = () => {
     }
   };
 
+  // Render dropdown field for Add mode with full visible labels
+  const renderDropdown = (label, name, options, required = false) => (
+    <Grid item xs={12} sm={6} key={name}>
+      <FormControl fullWidth size="small" error={!!errors[name]}>
+        <InputLabel 
+          id={`${name}-label`}
+          sx={{
+            fontSize: '0.9rem',
+            backgroundColor: 'white',
+            padding: '0 4px',
+            transform: 'translate(14px, -9px) scale(0.75)',
+            '&.Mui-focused': {
+              color: '#1976d2',
+            }
+          }}
+        >
+          {label}{required ? " *" : ""}
+        </InputLabel>
+        <Select
+          labelId={`${name}-label`}
+          label={label}
+          name={name}
+          value={formData[name] || ""}
+          onChange={handleChange}
+          required={required}
+          displayEmpty
+          sx={{
+            '& .MuiSelect-select': {
+              display: 'flex',
+              alignItems: 'center',
+            }
+          }}
+          renderValue={(selected) => {
+            if (!selected) {
+              return <span style={{ color: '#888' }}>Select {label}</span>;
+            }
+            return selected;
+          }}
+        >
+          <MenuItem value="">
+            <em style={{ color: '#888' }}>Select {label}</em>
+          </MenuItem>
+          {options.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </Select>
+        {errors[name] && (
+          <Typography variant="caption" color="error" sx={{ ml: 2 }}>
+            {errors[name]}
+          </Typography>
+        )}
+      </FormControl>
+    </Grid>
+  );
+
+  // Render dropdown for view/edit mode with full visible labels
+  const renderViewDropdown = (label, name, options, record, index) => (
+    <Grid item xs={12} sm={6} md={4} key={name}>
+      <FormControl fullWidth size="small">
+        <InputLabel 
+          id={`${name}-view-label`}
+          sx={{
+            fontSize: '0.9rem',
+            backgroundColor: editIndex === index ? 'white' : 'transparent',
+            padding: '0 4px',
+            transform: 'translate(14px, -9px) scale(0.75)',
+          }}
+        >
+          {label}
+        </InputLabel>
+        <Select
+          labelId={`${name}-view-label`}
+          label={label}
+          name={name}
+          value={record[name] || ""}
+          disabled={editIndex !== index}
+          onChange={(e) => {
+            const updated = {
+              ...record,
+              [name]: e.target.value,
+            };
+            setRecords((prev) => {
+              const copy = [...prev];
+              copy[index] = updated;
+              return copy;
+            });
+          }}
+          displayEmpty
+          renderValue={(selected) => {
+            if (!selected) {
+              return <span style={{ color: '#888' }}>Select {label}</span>;
+            }
+            return selected;
+          }}
+        >
+          <MenuItem value="">
+            <em style={{ color: '#888' }}>Select {label}</em>
+          </MenuItem>
+          {options.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </Grid>
+  );
+
   return (
     <Box
       sx={{
@@ -494,35 +669,45 @@ const Generalsetting = () => {
                           </Typography>
                         </Grid>
                         
-                        {/* General Fields */}
-                        {[
-                          ["Title", "title"],
-                          ["Name", "name"],
-                          ["Date of Join", "dateOfJoin"],
-                          ["Date of Birth", "dateOfBirth"],
-                          ["Religion", "religion"],
-                          ["Staff ID", "staffId"],
-                          ["Gender", "gender"],
-                          // ["Employee ID", "employeeId"],
-                          ["Blood Group", "bloodGroup"],
-                          ["Caste", "caste"],
-                          ["Department", "department"],
-                          ["Designation", "designation"],
-                          ["Contract Type", "contractType"],
-                          ["Category", "category"],
-                          ["Institution Last Worked", "institutionLastWorked"],
-                          ["KTU ID", "ktuId"],
-                          ["AICTE ID", "penNo"],
-                        ].map(([label, name]) => (
-                          <Grid item xs={12} sm={6} md={4} key={name}>
+                        {/* Title Dropdown */}
+                        {renderViewDropdown("Title", "title", titleOptions, record, index)}
+                        
+                        {/* Name Field */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Name"
+                            fullWidth
+                            size="small"
+                            name="name"
+                            value={record.name || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                name: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Date Fields */}
+                        {["Date of Join", "Date of Birth"].map((label) => (
+                          <Grid item xs={12} sm={6} md={4} key={label}>
                             <TextField
                               label={label}
                               fullWidth
                               size="small"
-                              name={name}
-                              value={record[name] || ""}
+                              name={label === "Date of Join" ? "dateOfJoin" : "dateOfBirth"}
+                              type="date"
+                              value={record[label === "Date of Join" ? "dateOfJoin" : "dateOfBirth"] || ""}
                               disabled={editIndex !== index}
                               onChange={(e) => {
+                                const name = label === "Date of Join" ? "dateOfJoin" : "dateOfBirth";
                                 const updated = {
                                   ...record,
                                   [name]: e.target.value,
@@ -533,9 +718,189 @@ const Generalsetting = () => {
                                   return copy;
                                 });
                               }}
+                              InputLabelProps={{ shrink: true }}
                             />
                           </Grid>
                         ))}
+                        
+                        {/* Religion Dropdown */}
+                        {renderViewDropdown("Religion", "religion", religionOptions, record, index)}
+                        
+                        {/* Staff ID */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Staff ID"
+                            fullWidth
+                            size="small"
+                            name="staffId"
+                            value={record.staffId || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                staffId: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Gender Dropdown */}
+                        {renderViewDropdown("Gender", "gender", genderOptions, record, index)}
+                        
+                        {/* Employee ID (Optional) */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Employee ID"
+                            fullWidth
+                            size="small"
+                            name="employeeId"
+                            value={record.employeeId || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                employeeId: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Blood Group Dropdown */}
+                        {renderViewDropdown("Blood Group", "bloodGroup", bloodGroupOptions, record, index)}
+                        
+                        {/* Caste Field */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Caste"
+                            fullWidth
+                            size="small"
+                            name="caste"
+                            value={record.caste || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                caste: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Department Dropdown */}
+                        {renderViewDropdown("Department", "department", departmentOptions, record, index)}
+                        
+                        {/* Designation Field */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Designation"
+                            fullWidth
+                            size="small"
+                            name="designation"
+                            value={record.designation || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                designation: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Contract Type Dropdown */}
+                        {renderViewDropdown("Contract Type", "contractType", contractTypeOptions, record, index)}
+                        
+                        {/* Category Dropdown */}
+                        {renderViewDropdown("Category", "category", categoryOptions, record, index)}
+                        
+                        {/* Institution Last Worked */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Institution Last Worked"
+                            fullWidth
+                            size="small"
+                            name="institutionLastWorked"
+                            value={record.institutionLastWorked || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                institutionLastWorked: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* KTU ID */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="KTU ID"
+                            fullWidth
+                            size="small"
+                            name="ktuId"
+                            value={record.ktuId || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                ktuId: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* AICTE ID */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="AICTE ID"
+                            fullWidth
+                            size="small"
+                            name="penNo"
+                            value={record.penNo || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                penNo: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
                         
                         <Grid item xs={12}>
                           <Divider sx={{ my: 2 }} />
@@ -548,35 +913,100 @@ const Generalsetting = () => {
                           </Typography>
                         </Grid>
                         
-                        {[
-                          ["Marital Status", "maritalStatus"],
-                          ["Mother Name", "motherName"],
-                          ["Father Name", "fatherName"],
-                          ["Spouse Name", "spouseName"],
-                          ["Nationality", "nationality"],
-                        ].map(([label, name]) => (
-                          <Grid item xs={12} sm={6} md={4} key={name}>
-                            <TextField
-                              label={label}
-                              fullWidth
-                              size="small"
-                              name={name}
-                              value={record[name] || ""}
-                              disabled={editIndex !== index}
-                              onChange={(e) => {
-                                const updated = {
-                                  ...record,
-                                  [name]: e.target.value,
-                                };
-                                setRecords((prev) => {
-                                  const copy = [...prev];
-                                  copy[index] = updated;
-                                  return copy;
-                                });
-                              }}
-                            />
-                          </Grid>
-                        ))}
+                        {/* Marital Status Dropdown */}
+                        {renderViewDropdown("Marital Status", "maritalStatus", maritalStatusOptions, record, index)}
+                        
+                        {/* Mother Name */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Mother Name"
+                            fullWidth
+                            size="small"
+                            name="motherName"
+                            value={record.motherName || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                motherName: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Father Name */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Father Name"
+                            fullWidth
+                            size="small"
+                            name="fatherName"
+                            value={record.fatherName || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                fatherName: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Spouse Name */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Spouse Name"
+                            fullWidth
+                            size="small"
+                            name="spouseName"
+                            value={record.spouseName || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                spouseName: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Nationality */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Nationality"
+                            fullWidth
+                            size="small"
+                            name="nationality"
+                            value={record.nationality || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                nationality: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
                         
                         <Grid item xs={12}>
                           <Divider sx={{ my: 2 }} />
@@ -589,36 +1019,103 @@ const Generalsetting = () => {
                           </Typography>
                         </Grid>
                         
-                        {[
-                          ["House Name", "presentHouseName"],
-                          ["Street", "presentStreet"],
-                          ["Post", "presentPost"],
-                          ["District", "presentDistrict"],
-                          ["PIN", "presentPin"],
-                          ["State", "presentState"],
-                        ].map(([label, name]) => (
-                          <Grid item xs={12} sm={6} md={4} key={name}>
-                            <TextField
-                              label={label}
-                              fullWidth
-                              size="small"
-                              name={name}
-                              value={record[name] || ""}
-                              disabled={editIndex !== index}
-                              onChange={(e) => {
-                                const updated = {
-                                  ...record,
-                                  [name]: e.target.value,
-                                };
-                                setRecords((prev) => {
-                                  const copy = [...prev];
-                                  copy[index] = updated;
-                                  return copy;
-                                });
-                              }}
-                            />
-                          </Grid>
-                        ))}
+                        {/* House Name */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="House Name"
+                            fullWidth
+                            size="small"
+                            name="presentHouseName"
+                            value={record.presentHouseName || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                presentHouseName: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Street */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Street"
+                            fullWidth
+                            size="small"
+                            name="presentStreet"
+                            value={record.presentStreet || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                presentStreet: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Post */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Post"
+                            fullWidth
+                            size="small"
+                            name="presentPost"
+                            value={record.presentPost || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                presentPost: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* District Dropdown */}
+                        {renderViewDropdown("District", "presentDistrict", districtOptions, record, index)}
+                        
+                        {/* PIN */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="PIN"
+                            fullWidth
+                            size="small"
+                            name="presentPin"
+                            value={record.presentPin || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                presentPin: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* State Dropdown */}
+                        {renderViewDropdown("State", "presentState", stateOptions, record, index)}
                         
                         <Grid item xs={12}>
                           <Divider sx={{ my: 2 }} />
@@ -656,36 +1153,103 @@ const Generalsetting = () => {
                           />
                         </Grid>
                         
-                        {[
-                          ["House Name", "permanentHouseName"],
-                          ["Street", "permanentStreet"],
-                          ["Post", "permanentPost"],
-                          ["District", "permanentDistrict"],
-                          ["PIN", "permanentPin"],
-                          ["State", "permanentState"],
-                        ].map(([label, name]) => (
-                          <Grid item xs={12} sm={6} md={4} key={name}>
-                            <TextField
-                              label={label}
-                              fullWidth
-                              size="small"
-                              name={name}
-                              value={record[name] || ""}
-                              disabled={editIndex !== index || (record.sameAsPresent || false)}
-                              onChange={(e) => {
-                                const updated = {
-                                  ...record,
-                                  [name]: e.target.value,
-                                };
-                                setRecords((prev) => {
-                                  const copy = [...prev];
-                                  copy[index] = updated;
-                                  return copy;
-                                });
-                              }}
-                            />
-                          </Grid>
-                        ))}
+                        {/* House Name */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="House Name"
+                            fullWidth
+                            size="small"
+                            name="permanentHouseName"
+                            value={record.permanentHouseName || ""}
+                            disabled={editIndex !== index || (record.sameAsPresent || false)}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                permanentHouseName: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Street */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Street"
+                            fullWidth
+                            size="small"
+                            name="permanentStreet"
+                            value={record.permanentStreet || ""}
+                            disabled={editIndex !== index || (record.sameAsPresent || false)}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                permanentStreet: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Post */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Post"
+                            fullWidth
+                            size="small"
+                            name="permanentPost"
+                            value={record.permanentPost || ""}
+                            disabled={editIndex !== index || (record.sameAsPresent || false)}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                permanentPost: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* District Dropdown */}
+                        {renderViewDropdown("District", "permanentDistrict", districtOptions, record, index)}
+                        
+                        {/* PIN */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="PIN"
+                            fullWidth
+                            size="small"
+                            name="permanentPin"
+                            value={record.permanentPin || ""}
+                            disabled={editIndex !== index || (record.sameAsPresent || false)}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                permanentPin: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* State Dropdown */}
+                        {renderViewDropdown("State", "permanentState", stateOptions, record, index)}
                         
                         <Grid item xs={12}>
                           <Divider sx={{ my: 2 }} />
@@ -698,34 +1262,97 @@ const Generalsetting = () => {
                           </Typography>
                         </Grid>
                         
-                        {[
-                          ["Phone", "phone"],
-                          ["Phone (RES)", "phoneRes"],
-                          ["Email", "email"],
-                          ["Office Address", "officeAddress"],
-                        ].map(([label, name]) => (
-                          <Grid item xs={12} sm={6} md={4} key={name}>
-                            <TextField
-                              label={label}
-                              fullWidth
-                              size="small"
-                              name={name}
-                              value={record[name] || ""}
-                              disabled={editIndex !== index}
-                              onChange={(e) => {
-                                const updated = {
-                                  ...record,
-                                  [name]: e.target.value,
-                                };
-                                setRecords((prev) => {
-                                  const copy = [...prev];
-                                  copy[index] = updated;
-                                  return copy;
-                                });
-                              }}
-                            />
-                          </Grid>
-                        ))}
+                        {/* Phone */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Phone"
+                            fullWidth
+                            size="small"
+                            name="phone"
+                            value={record.phone || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                phone: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Phone (RES) */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Phone (RES)"
+                            fullWidth
+                            size="small"
+                            name="phoneRes"
+                            value={record.phoneRes || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                phoneRes: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Email */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Email"
+                            fullWidth
+                            size="small"
+                            name="email"
+                            value={record.email || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                email: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Office Address */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Office Address"
+                            fullWidth
+                            size="small"
+                            name="officeAddress"
+                            value={record.officeAddress || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                officeAddress: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
                         
                         <Grid item xs={12}>
                           <Divider sx={{ my: 2 }} />
@@ -738,34 +1365,97 @@ const Generalsetting = () => {
                           </Typography>
                         </Grid>
                         
-                        {[
-                          ["Bank Name", "bankName"],
-                          ["Account No.", "accountNo"],
-                          ["Bank Branch", "bankBranch"],
-                          ["IFSC Code", "ifsc"],
-                        ].map(([label, name]) => (
-                          <Grid item xs={12} sm={6} md={4} key={name}>
-                            <TextField
-                              label={label}
-                              fullWidth
-                              size="small"
-                              name={name}
-                              value={record[name] || ""}
-                              disabled={editIndex !== index}
-                              onChange={(e) => {
-                                const updated = {
-                                  ...record,
-                                  [name]: e.target.value,
-                                };
-                                setRecords((prev) => {
-                                  const copy = [...prev];
-                                  copy[index] = updated;
-                                  return copy;
-                                });
-                              }}
-                            />
-                          </Grid>
-                        ))}
+                        {/* Bank Name */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Bank Name"
+                            fullWidth
+                            size="small"
+                            name="bankName"
+                            value={record.bankName || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                bankName: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Account No. */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Account No."
+                            fullWidth
+                            size="small"
+                            name="accountNo"
+                            value={record.accountNo || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                accountNo: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* Bank Branch */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="Bank Branch"
+                            fullWidth
+                            size="small"
+                            name="bankBranch"
+                            value={record.bankBranch || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                bankBranch: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
+                        
+                        {/* IFSC Code */}
+                        <Grid item xs={12} sm={6} md={4}>
+                          <TextField
+                            label="IFSC Code"
+                            fullWidth
+                            size="small"
+                            name="ifsc"
+                            value={record.ifsc || ""}
+                            disabled={editIndex !== index}
+                            onChange={(e) => {
+                              const updated = {
+                                ...record,
+                                ifsc: e.target.value,
+                              };
+                              setRecords((prev) => {
+                                const copy = [...prev];
+                                copy[index] = updated;
+                                return copy;
+                              });
+                            }}
+                          />
+                        </Grid>
                         
                         {/* User Info */}
                         <Grid item xs={12} sm={6} md={4}>
@@ -868,43 +1558,165 @@ const Generalsetting = () => {
               {activeTab === 0 && (
                 <FormSection title="General Details">
                   <Grid container spacing={2}>
-                    {[
-                      ["Title", "title"],
-                      ["Name", "name"],
-                      ["Date of Join", "dateOfJoin", "date"],
-                      ["Date of Birth", "dateOfBirth", "date"],
-                      ["Religion", "religion"],
-                      ["Staff ID", "staffId"],
-                      ["Gender", "gender"],
-                      // ["Employee ID", "employeeId"],
-                      ["Blood Group", "bloodGroup"],
-                      ["Caste", "caste"],
-                      ["Department", "department"],
-                      ["Designation", "designation"],
-                      ["Contract Type", "contractType"],
-                      ["Category", "category"],
-                      ["Institution Last Worked", "institutionLastWorked"],
-                      ["KTU ID", "ktuId"],
-                      ["AICTE ID.", "penNo"],
-                    ].map(([label, name, type]) => (
-                      <Grid item xs={12} sm={6} key={name}>
-                        <TextField
-                          fullWidth
-                          type={type || "text"}
-                          label={label}
-                          name={name}
-                          value={formData[name] || ""}
-                          onChange={handleChange}
-                          size="small"
-                          error={!!errors[name]}
-                          helperText={errors[name]}
-                          required={requiredFields.includes(name)}
-                          InputLabelProps={
-                            type === "date" ? { shrink: true } : {}
-                          }
-                        />
-                      </Grid>
-                    ))}
+                    {/* Title Dropdown */}
+                    {renderDropdown("Title", "title", titleOptions, true)}
+                    
+                    {/* Name Field */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Name"
+                        name="name"
+                        value={formData.name || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.name}
+                        helperText={errors.name}
+                        required
+                      />
+                    </Grid>
+                    
+                    {/* Date of Join */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        type="date"
+                        label="Date of Join"
+                        name="dateOfJoin"
+                        value={formData.dateOfJoin || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.dateOfJoin}
+                        helperText={errors.dateOfJoin}
+                        required
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                    
+                    {/* Date of Birth */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        type="date"
+                        label="Date of Birth"
+                        name="dateOfBirth"
+                        value={formData.dateOfBirth || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.dateOfBirth}
+                        helperText={errors.dateOfBirth}
+                        required
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                    
+                    {/* Religion Dropdown */}
+                    {renderDropdown("Religion", "religion", religionOptions, true)}
+                    
+                    {/* Staff ID */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Staff ID"
+                        name="staffId"
+                        value={formData.staffId || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.staffId}
+                        helperText={errors.staffId}
+                        required
+                      />
+                    </Grid>
+                    
+                    {/* Gender Dropdown */}
+                    {renderDropdown("Gender", "gender", genderOptions, true)}
+                    
+                    {/* Employee ID (Optional) */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Employee ID"
+                        name="employeeId"
+                        value={formData.employeeId || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
+                    
+                    {/* Blood Group Dropdown */}
+                    {renderDropdown("Blood Group", "bloodGroup", bloodGroupOptions)}
+                    
+                    {/* Caste */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Caste"
+                        name="caste"
+                        value={formData.caste || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
+                    
+                    {/* Department Dropdown */}
+                    {renderDropdown("Department", "department", departmentOptions, true)}
+                    
+                    {/* Designation */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Designation"
+                        name="designation"
+                        value={formData.designation || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.designation}
+                        helperText={errors.designation}
+                        required
+                      />
+                    </Grid>
+                    
+                    {/* Contract Type Dropdown */}
+                    {renderDropdown("Contract Type", "contractType", contractTypeOptions)}
+                    
+                    {/* Category Dropdown */}
+                    {renderDropdown("Category or Type", "category", categoryOptions)}
+                    
+                    {/* Institution Last Worked */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Institution Last Worked"
+                        name="institutionLastWorked"
+                        value={formData.institutionLastWorked || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
+                    
+                    {/* KTU ID */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="KTU ID"
+                        name="ktuId"
+                        value={formData.ktuId || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
+                    
+                    {/* AICTE ID */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="AICTE ID"
+                        name="penNo"
+                        value={formData.penNo || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
                   </Grid>
                 </FormSection>
               )}
@@ -912,24 +1724,56 @@ const Generalsetting = () => {
               {activeTab === 1 && (
                 <FormSection title="Personal Details">
                   <Grid container spacing={2}>
-                    {[
-                      ["Marital Status", "maritalStatus"],
-                      ["Mother Name", "motherName"],
-                      ["Father Name", "fatherName"],
-                      ["Spouse Name", "spouseName"],
-                      ["Nationality", "nationality"],
-                    ].map(([label, name]) => (
-                      <Grid item xs={12} sm={6} key={name}>
-                        <TextField
-                          fullWidth
-                          label={label}
-                          name={name}
-                          value={formData[name] || ""}
-                          onChange={handleChange}
-                          size="small"
-                        />
-                      </Grid>
-                    ))}
+                    {/* Marital Status Dropdown */}
+                    {renderDropdown("Marital Status", "maritalStatus", maritalStatusOptions)}
+                    
+                    {/* Mother Name */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Mother Name"
+                        name="motherName"
+                        value={formData.motherName || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
+                    
+                    {/* Father Name */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Father Name"
+                        name="fatherName"
+                        value={formData.fatherName || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
+                    
+                    {/* Spouse Name */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Spouse Name"
+                        name="spouseName"
+                        value={formData.spouseName || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
+                    
+                    {/* Nationality */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Nationality"
+                        name="nationality"
+                        value={formData.nationality || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
                   </Grid>
                 </FormSection>
               )}
@@ -945,28 +1789,65 @@ const Generalsetting = () => {
                     Present Address
                   </Typography>
                   <Grid container spacing={2}>
-                    {[
-                      ["House Name", "presentHouseName"],
-                      ["Street", "presentStreet"],
-                      ["Post", "presentPost"],
-                      ["District", "presentDistrict"],
-                      ["PIN", "presentPin"],
-                      ["State", "presentState"],
-                    ].map(([label, name]) => (
-                      <Grid item xs={12} sm={6} key={name}>
-                        <TextField
-                          fullWidth
-                          label={label}
-                          name={name}
-                          value={formData[name] || ""}
-                          onChange={handleChange}
-                          size="small"
-                          error={!!errors[name]}
-                          helperText={errors[name]}
-                          required={requiredFields.includes(name)}
-                        />
-                      </Grid>
-                    ))}
+                    {/* House Name */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="House Name"
+                        name="presentHouseName"
+                        value={formData.presentHouseName || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.presentHouseName}
+                        helperText={errors.presentHouseName}
+                        required
+                      />
+                    </Grid>
+                    
+                    {/* Street */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Street"
+                        name="presentStreet"
+                        value={formData.presentStreet || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
+                    
+                    {/* Post */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Post"
+                        name="presentPost"
+                        value={formData.presentPost || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
+                    
+                    {/* District Dropdown */}
+                    {renderDropdown("District", "presentDistrict", districtOptions, true)}
+                    
+                    {/* PIN */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="PIN"
+                        name="presentPin"
+                        value={formData.presentPin || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.presentPin}
+                        helperText={errors.presentPin}
+                        required
+                      />
+                    </Grid>
+                    
+                    {/* State Dropdown */}
+                    {renderDropdown("State", "presentState", stateOptions, true)}
                   </Grid>
                   
                   {/* Same as Present Checkbox and Copy Button */}
@@ -998,28 +1879,141 @@ const Generalsetting = () => {
                     Permanent Address
                   </Typography>
                   <Grid container spacing={2}>
-                    {[
-                      ["House Name", "permanentHouseName"],
-                      ["Street", "permanentStreet"],
-                      ["Post", "permanentPost"],
-                      ["District", "permanentDistrict"],
-                      ["PIN", "permanentPin"],
-                      ["State", "permanentState"],
-                    ].map(([label, name]) => (
-                      <Grid item xs={12} sm={6} key={name}>
-                        <TextField
-                          fullWidth
-                          label={label}
-                          name={name}
-                          value={formData[name] || ""}
+                    {/* House Name */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="House Name"
+                        name="permanentHouseName"
+                        value={formData.permanentHouseName || ""}
+                        onChange={handleChange}
+                        size="small"
+                        disabled={formData.sameAsPresent}
+                      />
+                    </Grid>
+                    
+                    {/* Street */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Street"
+                        name="permanentStreet"
+                        value={formData.permanentStreet || ""}
+                        onChange={handleChange}
+                        size="small"
+                        disabled={formData.sameAsPresent}
+                      />
+                    </Grid>
+                    
+                    {/* Post */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Post"
+                        name="permanentPost"
+                        value={formData.permanentPost || ""}
+                        onChange={handleChange}
+                        size="small"
+                        disabled={formData.sameAsPresent}
+                      />
+                    </Grid>
+                    
+                    {/* District Dropdown */}
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel 
+                          id="permanentDistrict-label"
+                          sx={{
+                            fontSize: '0.9rem',
+                            backgroundColor: formData.sameAsPresent ? 'transparent' : 'white',
+                            padding: '0 4px',
+                            transform: 'translate(14px, -9px) scale(0.75)',
+                          }}
+                        >
+                          District
+                        </InputLabel>
+                        <Select
+                          labelId="permanentDistrict-label"
+                          label="District"
+                          name="permanentDistrict"
+                          value={formData.permanentDistrict || ""}
                           onChange={handleChange}
-                          size="small"
                           disabled={formData.sameAsPresent}
-                          error={!!errors[name]}
-                          helperText={errors[name]}
-                        />
-                      </Grid>
-                    ))}
+                          displayEmpty
+                          renderValue={(selected) => {
+                            if (!selected) {
+                              return <span style={{ color: '#888' }}>Select District</span>;
+                            }
+                            return selected;
+                          }}
+                        >
+                          <MenuItem value="">
+                            <em style={{ color: '#888' }}>Select District</em>
+                          </MenuItem>
+                          {districtOptions.map((option) => (
+                            <MenuItem key={option} value={option}>
+                              {option}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    
+                    {/* PIN */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="PIN"
+                        name="permanentPin"
+                        value={formData.permanentPin || ""}
+                        onChange={handleChange}
+                        size="small"
+                        disabled={formData.sameAsPresent}
+                        error={!!errors.permanentPin}
+                        helperText={errors.permanentPin}
+                      />
+                    </Grid>
+                    
+                    {/* State Dropdown */}
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel 
+                          id="permanentState-label"
+                          sx={{
+                            fontSize: '0.9rem',
+                            backgroundColor: formData.sameAsPresent ? 'transparent' : 'white',
+                            padding: '0 4px',
+                            transform: 'translate(14px, -9px) scale(0.75)',
+                          }}
+                        >
+                          State
+                        </InputLabel>
+                        <Select
+                          labelId="permanentState-label"
+                          label="State"
+                          name="permanentState"
+                          value={formData.permanentState || ""}
+                          onChange={handleChange}
+                          disabled={formData.sameAsPresent}
+                          displayEmpty
+                          renderValue={(selected) => {
+                            if (!selected) {
+                              return <span style={{ color: '#888' }}>Select State</span>;
+                            }
+                            return selected;
+                          }}
+                        >
+                          <MenuItem value="">
+                            <em style={{ color: '#888' }}>Select State</em>
+                          </MenuItem>
+                          {stateOptions.map((option) => (
+                            <MenuItem key={option} value={option}>
+                              {option}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
                   </Grid>
                   
                   {/* Contact Information */}
@@ -1027,26 +2021,58 @@ const Generalsetting = () => {
                     Contact Information
                   </Typography>
                   <Grid container spacing={2}>
-                    {[
-                      ["Phone", "phone"],
-                      ["Phone (RES)", "phoneRes"],
-                      ["Email", "email", "email"],
-                      ["Office Address", "officeAddress"],
-                    ].map(([label, name, type]) => (
-                      <Grid item xs={12} sm={6} key={name}>
-                        <TextField
-                          fullWidth
-                          label={label}
-                          name={name}
-                          type={type || "text"}
-                          value={formData[name] || ""}
-                          onChange={handleChange}
-                          size="small"
-                          error={!!errors[name]}
-                          helperText={errors[name]}
-                        />
-                      </Grid>
-                    ))}
+                    {/* Phone */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Phone"
+                        name="phone"
+                        value={formData.phone || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.phone}
+                        helperText={errors.phone}
+                      />
+                    </Grid>
+                    
+                    {/* Phone (RES) */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Phone (RES)"
+                        name="phoneRes"
+                        value={formData.phoneRes || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
+                    
+                    {/* Email */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Email"
+                        name="email"
+                        type="email"
+                        value={formData.email || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.email}
+                        helperText={errors.email}
+                      />
+                    </Grid>
+                    
+                    {/* Office Address */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Office Address"
+                        name="officeAddress"
+                        value={formData.officeAddress || ""}
+                        onChange={handleChange}
+                        size="small"
+                      />
+                    </Grid>
                   </Grid>
                 </FormSection>
               )}
@@ -1054,26 +2080,65 @@ const Generalsetting = () => {
               {activeTab === 3 && (
                 <FormSection title="Bank Details">
                   <Grid container spacing={2}>
-                    {[
-                      ["Bank Name", "bankName"],
-                      ["Account No.", "accountNo"],
-                      ["Bank Branch", "bankBranch"],
-                      ["IFSC Code", "ifsc"],
-                    ].map(([label, name]) => (
-                      <Grid item xs={12} sm={6} key={name}>
-                        <TextField
-                          fullWidth
-                          label={label}
-                          name={name}
-                          value={formData[name] || ""}
-                          onChange={handleChange}
-                          size="small"
-                          error={!!errors[name]}
-                          helperText={errors[name]}
-                          required={requiredFields.includes(name)}
-                        />
-                      </Grid>
-                    ))}
+                    {/* Bank Name */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Bank Name"
+                        name="bankName"
+                        value={formData.bankName || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.bankName}
+                        helperText={errors.bankName}
+                        required
+                      />
+                    </Grid>
+                    
+                    {/* Account No. */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Account No."
+                        name="accountNo"
+                        value={formData.accountNo || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.accountNo}
+                        helperText={errors.accountNo}
+                        required
+                      />
+                    </Grid>
+                    
+                    {/* Bank Branch */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Bank Branch"
+                        name="bankBranch"
+                        value={formData.bankBranch || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.bankBranch}
+                        helperText={errors.bankBranch}
+                        required
+                      />
+                    </Grid>
+                    
+                    {/* IFSC Code */}
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="IFSC Code"
+                        name="ifsc"
+                        value={formData.ifsc || ""}
+                        onChange={handleChange}
+                        size="small"
+                        error={!!errors.ifsc}
+                        helperText={errors.ifsc}
+                        required
+                      />
+                    </Grid>
                   </Grid>
                 </FormSection>
               )}
