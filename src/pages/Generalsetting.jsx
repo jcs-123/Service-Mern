@@ -753,7 +753,7 @@ const Generalsetting = () => {
                         {renderViewDropdown("Gender", "gender", genderOptions, record, index)}
                         
                         {/* Employee ID (Optional) */}
-                        <Grid item xs={12} sm={6} md={4}>
+                        {/* <Grid item xs={12} sm={6} md={4}>
                           <TextField
                             label="Employee ID"
                             fullWidth
@@ -774,7 +774,7 @@ const Generalsetting = () => {
                             }}
                           />
                         </Grid>
-                        
+                         */}
                         {/* Blood Group Dropdown */}
                         {renderViewDropdown("Blood Group", "bloodGroup", bloodGroupOptions, record, index)}
                         
@@ -1632,7 +1632,7 @@ const Generalsetting = () => {
                     {renderDropdown("Gender", "gender", genderOptions, true)}
                     
                     {/* Employee ID (Optional) */}
-                    <Grid item xs={12} sm={6}>
+                    {/* <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
                         label="Employee ID"
@@ -1641,7 +1641,7 @@ const Generalsetting = () => {
                         onChange={handleChange}
                         size="small"
                       />
-                    </Grid>
+                    </Grid> */}
                     
                     {/* Blood Group Dropdown */}
                     {renderDropdown("Blood Group", "bloodGroup", bloodGroupOptions)}
