@@ -633,9 +633,9 @@ const Generalsetting = () => {
           </Box>
 
           {/* Display current logged-in user */}
-          <Alert severity="info" sx={{ mb: 2 }}>
+          {/* <Alert severity="info" sx={{ mb: 2 }}>
             Logged in as: <strong>{localStorage.getItem("username") || "Not logged in"}</strong>
-          </Alert>
+          </Alert> */}
 
           {/* ===== View/Edit Mode ===== */}
           {viewMode ? (
@@ -649,9 +649,9 @@ const Generalsetting = () => {
               </Alert>
             ) : (
               <>
-                <Alert severity="success" sx={{ mb: 2 }}>
+                {/* <Alert severity="success" sx={{ mb: 2 }}>
                   Showing {records.length} record(s) for your account.
-                </Alert>
+                </Alert> */}
                 
                 {records.map((record, index) => (
                   <Accordion key={record._id || index} sx={{ mb: 2 }}>
