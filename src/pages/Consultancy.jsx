@@ -332,13 +332,13 @@ const academicYearOptions = generateAcademicYears();
               <Table striped bordered hover>
                 <thead className="text-center bg-primary text-white">
                   <tr>
-                    <th>#</th>
-                    <th>Title</th>
-                    <th>Organised By</th>
-                    <th>Academic Year</th>
-                    <th>Funded</th>
-                    <th>Amount</th>
-                    <th>Actions</th>
+                    <th className="text-dark ">#</th>
+                    <th className="text-dark ">Title</th>
+                    <th className="text-dark ">Organised By</th>
+                    <th className="text-dark ">Academic Year</th>
+                    <th className="text-dark ">Funded</th>
+                    <th className="text-dark ">Amount</th>
+                    <th className="text-dark ">Actions</th>
                   </tr>
                 </thead>
                 <tbody>

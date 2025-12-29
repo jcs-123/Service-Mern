@@ -49,8 +49,9 @@ const validateRecord = (record) => {
   const errors = {};
   if (!record.title?.trim()) errors.title = "Title is required";
   if (!record.description?.trim()) errors.description = "Description is required";
-  if (!record.fromYear || !record.toYear)
-    errors.academicYear = "Academic year range required";
+if (!record.academicYear)
+  errors.academicYear = "Academic year is required";
+
   if (!record.fromDate) errors.fromDate = "Start date required";
   return errors;
 };
@@ -62,16 +63,15 @@ const InteractionsOutsideWorld = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const gmail = localStorage.getItem("gmail") || "";
 
-  const initialState = {
-    title: "",
-    description: "",
-    fromYear: "",
-    toYear: "",
-    academicYear: "",
-    fromDate: "",
-    toDate: "",
-    certificate: null
-  };
+const initialState = {
+  title: "",
+  description: "",
+  academicYear: "",
+  fromDate: "",
+  toDate: "",
+  certificate: null
+};
+
 
   const [record, setRecord] = useState(initialState);
   const [records, setRecords] = useState([]);
@@ -94,24 +94,23 @@ const InteractionsOutsideWorld = () => {
 
   /* ================= HANDLERS ================= */
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+const handleChange = (e) => {
+  const { name, value } = e.target;
 
-    setRecord((prev) => {
-      const updated = { ...prev, [name]: value };
-      if (name === "fromYear" || name === "toYear") {
-        if (updated.fromYear && updated.toYear) {
-          updated.academicYear =
-            updated.fromYear === updated.toYear
-              ? updated.fromYear
-              : `${updated.fromYear} to ${updated.toYear}`;
-        }
-      }
-      return updated;
-    });
+  setRecord((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
 
-    if (errors[name]) setErrors({ ...errors, [name]: "" });
-  };
+  // clear validation error instantly
+  if (errors[name]) {
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  }
+};
+
 
   const handleFileChange = (e) => {
     setRecord({ ...record, certificate: e.target.files[0] });
@@ -169,25 +168,24 @@ const InteractionsOutsideWorld = () => {
 
   /* ================= EDIT / DELETE ================= */
 
-  const handleEdit = (item) => {
-    const [fromYear, toYear] = item.academicYear.includes(" to ")
-      ? item.academicYear.split(" to ")
-      : [item.academicYear, item.academicYear];
+const handleEdit = (item) => {
+  setRecord({
+    title: item.title || "",
+    description: item.description || "",
+    academicYear: item.academicYear || "",
+    fromDate: item.fromDate || "",
+    toDate: item.toDate === "Present" ? "" : item.toDate || "",
+    certificate: null // file cannot be prefilled
+  });
 
-    setRecord({
-      title: item.title,
-      description: item.description,
-      fromYear,
-      toYear,
-      academicYear: item.academicYear,
-      fromDate: item.fromDate,
-      toDate: item.toDate === "Present" ? "" : item.toDate,
-      certificate: null
-    });
+  setEditId(item._id);
 
-    setEditId(item._id);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+};
+
 
   const handleDelete = async (id) => {
     if (window.confirm("Delete this record?")) {
@@ -198,6 +196,10 @@ const InteractionsOutsideWorld = () => {
       fetchRecords();
     }
   };
+const formatDate = (date) => {
+  if (!date) return "-";
+  return new Date(date).toLocaleDateString("en-GB"); // dd/mm/yyyy
+};
 
   /* ================= UI ================= */
 
@@ -244,45 +246,30 @@ const InteractionsOutsideWorld = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              select
-              label="Academic Year From *"
-              name="fromYear"
-              value={record.fromYear}
-              onChange={handleChange}
-              fullWidth
-            >
-              {ACADEMIC_YEAR_OPTIONS.map((yr) => (
-                <MenuItem key={yr} value={yr}>
-                  {yr}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
+        <Grid item xs={12} md={6}>
+  <TextField
+    select
+    label="Academic Year *"
+    name="academicYear"
+    value={record.academicYear}
+    onChange={handleChange}
+    fullWidth
+    error={!!errors.academicYear}
+    helperText={errors.academicYear}
+  >
+    <MenuItem value="">
+      <em>Select Academic Year</em>
+    </MenuItem>
+    {ACADEMIC_YEAR_OPTIONS.map((yr) => (
+      <MenuItem key={yr} value={yr}>
+        {yr}
+      </MenuItem>
+    ))}
+  </TextField>
+</Grid>
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              select
-              label="Academic Year To *"
-              name="toYear"
-              value={record.toYear}
-              onChange={handleChange}
-              fullWidth
-            >
-              {ACADEMIC_YEAR_OPTIONS.map((yr) => (
-                <MenuItem key={yr} value={yr}>
-                  {yr}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
 
-          {record.academicYear && (
-            <Grid item xs={12}>
-              <Chip label={record.academicYear} color="success" />
-            </Grid>
-          )}
+        
 
           <Grid item xs={12} md={6}>
             <TextField
@@ -391,23 +378,29 @@ const InteractionsOutsideWorld = () => {
               </TableCell>
 
               {/* PERIOD */}
-              <TableCell>
-                <Typography variant="body2">
-                  {r.fromDate}
-                </Typography>
-                {r.toDate === "Present" ? (
-                  <Chip
-                    label="Present"
-                    size="small"
-                    color="success"
-                    sx={{ mt: 0.5 }}
-                  />
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    to {r.toDate}
-                  </Typography>
-                )}
-              </TableCell>
+          <TableCell>
+  <Typography variant="body2" fontWeight={600}>
+    {formatDate(r.fromDate)}
+  </Typography>
+
+  {r.toDate === "Present" ? (
+    <Chip
+      label="Present"
+      size="small"
+      color="success"
+      sx={{ mt: 0.5 }}
+    />
+  ) : (
+    <Typography
+      variant="body2"
+      color="text.secondary"
+      sx={{ mt: 0.3 }}
+    >
+      to {formatDate(r.toDate)}
+    </Typography>
+  )}
+</TableCell>
+
  <TableCell>
                       {r.certificate ? (
                         <a

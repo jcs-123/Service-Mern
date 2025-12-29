@@ -367,14 +367,14 @@ const Projectguided = () => {
               <Table striped bordered hover>
                 <thead>
                   <tr className="text-center bg-primary text-white">
-                    <th>#</th>
-                    <th>Project Name</th>
-                    <th>Academic Year</th>
-                    <th>Funded</th>
-                    <th>Agency</th>
-                    <th>Co-Investigator</th>
-                    <th>Level</th>
-                    <th>Actions</th>
+                    <th className="text-dark ">#</th>
+                    <th className="text-dark ">Project Name</th>
+                    <th className="text-dark ">Academic Year</th>
+                    <th className="text-dark ">Funded</th>
+                    <th className="text-dark ">Agency</th>
+                    <th className="text-dark ">Co-Investigator</th>
+                    <th className="text-dark ">Level</th>
+                    <th className="text-dark ">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
