@@ -381,23 +381,26 @@ const academicYearOptions = generateAcademicYears();
                         <td>{item.isFunded}</td>
                         <td>{item.status}</td>
                         <td>{item.fundAmount || "-"}</td>
-                        <td>
-                          <Button
-                            variant="outline-primary"
-                            size="sm"
-                            onClick={() => handleEdit(item)}
-                            className="me-2"
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => handleDelete(item._id)}
-                          >
-                            Delete
-                          </Button>
-                        </td>
+                     <td className="text-center">
+  <div className="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+    <Button
+      variant="outline-primary"
+      size="sm"
+      onClick={() => handleEdit(item)}
+    >
+      Edit
+    </Button>
+
+    <Button
+      variant="outline-danger"
+      size="sm"
+      onClick={() => handleDelete(item._id)}
+    >
+      Delete
+    </Button>
+  </div>
+</td>
+
                       </tr>
                     ))}
                   </tbody>

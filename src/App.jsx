@@ -27,6 +27,10 @@ import AdminDashboard from "./pages/AdminDashboard.jsx";
 import Experience from "./pages/Experience.jsx";
 import AdminExcelExport from "./pages/AdminExcelExport.jsx";
 import React from "react";
+import Journalpublicationdetail from "./pages/Journalpublicationdetail.jsx";
+import Conferencepublicationdetail from "./pages/Conferencepublicationdetail.jsx";
+import Bookchapterpublication from "./pages/Bookchapterpublication.jsx";
+import Reseachidpublication from "./pages/Reseachidpublication.jsx";
 
 /* ======================================================
    🧩 Protected Route Components
@@ -90,6 +94,11 @@ function App() {
           <Route path="/Qualification" element={<Qualification />} />
           <Route path="/SubjectEngaged" element={<SubjectEngaged />} />
           <Route path="/Publications" element={<Publications />} />
+                    <Route path="/publications/journal" element={<Journalpublicationdetail/>} />
+                    <Route path="/publications/conference" element={<Conferencepublicationdetail/>} />
+                    <Route path="/publications/book" element={<Bookchapterpublication/>} />
+                    <Route path="/publications/research-id" element={<Reseachidpublication/>} />
+
           <Route path="/ProgramsCoordinated" element={<ProgramsCoordinated />} />
           <Route path="/ProgramsAttended" element={<ProgramsAttended />} />
           <Route path="/Experience" element={<Experience />} />

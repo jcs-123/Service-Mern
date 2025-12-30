@@ -371,7 +371,7 @@ const PATENT_YEAR_OPTIONS = generatePatentYearOptions();
             display: "flex", justifyContent: "space-between",
             alignItems: "center", mt: 6, pt: 4, borderTop: "2px solid #e3f2fd"
           }}>
-            <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => navigate("/Publications")}
+            <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => navigate("/SubjectEngaged")}
               sx={{
                 borderColor: "#1565c0", color: "#1565c0",
                 textTransform: "none", fontWeight: "bold",

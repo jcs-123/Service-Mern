@@ -104,6 +104,18 @@ const SubjectEngaged = () => {
     }
   };
 
+<<<<<<< HEAD
+=======
+  // 🔹 View subject
+  const handleView = (sub) => {
+    setSelectedSubject(sub);
+    setViewDialogOpen(true);
+  };
+
+  const handlePrevious = () => navigate("/qualification");
+  const handleNext = () => navigate("/Patent");
+
+>>>>>>> a3394ca7c45034fb998f9799cccb50cde377ffbc
   return (
     <Box p={3}>
       <ToastContainer position="top-right" autoClose={2500} />
