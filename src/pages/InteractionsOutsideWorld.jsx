@@ -286,7 +286,7 @@ const formatDate = (date) => {
           <Grid item xs={12} md={6}>
             <TextField
               type="date"
-              label="To Date (empty = Present)"
+              label="To Date"
               name="toDate"
               InputLabelProps={{ shrink: true }}
               value={record.toDate}
