@@ -202,7 +202,7 @@ function SubjectEngaged() {
   };
 
   const handlePrevious = () => navigate("/qualification");
-  const handleNext = () => navigate("/publications");
+  const handleNext = () => navigate("/Patent");
 
   return (
     <Box

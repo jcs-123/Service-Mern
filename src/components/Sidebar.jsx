@@ -9,6 +9,7 @@ import {
   Divider,
   useMediaQuery,
   Tooltip,
+  Collapse,
 } from "@mui/material";
 import {
   Person,
@@ -25,7 +26,6 @@ import {
   Public,
   Interests,
   EmojiEvents,
-  Favorite,
   History,
   Lightbulb,
   LibraryBooks,
@@ -33,148 +33,224 @@ import {
   MilitaryTech,
   AccountTree,
   Logout,
+  ExpandLess,
+  ExpandMore,
 } from "@mui/icons-material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-const drawerWidth = 240;
+/* =====================
+   RESPONSIVE DRAWER WIDTH
+   ===================== */
+const drawerWidth = {
+  xs: 220, // mobile
+  sm: 240, // desktop
+};
 
 const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
   const isMobile = useMediaQuery("(max-width:600px)");
   const location = useLocation();
   const navigate = useNavigate();
 
+  /* Auto-open Research Profile if child route active */
+  const [openResearch, setOpenResearch] = React.useState(
+    location.pathname.startsWith("/publications")
+  );
+
   const forms = [
     { text: "1. General Details", icon: <Person />, path: "/GeneralDetail" },
     { text: "2. Qualifications", icon: <School />, path: "/Qualification" },
     { text: "3. Experience", icon: <Work />, path: "/Experience" },
     { text: "4. Subject Engaged", icon: <MenuBook />, path: "/SubjectEngaged" },
-    { text: "5. Publications", icon: <Article />, path: "/Publications" },
-        { text: "6. Patent", icon: <Lightbulb />, path: "/Patent" },
+
+    {
+      text: "5. Research Profile",
+      icon: <Article />,
+      children: [
+        { text: "5A. Journal Publication Details", path: "/publications/journal" },
+        { text: "5B. Conference Publication Details", path: "/publications/conference" },
+        { text: "5C. Book & Book Chapter Publications", path: "/publications/book" },
+        { text: "5D. Research ID", path: "/publications/research-id" },
+      ],
+    },
+
+    { text: "6. Patent", icon: <Lightbulb />, path: "/Patent" },
     { text: "7. Programs Co-ordinated", icon: <EventAvailable />, path: "/ProgramsCoordinated" },
     { text: "8. Programs Attended", icon: <EventNote />, path: "/ProgramsAttended" },
-        { text: "9. MOOC Course", icon: <LibraryBooks />, path: "/MoocCourseCompleted" },
-
+    { text: "9. MOOC Course", icon: <LibraryBooks />, path: "/MoocCourseCompleted" },
     { text: "10. Faculty Research", icon: <Science />, path: "/FacultyReserach" },
     { text: "11. Consultancies", icon: <Build />, path: "/Consultancy" },
     { text: "12. Project Guided", icon: <Folder />, path: "/ProjectGuided" },
     { text: "13. Seminar Guided", icon: <Forum />, path: "/SeminarsGuided" },
     { text: "14. Outside Interactions", icon: <Public />, path: "/InteractionsOutsideWorld" },
-    { text: "15. Positions Held/ Other Responsibilities", icon: <AccountTree />, path: "/PositionsHeld" },
+    { text: "15. Positions Held / Other Responsibilities", icon: <AccountTree />, path: "/PositionsHeld" },
     { text: "16. Research Interests", icon: <Interests />, path: "/ResearchInterests" },
     { text: "17. Achievements", icon: <EmojiEvents />, path: "/Achievements" },
-    // { text: "16. Interested Subjects", icon: <Favorite />, path: "/InterestedSubjects" },
     { text: "18. Activity Log", icon: <History />, path: "/ActivityLog" },
-
     { text: "19. Administrative Work", icon: <WorkspacePremium />, path: "/AdministrativeWork" },
     { text: "20. Professional Body", icon: <MilitaryTech />, path: "/Professional" },
   ];
 
-  // ✅ Logout Handlerhttps://chat.deepseek.com/a/chat/s/33cee13f-9cf8-47fa-a34a-442afade1f04
   const handleLogout = () => {
     toast.info("Logging out... 👋", { autoClose: 1200 });
     setTimeout(() => {
-      localStorage.clear(); // remove all saved user data
-      navigate("/login"); // redirect to login
+      localStorage.clear();
+      navigate("/login");
     }, 1000);
   };
 
   const drawerContent = (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        background: "linear-gradient(180deg, #ffffff 0%, #f4f9ff 100%)",
-      }}
-    >
-      {/* === Sidebar Items === */}
-      <Box sx={{ py: 1 }}>
-        <List disablePadding sx={{ px: 1 }}>
-          {forms.map((item) => {
-            const isActive = location.pathname === item.path;
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <List sx={{ px: 1 }}>
+        {forms.map((item) => {
+          /* ================= RESEARCH PROFILE ================= */
+          if (item.children) {
+            const isAnyChildActive = item.children.some(
+              (child) => location.pathname === child.path
+            );
+
             return (
-              <Tooltip
-                key={item.text}
-                title={isMobile ? "" : item.text}
-                placement="right"
-                arrow
-              >
+              <Box key={item.text}>
                 <ListItemButton
-                  component={Link}
-                  to={item.path}
-                  onClick={isMobile ? handleDrawerToggle : undefined}
+                  onClick={() => setOpenResearch(!openResearch)}
                   sx={{
                     borderRadius: 2,
                     mb: 0.4,
-                    transition: "all 0.2s ease-in-out",
-                    backgroundColor: isActive
+                    backgroundColor: isAnyChildActive
                       ? "rgba(25,118,210,0.12)"
                       : "transparent",
                     "&:hover": {
                       backgroundColor: "rgba(25,118,210,0.08)",
-                      transform: "translateX(3px)",
                     },
                   }}
                 >
                   <ListItemIcon
                     sx={{
-                      color: isActive ? "#1976d2" : "rgba(0,0,0,0.6)",
                       minWidth: 40,
+                      color: isAnyChildActive
+                        ? "#1976d2"
+                        : "rgba(0,0,0,0.6)",
                     }}
                   >
                     {item.icon}
                   </ListItemIcon>
+
                   <ListItemText
                     primary={item.text}
                     primaryTypographyProps={{
-                      fontWeight: isActive ? 600 : 500,
+                      fontWeight: isAnyChildActive ? 600 : 500,
                       fontSize: "0.85rem",
-                      color: isActive ? "#1976d2" : "#2c3e50",
+                      color: isAnyChildActive ? "#1976d2" : "#2c3e50",
                     }}
                   />
-                </ListItemButton>
-              </Tooltip>
-            );
-          })}
-        </List>
-      </Box>
 
-      {/* === Logout Button (Bottom) === */}
+                  {openResearch ? (
+                    <ExpandLess sx={{ color: isAnyChildActive ? "#1976d2" : "inherit" }} />
+                  ) : (
+                    <ExpandMore sx={{ color: isAnyChildActive ? "#1976d2" : "inherit" }} />
+                  )}
+                </ListItemButton>
+
+                <Collapse in={openResearch} timeout="auto" unmountOnExit>
+                  <List disablePadding>
+                    {item.children.map((child) => {
+                      const isChildActive = location.pathname === child.path;
+
+                      return (
+                        <ListItemButton
+                          key={child.text}
+                          component={Link}
+                          to={child.path}
+                          onClick={isMobile ? handleDrawerToggle : undefined}
+                          sx={{
+                            pl: 5,
+                            borderRadius: 2,
+                            mb: 0.3,
+                            backgroundColor: isChildActive
+                              ? "rgba(25,118,210,0.12)"
+                              : "transparent",
+                          }}
+                        >
+                          <ListItemText
+                            primary={child.text}
+                            primaryTypographyProps={{
+                              fontSize: "0.8rem",
+                              fontWeight: isChildActive ? 600 : 500,
+                              color: isChildActive ? "#1976d2" : "#2c3e50",
+                            }}
+                          />
+                        </ListItemButton>
+                      );
+                    })}
+                  </List>
+                </Collapse>
+              </Box>
+            );
+          }
+
+          /* ================= NORMAL ITEMS ================= */
+          const isActive = location.pathname === item.path;
+
+          return (
+            <Tooltip key={item.text} title={isMobile ? "" : item.text} placement="right" arrow>
+              <ListItemButton
+                component={Link}
+                to={item.path}
+                onClick={isMobile ? handleDrawerToggle : undefined}
+                sx={{
+                  borderRadius: 2,
+                  mb: 0.4,
+                  backgroundColor: isActive
+                    ? "rgba(25,118,210,0.12)"
+                    : "transparent",
+                  "&:hover": {
+                    backgroundColor: "rgba(25,118,210,0.08)",
+                    transform: "translateX(3px)",
+                  },
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 40,
+                    color: isActive ? "#1976d2" : "rgba(0,0,0,0.6)",
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    fontWeight: isActive ? 600 : 500,
+                    fontSize: "0.85rem",
+                    color: isActive ? "#1976d2" : "#2c3e50",
+                  }}
+                />
+              </ListItemButton>
+            </Tooltip>
+          );
+        })}
+      </List>
+
+      {/* Logout */}
       <Box sx={{ mt: "auto" }}>
-        <Divider sx={{ borderColor: "rgba(0,0,0,0.2)" }} />
-        <Box sx={{ p: 1.5 }}>
-          <ListItemButton
-            onClick={handleLogout}
-            sx={{
-              borderRadius: 2,
-              transition: "all 0.3s ease-in-out",
-              "&:hover": {
-                backgroundColor: "rgba(244,67,54,0.08)",
-                transform: "translateX(4px)",
-              },
-            }}
-          >
-            <ListItemIcon sx={{ color: "#f44336" }}>
-              <Logout />
-            </ListItemIcon>
-            <ListItemText
-              primary="Logout"
-              primaryTypographyProps={{
-                fontWeight: 600,
-                color: "#f44336",
-                fontSize: "0.9rem",
-              }}
-            />
-          </ListItemButton>
-        </Box>
+        <Divider />
+        <ListItemButton onClick={handleLogout}>
+          <ListItemIcon sx={{ color: "#f44336" }}>
+            <Logout />
+          </ListItemIcon>
+          <ListItemText
+            primary="Logout"
+            primaryTypographyProps={{ color: "#f44336", fontWeight: 600 }}
+          />
+        </ListItemButton>
       </Box>
     </Box>
   );
 
   return (
     <>
-      {/* === Mobile Drawer === */}
+      {/* MOBILE DRAWER */}
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -183,34 +259,28 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
         sx={{
           display: { xs: "block", sm: "none" },
           "& .MuiDrawer-paper": {
-            width: drawerWidth,
-            boxSizing: "border-box",
+            width: drawerWidth.xs,
             top: "64px",
             height: "calc(100% - 64px)",
-            borderRight: "2px solid black",
           },
         }}
       >
         {drawerContent}
       </Drawer>
 
-      {/* === Desktop Drawer === */}
+      {/* DESKTOP DRAWER */}
       <Drawer
         variant="permanent"
+        open
         sx={{
           display: { xs: "none", sm: "block" },
           "& .MuiDrawer-paper": {
-            width: drawerWidth,
-            boxSizing: "border-box",
+            width: drawerWidth.sm,
             top: "64px",
             height: "calc(100% - 64px)",
-            background: "linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%)",
-            borderRight: "2px solid #000",
-            boxShadow: "6px 0 12px rgba(0, 0, 0, 0.25)",
-            transition: "all 0.3s ease-in-out",
+            boxShadow: "6px 0 12px rgba(0,0,0,0.25)",
           },
         }}
-        open
       >
         {drawerContent}
       </Drawer>
