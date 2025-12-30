@@ -184,6 +184,7 @@ const Generalsetting = () => {
   const [records, setRecords] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const [hasData, setHasData] = useState(false);
+  const [expandedAccordion, setExpandedAccordion] = useState(true); // Set to true to keep accordion open
 
   // ✅ Fetch only logged-in user's records
   const fetchRecords = async () => {
@@ -406,6 +407,7 @@ const Generalsetting = () => {
       toast.success("✅ Updated Successfully!");
       fetchRecords();
       setEditIndex(null);
+      setExpandedAccordion(true); // Keep accordion open after update
     } catch (err) {
       console.error("Update error:", err);
       toast.error("❌ Update Failed!");
@@ -616,12 +618,12 @@ const Generalsetting = () => {
           </Box>
 
           {/* Display current logged-in user */}
-          <Alert severity="info" sx={{ mb: 2 }}>
+          {/* <Alert severity="info" sx={{ mb: 2 }}>
             Logged in as: <strong>{localStorage.getItem("username") || "Not logged in"}</strong>
             {hasData && records.length > 0 && (
               <span> | Records found: {records.length}</span>
             )}
-          </Alert>
+          </Alert> */}
 
           {/* ===== View Mode ===== */}
           {viewMode ? (
@@ -636,12 +638,12 @@ const Generalsetting = () => {
               </Alert>
             ) : (
               <>
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  Showing your profile details. Click "Edit Details" to make changes.
-                </Alert>
-                
                 {records.map((record, index) => (
-                  <Accordion key={record._id || index} sx={{ mb: 2 }}>
+                  <Accordion 
+                    key={record._id || index} 
+                    expanded={expandedAccordion}
+                    sx={{ mb: 2 }}
+                  >
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                       <Typography sx={{ fontWeight: 600, color: "#0b3d91" }}>
                         {record.name || "Unnamed"} – {record.department} – {record.staffId}
@@ -902,7 +904,7 @@ const Generalsetting = () => {
                           </Box>
                         </>
                       ) : (
-                        // View mode for this record
+                        // View mode for this record - PERMANENTLY OPENED
                         <>
                           <Grid container spacing={2}>
                             {/* General Information */}
