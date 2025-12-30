@@ -15,11 +15,14 @@ import {
   IconButton,
   Modal,
 } from "@mui/material";
-import { Add, Edit, Delete } from "@mui/icons-material";
+import { Add, Edit, Delete, ArrowBack, ArrowForward } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 
 const SubjectEngaged = () => {
+  const navigate = useNavigate();
+
   const gmail =
     localStorage.getItem("gmail") || localStorage.getItem("email");
 
@@ -59,9 +62,7 @@ const SubjectEngaged = () => {
   /* ================= SAVE SUBJECT ================= */
   const handleSave = async () => {
     if (!form.academicYear || !form.subjectCode || !form.subjectName) {
-      toast.error(
-        "Academic Year, Subject Code and Subject Name are required"
-      );
+      toast.error("Academic Year, Subject Code and Subject Name are required");
       return;
     }
 
@@ -73,10 +74,10 @@ const SubjectEngaged = () => {
         );
         toast.success("Subject updated successfully");
       } else {
-        await axios.post("https://service-book-backend.onrender.com/subjects-engaged", {
-          ...form,
-          gmail,
-        });
+        await axios.post(
+          "https://service-book-backend.onrender.com/subjects-engaged",
+          { ...form, gmail }
+        );
         toast.success("Subject added successfully");
       }
 
@@ -104,15 +105,6 @@ const SubjectEngaged = () => {
     }
   };
 
-  // 🔹 View subject
-  const handleView = (sub) => {
-    setSelectedSubject(sub);
-    setViewDialogOpen(true);
-  };
-
-  const handlePrevious = () => navigate("/qualification");
-  const handleNext = () => navigate("/Patent");
-
   return (
     <Box p={3}>
       <ToastContainer position="top-right" autoClose={2500} />
@@ -137,49 +129,93 @@ const SubjectEngaged = () => {
       </Box>
 
       {/* ================= TABLE ================= */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead sx={{ background: "#1976d2" }}>
+      <TableContainer component={Paper} sx={{ border: "1px solid #cfd8dc" }}>
+        <Table
+          sx={{
+            borderCollapse: "collapse",
+            "& th, & td": {
+              border: "1px solid #cfd8dc",
+            },
+          }}
+        >
+          <TableHead sx={{ backgroundColor: "#1976d2" }}>
             <TableRow>
-              <TableCell sx={{ color: "#fff" }}>Academic Year</TableCell>
-              <TableCell sx={{ color: "#fff" }}>Subject Code</TableCell>
-              <TableCell sx={{ color: "#fff" }}>Subject Name</TableCell>
-              <TableCell sx={{ color: "#fff" }}>Pass %</TableCell>
-              <TableCell sx={{ color: "#fff" }}>Actions</TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: 700 }}>
+                Academic Year
+              </TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: 700 }}>
+                Subject Code
+              </TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: 700 }}>
+                Subject Name
+              </TableCell>
+              <TableCell
+                sx={{ color: "#fff", fontWeight: 700 }}
+                align="center"
+              >
+                Batch
+              </TableCell>
+              <TableCell
+                sx={{ color: "#fff", fontWeight: 700 }}
+                align="center"
+              >
+                Semester
+              </TableCell>
+              <TableCell
+                sx={{ color: "#fff", fontWeight: 700 }}
+                align="center"
+              >
+                Pass %
+              </TableCell>
+              <TableCell
+                sx={{ color: "#fff", fontWeight: 700 }}
+                align="center"
+              >
+                Actions
+              </TableCell>
             </TableRow>
           </TableHead>
 
           <TableBody>
             {subjects.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={7} align="center">
                   No subjects found
                 </TableCell>
               </TableRow>
             ) : (
               subjects.map((s) => (
-                <TableRow key={s._id}>
+                <TableRow key={s._id} hover>
                   <TableCell>{s.academicYear}</TableCell>
                   <TableCell>{s.subjectCode}</TableCell>
                   <TableCell>{s.subjectName}</TableCell>
-                  <TableCell>
-                    {s.passPercentage ? `${s.passPercentage}%` : "-"}
+                  <TableCell align="center">
+                    {s.batch || "–"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell align="center">
+                    {s.semester || "–"}
+                  </TableCell>
+                  <TableCell align="center">
+                    {s.passPercentage ? `${s.passPercentage}%` : "–"}
+                  </TableCell>
+                  <TableCell align="center">
                     <IconButton
+                      size="small"
                       onClick={() => {
                         setEditItem(s);
                         setForm(s);
                         setOpen(true);
                       }}
                     >
-                      <Edit />
+                      <Edit fontSize="small" />
                     </IconButton>
+
                     <IconButton
+                      size="small"
                       color="error"
                       onClick={() => handleDelete(s._id)}
                     >
-                      <Delete />
+                      <Delete fontSize="small" />
                     </IconButton>
                   </TableCell>
                 </TableRow>
@@ -188,6 +224,34 @@ const SubjectEngaged = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+
+      {/* ================= NAVIGATION BUTTONS ================= */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          mt: 4,
+          pt: 3,
+          borderTop: "1px solid #e0e0e0",
+        }}
+      >
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBack />}
+          onClick={() => navigate("/Experience")}
+        >
+          Back
+        </Button>
+
+        <Button
+          variant="contained"
+          endIcon={<ArrowForward />}
+          onClick={() => navigate("/Patent")}
+        >
+          Next
+        </Button>
+      </Box>
 
       {/* ================= MODAL ================= */}
       <Modal open={open} onClose={() => setOpen(false)}>
