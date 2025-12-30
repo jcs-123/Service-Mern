@@ -43,7 +43,7 @@ const SubjectEngaged = () => {
   const fetchSubjects = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:4000/subjects-engaged/${gmail}`
+        `https://service-book-backend.onrender.com/subjects-engaged/${gmail}`
       );
       setSubjects(res.data.data || []);
     } catch {
@@ -68,12 +68,12 @@ const SubjectEngaged = () => {
     try {
       if (editItem) {
         await axios.put(
-          `http://localhost:4000/subjects-engaged/${editItem._id}`,
+          `https://service-book-backend.onrender.com/subjects-engaged/${editItem._id}`,
           { ...form, gmail }
         );
         toast.success("Subject updated successfully");
       } else {
-        await axios.post("http://localhost:4000/subjects-engaged", {
+        await axios.post("https://service-book-backend.onrender.com/subjects-engaged", {
           ...form,
           gmail,
         });
@@ -95,7 +95,7 @@ const SubjectEngaged = () => {
 
     try {
       await axios.delete(
-        `http://localhost:4000/subjects-engaged/${id}`
+        `https://service-book-backend.onrender.com/subjects-engaged/${id}`
       );
       toast.success("Subject deleted");
       fetchSubjects();
@@ -104,8 +104,6 @@ const SubjectEngaged = () => {
     }
   };
 
-<<<<<<< HEAD
-=======
   // 🔹 View subject
   const handleView = (sub) => {
     setSelectedSubject(sub);
@@ -115,7 +113,6 @@ const SubjectEngaged = () => {
   const handlePrevious = () => navigate("/qualification");
   const handleNext = () => navigate("/Patent");
 
->>>>>>> a3394ca7c45034fb998f9799cccb50cde377ffbc
   return (
     <Box p={3}>
       <ToastContainer position="top-right" autoClose={2500} />
