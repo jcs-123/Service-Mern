@@ -1,16 +1,63 @@
-# React + Vite
+# 📘 Service Book Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A **full-stack MERN application** designed to digitally manage **staff service records** for educational institutions.  
+This system replaces traditional paper-based service books with a **secure, role-based, and searchable digital platform**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Project Overview
 
-## React Compiler
+The **Service Book Management System** helps institutions maintain detailed records of staff members, including:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Personal & professional details  
+- Academic qualifications  
+ 
 
-## Expanding the ESLint configuration
+Built with **MongoDB, Express, React, and Node.js**, the system ensures accuracy, accessibility, and long-term data safety.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🧩 Tech Stack
+
+### Frontend
+- ⚛️ React.js  
+- 🎨 Material UI (MUI) / React Bootstrap  
+- 📊 Chart.js (Dashboards & analytics)  
+- 🔐 Role-based UI rendering  
+
+### Backend
+- 🟢 Node.js  
+- 🚂 Express.js  
+- 🍃 MongoDB with Mongoose  
+- 🔑 JWT Authentication  
+
+### Deployment & Tools
+- ☁️ MongoDB Atlas  
+- 🚀 Render / Hostinger  
+- 📦 Git & GitHub  
+- 📄 Excel / PDF export support  
+
+---
+
+## 🔐 User Roles
+
+| Role  | Permissions |
+|------|------------|
+| **Admin** | Full access, user management, verification |
+| **Staff** | Create & edit own service records |
+
+
+---
+
+## 🧾 Key Features
+
+- ✅ Multi-section service book (20+ forms)
+- 🔍 Advanced search & filters
+- 📊 Interactive dashboards
+- 📤 Export to **PDF / Excel**
+- 📅 Date-wise service tracking
+- 🔐 Secure login with role control
+- 📱 Fully responsive design
+- 🗂️ Centralized staff record repository
+
+---

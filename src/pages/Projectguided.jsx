@@ -394,23 +394,26 @@ const Projectguided = () => {
                         <td>{p.fundedAgency}</td>
                         <td>{p.coInvestigator}</td>
                         <td>{p.level}</td>
-                        <td className="text-center">
-                          <Button
-                            variant="outline-warning"
-                            size="sm"
-                            className="me-2"
-                            onClick={() => handleEdit(p)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => confirmDelete(p._id)}
-                          >
-                            Delete
-                          </Button>
-                        </td>
+                    <td className="text-center">
+  <div className="d-flex flex-column flex-md-row gap-2 justify-content-center">
+    <Button
+      variant="outline-warning"
+      size="sm"
+      onClick={() => handleEdit(p)}
+    >
+      Edit
+    </Button>
+
+    <Button
+      variant="outline-danger"
+      size="sm"
+      onClick={() => confirmDelete(p._id)}
+    >
+      Delete
+    </Button>
+  </div>
+</td>
+
                       </tr>
                     ))
                   )}
