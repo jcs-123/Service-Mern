@@ -72,22 +72,30 @@ const Qualification = () => {
     fetchQualifications();
   }, []);
 
-  const fetchQualifications = async () => {
-    if (!userEmail) return;
-    
-    try {
-      setLoading(true);
-      const res = await axios.get(
-        `https://service-book-backend.onrender.com/qualification/${encodeURIComponent(userEmail)}`
-      );
-      setQualifications(res.data.data || []);
-    } catch (error) {
-      console.error("Error fetching qualifications:", error);
-      // toast.error("Failed to load qualifications ❌");
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchQualifications = async () => {
+  if (!userEmail) return;
+
+  try {
+    setLoading(true);
+    const res = await axios.get(
+      `https://service-book-backend.onrender.com/qualification/${encodeURIComponent(userEmail)}`
+    );
+
+    const data = res.data.data || [];
+
+    // ✅ SORT BY PASSING YEAR (LATEST FIRST)
+    const sortedData = data.sort(
+      (a, b) => (b.passingYear || 0) - (a.passingYear || 0)
+    );
+
+    setQualifications(sortedData);
+  } catch (error) {
+    console.error("Error fetching qualifications:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Handle form input changes
   const handleChange = (e) => {

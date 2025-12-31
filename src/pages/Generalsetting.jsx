@@ -1334,8 +1334,35 @@ const Generalsetting = () => {
                               </SectionContainer>
                             </Grid>
                           </Grid>
-
-                          {/* Edit Button */}
+                          <Box textAlign="right" mt={4}>
+                          <Button
+                            variant={viewMode ? "contained" : "outlined"}
+                            onClick={() => {
+                              setViewMode(!viewMode);
+                              if (viewMode && hasData) {
+                                if (records.length > 0) {
+                                  setFormData(records[0]);
+                                }
+                              }
+                            }}
+                            startIcon={viewMode ? <EditNoteIcon /> : <VisibilityIcon />}
+                            sx={{
+                              borderRadius: 2,
+                              fontWeight: 600,
+                              background: viewMode ? "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)" : "transparent",
+                              color: viewMode ? "white" : "#1976d2",
+                              borderColor: "#1976d2",
+                              px: 3,
+                              py: 1,
+                              '&:hover': {
+                                background: viewMode ? "linear-gradient(135deg, #1565c0 0%, #1e88e5 100%)" : "rgba(25, 118, 210, 0.04)",
+                              }
+                            }}
+                          >
+                            {viewMode ? "Edit Details" : "View Details"}
+                          </Button>
+                          </Box>
+                          {/* Edit Button
                           <Box textAlign="right" mt={4}>
                             <Button
                               variant="contained"
@@ -1358,7 +1385,7 @@ const Generalsetting = () => {
                             >
                               Edit Details
                             </Button>
-                          </Box>
+                          </Box> */}
                         </>
                       )}
                     </AccordionDetails>
@@ -1669,7 +1696,7 @@ const SectionContainer = ({ title, children, mb = 0, noPadding = false }) => (
 // ===== InfoField Component =====
 const InfoField = ({ label, value, highlight = false }) => {
   const displayValue = value || <Typography component="span" sx={{ color: '#999', fontStyle: 'italic' }}>Not provided</Typography>;
-  
+
   return (
     <Box sx={{
       p: 1.5,
