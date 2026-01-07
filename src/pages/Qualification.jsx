@@ -68,9 +68,11 @@ const Qualification = () => {
   });
 
   // Fetch qualifications
-  useEffect(() => {
+useEffect(() => {
+  if (userEmail) {
     fetchQualifications();
-  }, []);
+  }
+}, [userEmail]);
 
   const fetchQualifications = async () => {
     if (!userEmail) return;
@@ -278,34 +280,34 @@ if (!editItem && !formData.certificate) {
 };
 
   // Delete qualification with toast confirmation
-  const handleDeleteClick = (id) => {
-    toast.info(
-      <div style={{ textAlign: "center" }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          Delete this qualification?
-        </Typography>
-        <div style={{ marginTop: 10 }}>
-          <Button
-            size="small"
-            variant="contained"
-            color="error"
-            onClick={() => confirmDelete(id)}
-            sx={{ mr: 1 }}
-          >
-            Yes
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={() => toast.dismiss()}
-          >
-            No
-          </Button>
-        </div>
-      </div>,
-      { autoClose: false, closeOnClick: false }
+const handleDeleteClick = async (id) => {
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this qualification?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+    await toast.promise(
+      axios.delete(
+        `https://service-book-backend.onrender.com/qualification/${id}`
+      ),
+      {
+        pending: "Deleting qualification...",
+        success: "Qualification deleted successfully ✅",
+        error: "Failed to delete qualification ❌",
+      }
     );
-  };
+
+    // ✅ Refresh list AFTER delete
+    fetchQualifications();
+
+  } catch (error) {
+    console.error("Delete error:", error);
+    toast.error("Delete failed ❌");
+  }
+};
+
 
   const confirmDelete = async (id) => {
     toast.dismiss();
