@@ -48,7 +48,7 @@ const Projectguided = () => {
     if (!userEmail) return;
     try {
       const res = await axios.get(
-        `http://localhost:4000/view?email=${userEmail}`
+        `https://service-book-backend.onrender.com/view?email=${userEmail}`
       );
       if (res.data.success) {
         setProjects(res.data.data);
@@ -81,14 +81,14 @@ const Projectguided = () => {
 
       if (editId) {
         await axios.put(
-          `http://localhost:4000/update/${editId}`,
+          `https://service-book-backend.onrender.com/update/${editId}`,
           payload
         );
         toast.success("✅ Project updated successfully!");
         setEditId(null);
       } else {
         await axios.post(
-          "http://localhost:4000/add",
+          "https://service-book-backend.onrender.com/add",
           payload
         );
         toast.success("✅ Project added successfully!");
@@ -132,7 +132,7 @@ const Projectguided = () => {
     if (!window.confirm("Delete this project?")) return;
     try {
       await axios.delete(
-        `http://localhost:4000/delete/${id}`
+        `https://service-book-backend.onrender.com/delete/${id}`
       );
       toast.success("🗑️ Deleted successfully");
       fetchData();
