@@ -106,7 +106,7 @@ const Experience = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `http://localhost:4000/experience/${userEmail}`
+        `https://service-book-backend.onrender.com/experience/${userEmail}`
       );
       setExperiences(res.data?.success ? res.data.data : []);
     } catch {
@@ -182,7 +182,7 @@ const Experience = () => {
     toast.dismiss();
     await toast.promise(
       axios.delete(
-        `http://localhost:4000/experience/${id}`
+        `https://service-book-backend.onrender.com/experience/${id}`
       ),
       {
         pending: "Deleting experience...",
@@ -217,13 +217,13 @@ const Experience = () => {
     try {
       if (editItem) {
         await axios.put(
-          `http://localhost:4000/experience/${editItem._id}`,
+          `https://service-book-backend.onrender.com/experience/${editItem._id}`,
           form
         );
         toast.success("Experience updated successfully");
       } else {
         await axios.post(
-          "http://localhost:4000/experience",
+          "https://service-book-backend.onrender.com/experience",
           form
         );
         toast.success("Experience added successfully");
@@ -305,7 +305,7 @@ const Experience = () => {
                   <TableCell>
                     {e.certificate && (
                       <a
-                        href={`http://localhost:4000/uploads/${e.certificate}`}
+                        href={`https://service-book-backend.onrender.com/uploads/${e.certificate}`}
                         target="_blank"
                         rel="noreferrer"
                       >
