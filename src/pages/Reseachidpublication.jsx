@@ -6,35 +6,42 @@ import {
   Button,
   Grid,
   Paper,
+  Divider,
+  Stack,
 } from "@mui/material";
-import { Table } from "react-bootstrap";
+
 import BadgeIcon from "@mui/icons-material/Badge";
-import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
-import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import SchoolIcon from "@mui/icons-material/School";
+import ArticleIcon from "@mui/icons-material/Article";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import FingerprintIcon from "@mui/icons-material/Fingerprint";
+
 import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import "react-toastify/dist/ReactToastify.css";
 
 const BASE_URL =
-  localStorage.getItem("API_BASE_URL") || "https://service-book-backend.onrender.com";
+  localStorage.getItem("API_BASE_URL") ||
+  "https://service-book-backend.onrender.com";
 
 function ResearchIdPublication() {
-  const [records, setRecords] = useState([]);
-  const [showForm, setShowForm] = useState(false);
+  const [record, setRecord] = useState(null);
   const [editId, setEditId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
   const [form, setForm] = useState({
     gmail: "",
     googleScholar: "",
     scopus: "",
     vidwan: "",
+    orcid: "",
   });
 
   /* ===============================
-     LOAD GMAIL + FETCH DATA
+     LOAD DATA
   =============================== */
   useEffect(() => {
     const gmail =
@@ -44,100 +51,100 @@ function ResearchIdPublication() {
 
     if (gmail) {
       setForm((prev) => ({ ...prev, gmail }));
-      fetchResearchIds(gmail);
+      fetchRecord(gmail);
     }
   }, []);
 
-  const fetchResearchIds = async (gmail) => {
+  const fetchRecord = async (gmail) => {
     try {
-      const res = await axios.get(
-        `${BASE_URL}/api/research-id/${gmail}`
-      );
-      setRecords(res.data.data || []);
+      const res = await axios.get(`${BASE_URL}/api/research-id/${gmail}`);
+      const data = res.data.data[0];
+
+      if (data) {
+        setRecord(data);
+        setEditId(data._id);
+        setForm(data);
+      } else {
+        setShowForm(true);
+      }
     } catch {
-      setRecords([]);
+      setShowForm(true);
     }
   };
 
   /* ===============================
-     FORM HANDLERS
+     HANDLERS
   =============================== */
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleAddNew = () => {
-    setEditId(null);
-    setForm({
-      gmail: form.gmail,
-      googleScholar: "",
-      scopus: "",
-      vidwan: "",
-    });
-    setShowForm(true);
-  };
-
-  const handleEdit = (row) => {
-    setEditId(row._id);
-    setForm({
-      gmail: row.gmail,
-      googleScholar: row.googleScholar,
-      scopus: row.scopus,
-      vidwan: row.vidwan,
-    });
-    setShowForm(true);
-  };
-
-  /* ===============================
-     SAVE / UPDATE
-  =============================== */
   const handleSubmit = async () => {
     try {
       if (editId) {
-        // ✅ UPDATE
-        await axios.put(
-          `${BASE_URL}/api/research-id/${editId}`,
-          {
-            googleScholar: form.googleScholar,
-            scopus: form.scopus,
-            vidwan: form.vidwan,
-          }
-        );
-        toast.success("Research ID updated successfully ✅");
+        await axios.put(`${BASE_URL}/api/research-id/${editId}`, form);
+        toast.success("Research profiles updated successfully ✅");
       } else {
-        // ✅ ADD
         await axios.post(`${BASE_URL}/api/research-id`, form);
-        toast.success("Research ID added successfully ✅");
+        toast.success("Research profiles saved successfully ✅");
       }
-
       setShowForm(false);
-      setEditId(null);
-      fetchResearchIds(form.gmail);
+      fetchRecord(form.gmail);
     } catch {
       toast.error("Operation failed ❌");
     }
   };
 
-  /* ===============================
-     DELETE (WITH CONFIRMATION)
-  =============================== */
-  const handleDelete = async (id) => {
-    const confirm = window.confirm(
-      "Are you sure you want to delete this Research ID?"
-    );
-    if (!confirm) return;
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete Research ID details?"))
+      return;
 
     try {
-      await axios.delete(`${BASE_URL}/api/research-id/${id}`);
-      toast.success("Research ID deleted successfully 🗑️");
-      setRecords((prev) => prev.filter((r) => r._id !== id));
+      await axios.delete(`${BASE_URL}/api/research-id/${editId}`);
+      toast.success("Research profiles deleted 🗑️");
+
+      setRecord(null);
+      setEditId(null);
+      setShowForm(true);
+      setForm({
+        gmail: form.gmail,
+        googleScholar: "",
+        scopus: "",
+        vidwan: "",
+        orcid: "",
+      });
     } catch {
       toast.error("Delete failed ❌");
     }
   };
 
+  const ProfileRow = ({ icon, label, value }) => (
+    <Stack direction="row" spacing={2} alignItems="flex-start" mb={2}>
+      <Box mt={0.3}>{icon}</Box>
+      <Box>
+        <Typography fontWeight={600}>{label}</Typography>
+        {value ? (
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: "#1976d2",
+              textDecoration: "none",
+              wordBreak: "break-all",
+            }}
+          >
+            {value}
+          </a>
+        ) : (
+          <Typography color="text.secondary">Not provided</Typography>
+        )}
+      </Box>
+    </Stack>
+  );
+
   return (
-    <Box sx={{ maxWidth: 1000, mx: "auto", mt: 3, px: 2 }}>
-      <ToastContainer position="top-right" />
+    <Box sx={{ maxWidth: 900, mx: "auto", mt: 4 }}>
+      <ToastContainer />
 
       {/* ================= HEADER ================= */}
       <Paper
@@ -145,138 +152,103 @@ function ResearchIdPublication() {
         sx={{
           p: 3,
           mb: 3,
-          borderRadius: 3,
-          backgroundColor: "#e3f2fd",
           display: "flex",
-          justifyContent: "space-between",
           alignItems: "center",
+          gap: 2,
+          background: "linear-gradient(135deg, #e3f2fd, #ffffff)",
         }}
       >
-        <Box display="flex" alignItems="center" gap={2}>
-          <BadgeIcon sx={{ color: "#1976d2" }} />
-          <Typography fontWeight={600} color="#0d47a1">
+        <BadgeIcon color="primary" fontSize="large" />
+        <Box>
+          <Typography fontWeight={700} fontSize={18}>
             Research ID & Profile Links
           </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Author identifiers & research profiles
+          </Typography>
         </Box>
-
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAddNew}
-        >
-          Add New
-        </Button>
       </Paper>
 
-      {/* ================= TABLE ================= */}
-      {!showForm && records.length > 0 && (
-        <div className="table-responsive">
-          <Table bordered hover>
-            <thead className="table-primary text-center">
-              <tr>
-                <th>#</th>
-                <th>Google Scholar</th>
-                <th>Scopus</th>
-                <th>Vidwan</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {records.map((row, index) => (
-                <tr key={row._id}>
-                  <td className="text-center">{index + 1}</td>
-                  <td>{row.googleScholar || "-"}</td>
-                  <td>{row.scopus || "-"}</td>
-                  <td>{row.vidwan || "-"}</td>
-                  <td className="text-center">
-                    <Button
-                      size="sm"
-                      variant="outline-primary"
-                      className="me-2"
-                      onClick={() => handleEdit(row)}
-                    >
-                      <EditIcon fontSize="small" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline-danger"
-                      onClick={() => handleDelete(row._id)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </div>
-      )}
+      {/* ================= VIEW MODE ================= */}
+      {!showForm && record && (
+        <Paper elevation={2} sx={{ p: 4 }}>
+          <ProfileRow
+            icon={<SchoolIcon color="primary" />}
+            label="Google Scholar"
+            value={record.googleScholar}
+          />
+          <ProfileRow
+            icon={<ArticleIcon sx={{ color: "#2e7d32" }} />}
+            label="Scopus"
+            value={record.scopus}
+          />
+          <ProfileRow
+            icon={<AccountTreeIcon sx={{ color: "#6a1b9a" }} />}
+            label="Vidwan"
+            value={record.vidwan}
+          />
+          <ProfileRow
+            icon={<FingerprintIcon sx={{ color: "#f57c00" }} />}
+            label="ORCID"
+            value={record.orcid}
+          />
 
-      {/* ================= FORM ================= */}
-      {showForm && (
-        <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={3}
-          >
-            <Typography fontWeight={600}>
-              {editId ? "Edit" : "Add"} Research Profile Links
-            </Typography>
+          <Divider sx={{ my: 3 }} />
+
+          <Box display="flex" justifyContent="flex-end" gap={1}>
+            <Button
+              variant="outlined"
+              startIcon={<EditIcon />}
+              onClick={() => setShowForm(true)}
+            >
+              Edit
+            </Button>
 
             <Button
-              size="small"
+              variant="outlined"
               color="error"
-              startIcon={<CloseIcon />}
-              onClick={() => {
-                setShowForm(false);
-                setEditId(null);
-              }}
+              startIcon={<DeleteIcon />}
+              onClick={handleDelete}
             >
-              Close
+              Delete
             </Button>
           </Box>
+        </Paper>
+      )}
+
+      {/* ================= FORM MODE ================= */}
+      {showForm && (
+        <Paper elevation={2} sx={{ p: 4 }}>
+          <Typography fontWeight={700} mb={3}>
+            Edit Research Profile Links
+          </Typography>
 
           <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                label="Google Scholar Profile Link"
-                name="googleScholar"
-                value={form.googleScholar}
-                onChange={handleChange}
-                fullWidth
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Scopus Profile Link"
-                name="scopus"
-                value={form.scopus}
-                onChange={handleChange}
-                fullWidth
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Vidwan Profile Link"
-                name="vidwan"
-                value={form.vidwan}
-                onChange={handleChange}
-                fullWidth
-              />
-            </Grid>
+            {[
+              { name: "googleScholar", label: "Google Scholar Profile Link" },
+              { name: "scopus", label: "Scopus Profile Link" },
+              { name: "vidwan", label: "Vidwan Profile Link" },
+              { name: "orcid", label: "ORCID Profile Link" },
+            ].map((field) => (
+              <Grid item xs={12} key={field.name}>
+                <TextField
+                  label={field.label}
+                  name={field.name}
+                  value={form[field.name]}
+                  onChange={handleChange}
+                  fullWidth
+                />
+              </Grid>
+            ))}
 
             <Grid item xs={12} textAlign="center">
               <Button
                 variant="contained"
+                size="large"
                 startIcon={<SaveIcon />}
-                sx={{ px: 6 }}
                 onClick={handleSubmit}
               >
-                {editId ? "Update" : "Save"} Details
+                Save Details
               </Button>
             </Grid>
           </Grid>

@@ -222,7 +222,7 @@ const ConferencePublication = () => {
               }}
               className="px-4 py-2"
             >
-              Add New Record
+              Add Publication
             </Button>
           </div>
         </Card.Body>
