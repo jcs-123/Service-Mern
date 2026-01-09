@@ -256,6 +256,7 @@ function ResearchIdPublication() {
       )}
     </Box>
   );
+  
 }
 
 export default ResearchIdPublication;
