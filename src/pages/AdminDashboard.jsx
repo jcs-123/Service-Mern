@@ -115,7 +115,12 @@ const AdminDashboard = () => {
     { key: "qualifications", title: "Qualifications", icon: "🎓" },
     { key: "experience", title: "Experience", icon: "💼" },
     { key: "subjectEngaged", title: "Subject Engaged", icon: "📚" },
-    { key: "publications", title: "Publications", icon: "📄" },
+    { key: "subjectEngaged", title: "Subject Engaged", icon: "📚" },
+
+  { key: "JournalPublication", title: "Journal Publications", icon: "📄" },
+  { key: "ConferencePublication", title: "Conference Publications", icon: "📑" },
+  { key: "BookChapterPublications", title: "Book Chapter Publications", icon: "📘" },
+  { key: "ResearchIDProfileLinks", title: "Research ID & Profiles", icon: "🔗" },
     { key: "programsCoordinated", title: "Programs Coordinated", icon: "🎯" },
     { key: "programsAttended", title: "Programs Attended", icon: "🗓️" },
     { key: "consultancies", title: "Consultancies", icon: "💡" },
