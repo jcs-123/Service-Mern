@@ -185,7 +185,12 @@ const AdminExcelExport = () => {
           qualifications: "/api/qualification/get",
           experience: "/api/experience/get",
           subjectEngaged: "/api/subjects-engaged/get",
-          publications: "/api/publications/get",
+          JournalPublication: "/journal-publication/api",
+          ConferencePublication: "/api/conference-publications/get",
+          BookChapterPublications: "/getall/book-publications/get",
+          ResearchIDProfileLinks: "/research-id/all",
+
+
           programsCoordinated: "/api/programs-coordinated/get",
           programsAttended: "/api/programs-attended/get",
           consultancies: "/api/consultancy/get",
